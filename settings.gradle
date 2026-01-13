@@ -1,0 +1,11 @@
+pluginManagement {
+    repositories {
+        maven { url = 'https://repo.spring.io/snapshot' }
+        gradlePluginPortal()
+    }
+}
+rootProject.name = 'Billing'
+
+include 'billing_api'
+include 'billing_batch'
+include 'billing_message'
