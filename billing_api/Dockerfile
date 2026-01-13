@@ -7,7 +7,7 @@ RUN chmod +x ./gradlew
 # API 모듈만 빌드 (테스트는 켬/끔 선택, 일단 생략하여 속도 향상)
 RUN ./gradlew :billing_api:bootJar -x test
 
-FROM openjdk:17-jdk-slim
+FROM eclipse-temurin:17-jre
 WORKDIR /app
 # 빌드된 JAR 파일만 가져오기
 COPY --from=builder /workspace/billing_api/build/libs/*.jar app.jar

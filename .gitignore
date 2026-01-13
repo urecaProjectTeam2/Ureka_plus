@@ -1,3 +1,7 @@
+# Docker data
+data/
+.metadata/
+
 HELP.md
 .gradle
 build/
