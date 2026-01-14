@@ -69,6 +69,7 @@ Ureka_plus/
 ## 서버구조
 <img width="998" height="615" alt="image" src="https://github.com/user-attachments/assets/8dcd30e9-94ee-4da7-ba6c-b47368421aef" />
 
+## ERD
 <img width="798" height="581" alt="image" src="https://github.com/user-attachments/assets/ae0498ae-8970-4e2d-a3ff-aa32b5d0cab8" />
 
 <img width="950" height="912" alt="image" src="https://github.com/user-attachments/assets/fc162067-e6eb-4499-8ff7-f5f75283cf7f" />
