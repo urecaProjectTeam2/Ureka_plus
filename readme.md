@@ -1,6 +1,9 @@
 # 주제
 대용량 통신 요금 명세서 및 알림 발송 시스템
 
+**질문사항**
+https://auspicious-blinker-37f.notion.site/2e921d7d5c4480ee9dabc1cdac0e514b?source=copy_link
+
 # 기능
 
 ## 1. 정산
