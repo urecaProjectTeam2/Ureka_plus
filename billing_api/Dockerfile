@@ -1,4 +1,4 @@
-FROM gradle:jdk17-alpine AS builder
+FROM gradle:jdk17 AS builder
 WORKDIR /workspace
 # 전체 프로젝트 코드를 복사 (멀티 모듈 의존성 해결을 위해)
 COPY . .
