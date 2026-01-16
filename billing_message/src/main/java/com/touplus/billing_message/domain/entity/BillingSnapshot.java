@@ -1,4 +1,4 @@
-package com.touplus.billing_message.domain;
+package com.touplus.billing_message.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

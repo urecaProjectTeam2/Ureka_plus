@@ -1,4 +1,4 @@
-package com.touplus.billing_batch.domain;
+package com.touplus.billing_batch.domain.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;

@@ -1,0 +1,17 @@
+package com.touplus.billing_batch.domain.dto;
+
+import lombok.Data;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+
+@Data
+public class BillingResultMessage {
+    private Long id;
+    private LocalDate settlementMonth;
+    private Long userId;
+    private Integer totalPrice;
+    private String settlementDetails;
+    private String sendStatus;
+    private Long batchExecutionId;
+    private LocalDateTime processedAt;
+}

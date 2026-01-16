@@ -10,6 +10,8 @@ import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
 
+import com.touplus.billing_message.domain.dto.BillingResultMessage;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -18,28 +20,24 @@ import java.util.Map;
 public class KafkaConsumerConfig {
 
     @Bean
-    public ConsumerFactory<String, Map<String, Object>> consumerFactory() {
+    public ConsumerFactory<String, BillingResultMessage> consumerFactory() {
         Map<String, Object> props = new HashMap<>();
         props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "localhost:9092");
         props.put(ConsumerConfig.GROUP_ID_CONFIG, "billing-message-group");
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
-
-        // Map으로 역직렬화, _type 헤더 무시
-        JsonDeserializer<Map<String, Object>> valueDeserializer = new JsonDeserializer<>(Map.class);
-        valueDeserializer.addTrustedPackages("*");
-        valueDeserializer.setUseTypeMapperForKey(false);
-        valueDeserializer.setRemoveTypeHeaders(true); // ✅ _type 헤더 제거
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
+        props.put(JsonDeserializer.TRUSTED_PACKAGES, "*");
 
         return new DefaultKafkaConsumerFactory<>(
                 props,
                 new StringDeserializer(),
-                valueDeserializer
+                new JsonDeserializer<>(BillingResultMessage.class, false)
         );
     }
 
     @Bean
-    public ConcurrentKafkaListenerContainerFactory<String, Map<String, Object>> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, Map<String, Object>> factory =
+    public ConcurrentKafkaListenerContainerFactory<String, BillingResultMessage> kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, BillingResultMessage> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         return factory;
