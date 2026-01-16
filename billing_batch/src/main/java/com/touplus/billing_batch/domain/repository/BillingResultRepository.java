@@ -1,7 +1,6 @@
 package com.touplus.billing_batch.domain.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Lock;
-import org.springframework.data.jpa.repository.Query;
 
 import com.touplus.billing_batch.domain.entity.BillingResult;
 import com.touplus.billing_batch.domain.entity.SendStatus;
