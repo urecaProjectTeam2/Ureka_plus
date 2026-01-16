@@ -6,13 +6,13 @@ services:
 
   # Mysql 삭제
 
-  redis:
-    image: redis:7
-    container_name: billing-redis
-    ports:
-      - "6379:6379"
-    networks:
-      - billing-net
+#  redis:
+#    image: redis:7
+#    container_name: billing-redis
+#    ports:
+#      - "6379:6379"
+#    networks:
+#      - billing-net
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
@@ -59,11 +59,7 @@ services:
       SPRING_DATASOURCE_URL: jdbc:mysql://host.docker.internal:13306/batch
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-      SPRING_REDIS_HOST: redis
-      SPRING_REDIS_PORT: 6379
-    depends_on:
-      redis:
-        condition: service_started
+
     networks:
       - billing-net
 
@@ -103,13 +99,11 @@ services:
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
-      SPRING_REDIS_HOST: redis
-      SPRING_REDIS_PORT: 6379
+
     depends_on:
       kafka:
         condition: service_started
-      redis:
-        condition: service_started
+
     networks:
       - billing-net
 
