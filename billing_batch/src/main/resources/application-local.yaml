@@ -1,0 +1,18 @@
+# application-local.yml
+spring:
+  config:
+    activate:
+      on-profile: local # 이 설정은 'local' 프로필일 때만 작동함
+
+  datasource:
+    # 도커 내부(host.docker.internal)가 아니라 내 컴퓨터(localhost)로 접속
+    url: jdbc:mysql://localhost:13306/billing_batch
+    username: ${DB_USER} # 혹은 직접 입력 (예: root)
+    password: ${DB_PASSWORD} # 혹은 직접 입력
+
+  kafka:
+    # 도커 서비스명(kafka:29092)이 아니라 내 컴퓨터 포트(localhost:9092)로 접속
+    bootstrap-servers: localhost:9092
+    consumer:
+      group-id: billing-group
+      auto-offset-reset: earliest
