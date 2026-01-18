@@ -1,6 +1,7 @@
 package com.touplus.billing_batch.domain.dto;
 
 import lombok.Data;
+
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 

@@ -1,67 +1,43 @@
+version: "3.9"
 
 services:
   # ==========================================
   # [Infrastructure]
   # ==========================================
 
-<<<<<<< HEAD
-#  mysql:
-#    image: mysql:8.0
-#    container_name: billing-db
-#    ports:
-#      - "3307:3306"
-#    environment:
-#      MYSQL_ROOT_PASSWORD: root
-#      MYSQL_DATABASE: billing
-#    command:
-#      - --character-set-server=utf8mb4
-#      - --collation-server=utf8mb4_unicode_ci
-#      - --default-time-zone=+09:00
-#    volumes:
-#      - ./data/mysql:/var/lib/mysql
-#    healthcheck:
-#      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-#      interval: 10s
-#      timeout: 5s
-#      retries: 5
-#    networks:
-#      - billing-net
-=======
-  mysql:
-    image: mysql:8.0
-    container_name: billing-db
-    ports:
-      - "3307:3306"
-    environment:
-      MYSQL_ROOT_PASSWORD: root
-      MYSQL_DATABASE: billing
-    command:
-      - --character-set-server=utf8mb4
-      - --collation-server=utf8mb4_unicode_ci
-      - --default-time-zone=+09:00
-    volumes:
-      - ./init:/docker-entrypoint-initdb.d
-      - ./data/mysql:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-    networks:
-      - billing-net
->>>>>>> kafka_v2
+  #  mysql:
+  #    image: mysql:8.0
+  #    container_name: billing-db
+  #    ports:
+  #      - "3307:3306"
+  #    environment:
+  #      MYSQL_ROOT_PASSWORD: root
+  #      MYSQL_DATABASE: billing
+  #    command:
+  #      - --character-set-server=utf8mb4
+  #      - --collation-server=utf8mb4_unicode_ci
+  #      - --default-time-zone=+09:00
+  #    volumes:
+  #      - ./data/mysql:/var/lib/mysql
+  #    healthcheck:
+  #      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+  #      interval: 10s
+  #      timeout: 5s
+  #      retries: 5
+  #    networks:
+  #      - billing-net
 
-#  redis:
-#    image: redis:7
-#    container_name: billing-redis
-#    ports:
-#      - "6379:6379"
-#    networks:
-#      - billing-net
+  #  redis:
+  #    image: redis:7
+  #    container_name: billing-redis
+  #    ports:
+  #      - "6379:6379"
+  #    networks:
+  #      - billing-net
 
   zookeeper:
     image: confluentinc/cp-zookeeper:7.5.0
-    platform: linux/amd64 #
+    platform: linux/amd64
     container_name: billing-zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
@@ -71,7 +47,7 @@ services:
 
   kafka:
     image: confluentinc/cp-kafka:7.5.0
-    platform: linux/amd64 #
+    platform: linux/amd64
     container_name: billing-kafka
     depends_on:
       zookeeper:
@@ -127,15 +103,9 @@ services:
       - "host.docker.internal:host-gateway"
     environment:
       SPRING_PROFILES_ACTIVE: docker
-<<<<<<< HEAD
       SPRING_DATASOURCE_URL: jdbc:mysql://host.docker.internal:13306/billing_batch
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-=======
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/billing_batch
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
->>>>>>> kafka_v2
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
     depends_on:
       kafka:
@@ -154,15 +124,9 @@ services:
       - "host.docker.internal:host-gateway"
     environment:
       SPRING_PROFILES_ACTIVE: docker
-<<<<<<< HEAD
       SPRING_DATASOURCE_URL: jdbc:mysql://host.docker.internal:13306/billing_message
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
-=======
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/billing_message
-      SPRING_DATASOURCE_USERNAME: root
-      SPRING_DATASOURCE_PASSWORD: root
->>>>>>> kafka_v2
       SPRING_KAFKA_BOOTSTRAP_SERVERS: kafka:29092
 
     depends_on:
