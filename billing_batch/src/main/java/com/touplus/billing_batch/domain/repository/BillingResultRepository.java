@@ -1,13 +1,4 @@
 package com.touplus.billing_batch.domain.repository;
-<<<<<<< HEAD
-<<<<<<< HEAD
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Lock;
-=======
->>>>>>> main
-=======
->>>>>>> main
-
 import com.touplus.billing_batch.domain.entity.BillingResult;
 import com.touplus.billing_batch.domain.entity.SendStatus;
 import jakarta.persistence.LockModeType;
