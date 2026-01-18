@@ -1,4 +1,5 @@
 package com.touplus.billing_batch.domain.repository;
+
 import com.touplus.billing_batch.domain.entity.BillingResult;
 import com.touplus.billing_batch.domain.entity.SendStatus;
 import jakarta.persistence.LockModeType;

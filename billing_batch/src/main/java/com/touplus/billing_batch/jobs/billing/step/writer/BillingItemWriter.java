@@ -3,6 +3,7 @@ package com.touplus.billing_batch.jobs.billing.step.writer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import lombok.Builder;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.stereotype.Component;
@@ -14,7 +15,7 @@ import com.touplus.billing_batch.domain.entity.BillingResult;
 import com.touplus.billing_batch.domain.entity.SendStatus;
 import com.touplus.billing_batch.domain.repository.BillingResultRepository;
 
-
+@Builder
 @Component
 public class BillingItemWriter
         implements ItemWriter<BillingCalculationResult> {

@@ -9,9 +9,6 @@ spring:
     url: jdbc:mysql://localhost:13306/billing_batch
     username: ${DB_USER} # 혹은 직접 입력 (예: root)
     password: ${DB_PASSWORD} # 혹은 직접 입력
-  batch:
-    jdbc:
-      initialize-schema: always   # ⭐ 이 줄 추가
 
   kafka:
     # 도커 서비스명(kafka:29092)이 아니라 내 컴퓨터 포트(localhost:9092)로 접속
