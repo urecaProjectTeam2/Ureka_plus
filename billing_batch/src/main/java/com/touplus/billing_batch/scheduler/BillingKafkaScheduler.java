@@ -29,10 +29,11 @@ public class BillingKafkaScheduler {
     @Transactional
     public void sendBillingResult() {
         List<BillingResult> targets = billingResultRepository.findBySendStatusOrderById(SendStatus.READY);
+        log.info("빌링 카프카 스케줄 열림?");
 
         for (BillingResult billing : targets) {
             try {
-                log.info("Trying to send billingResultId={}", billing.getId());
+                log.info("빌링 카프카 스케줄", billing.getId());
 
                 // Entity → DTO 변환
                 BillingResultMessage message = new BillingResultMessage();

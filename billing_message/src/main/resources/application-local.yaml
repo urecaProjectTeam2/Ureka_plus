@@ -16,3 +16,4 @@ spring:
     consumer:
       group-id: billing-group
       auto-offset-reset: earliest
+      max-poll-records: 500

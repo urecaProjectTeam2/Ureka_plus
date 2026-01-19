@@ -6,7 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
-public class BillingResultMessage {
+public class BillingResultDto {
     private Long id;
     private LocalDate settlementMonth;
     private Long userId;
