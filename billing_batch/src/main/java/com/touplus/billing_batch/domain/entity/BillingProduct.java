@@ -1,5 +1,6 @@
 package com.touplus.billing_batch.domain.entity;
 
+import com.touplus.billing_batch.domain.enums.ProductType;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -1,4 +1,4 @@
-package com.touplus.billing_batch.domain.entity;
+package com.touplus.billing_batch.domain.enums;
 
 public enum SendStatus {
     READY,

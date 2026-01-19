@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import com.touplus.billing_batch.domain.dto.BillingCalculationResult;
 import com.touplus.billing_batch.domain.entity.BillingResult;
-import com.touplus.billing_batch.domain.entity.SendStatus;
+import com.touplus.billing_batch.domain.enums.SendStatus;
 import com.touplus.billing_batch.domain.repository.BillingResultRepository;
 
 @Builder
