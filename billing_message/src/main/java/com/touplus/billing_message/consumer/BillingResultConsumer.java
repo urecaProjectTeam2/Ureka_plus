@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import com.touplus.billing_message.domain.dto.BillingResultDto;
 import com.touplus.billing_message.domain.entity.BillingSnapshot;
 import com.touplus.billing_message.domain.respository.BillingSnapshotJdbcRepository;
+import com.touplus.billing_message.processor.MessageProcessor;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 public class BillingResultConsumer {
 
     private final BillingSnapshotJdbcRepository jdbcRepository;
+    private final MessageProcessor messageProcessor;
+
 
     @KafkaListener(
         topics = "billing-result",
@@ -64,7 +67,14 @@ public class BillingResultConsumer {
             if (!toUpsert.isEmpty()) {
                 jdbcRepository.batchUpsertByUserMonth(toUpsert);
                 log.info("billing_snapshot upsert 요청={}건", toUpsert.size());
+
+                // Message 생성 (각 snapshot에 대해 처리)
+                for (BillingSnapshot snapshot : toUpsert) {
+                    messageProcessor.process(snapshot);
+                }
+                log.info("Message 생성 완료={}건", toUpsert.size());
             }
+
 
             ack.acknowledge();
             log.info("데이터 넣기 끝!");
