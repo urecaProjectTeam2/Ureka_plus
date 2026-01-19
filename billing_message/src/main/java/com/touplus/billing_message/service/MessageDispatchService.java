@@ -39,9 +39,11 @@ public class MessageDispatchService {
     public void dispatchDueMessages() {
         List<Long> messageIds = claimNextMessages(LocalDateTime.now());
         if (messageIds.isEmpty()) {
+            log.debug("No due messages found");
             return;
         }
 
+        log.info("Dispatching {} messages", messageIds.size());
         for (Long messageId : messageIds) {
             messageTaskExecutor.execute(() -> processMessage(messageId));
         }
@@ -49,22 +51,27 @@ public class MessageDispatchService {
 
     @Transactional
     public List<Long> claimNextMessages(LocalDateTime now) {
+        log.info("Claiming messages at: {}", now);  // 추가
         List<Long> messageIds = messageRepository.lockNextMessageIds(now, batchSize);
+        log.info("Found messageIds: {}", messageIds);  // 추가
         if (messageIds.isEmpty()) {
             return messageIds;
         }
 
         // TEMP: use SENT as in-progress marker until SENDING is added.
         messageRepository.markSentByIds(messageIds);
+        log.debug("Claimed {} messages", messageIds.size());
         return messageIds;
     }
 
     public void processMessage(Long messageId) {
         Message message = messageRepository.findById(messageId).orElse(null);
         if (message == null) {
+            log.warn("Message not found messageId={}", messageId);
             return;
         }
 
+        log.info("Processing messageId={} retryCount={}", messageId, message.getRetryCount());
         MessageSnapshot snapshot = messageSnapshotRepository.findById(messageId).orElse(null);
         if (snapshot == null) {
             log.warn("Missing message_snapshot for messageId={}", messageId);
@@ -78,6 +85,7 @@ public class MessageDispatchService {
         if (messagePolicy.isInBanWindow(now, banInfo)) {
             LocalDateTime nextAllowed = messagePolicy.nextAllowedTime(now, banInfo);
             messageRepository.defer(messageId, nextAllowed);
+            log.info("Deferred messageId={} until {}", messageId, nextAllowed);
             return;
         }
 
@@ -93,6 +101,7 @@ public class MessageDispatchService {
             LocalDateTime nextRetry = messagePolicy.nextRetryAt(LocalDateTime.now(), message.getRetryCount());
             LocalDateTime adjustedRetry = messagePolicy.adjustForBan(nextRetry, banInfo);
             messageRepository.markFailed(messageId, adjustedRetry);
+            log.info("Retry scheduled messageId={} at {}", messageId, adjustedRetry);
             return;
         }
 
@@ -109,11 +118,13 @@ public class MessageDispatchService {
 
         if (result.success()) {
             messageRepository.markSent(messageId);
+            log.info("Message sent messageId={} type={}", messageId, messageType);
             return;
         }
 
         LocalDateTime nextRetry = messagePolicy.nextRetryAt(LocalDateTime.now(), message.getRetryCount());
         LocalDateTime adjustedRetry = messagePolicy.adjustForBan(nextRetry, banInfo);
         messageRepository.markFailed(messageId, adjustedRetry);
+        log.info("Message failed messageId={} type={} retryAt={}", messageId, messageType, adjustedRetry);
     }
 }
