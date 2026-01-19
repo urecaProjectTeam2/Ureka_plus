@@ -1,5 +1,6 @@
 package com.touplus.billing_batch.jobs.billing.step.listener;
 
+import com.touplus.billing_batch.common.BillingException;
 import com.touplus.billing_batch.domain.entity.BillingUser;
 import com.touplus.billing_batch.domain.dto.BillingCalculationResult;
 import lombok.extern.slf4j.Slf4j;
@@ -12,22 +13,28 @@ public class BillingSkipListener implements SkipListener<BillingUser, BillingCal
 
     @Override
     public void onSkipInRead(Throwable t) {
-        // 읽기 단계에서 에러 발생 시 (예: DB 조회 실패 등)
+        // DB에서 정산 대상자(BillingUser)를 읽어올 때 발생한 에러
         log.error(">> [Skip In Read] Cause: {}", t.getMessage());
     }
 
     @Override
     public void onSkipInProcess(BillingUser item, Throwable t) {
-        // 프로세서 단계에서 에러 발생 시 (예: 정산 금액 계산 로직 오류 등)
-        // BillingUser 엔티티의 userId를 사용하여 누가 실패했는지 기록
-        log.error(">> [Skip In Process] UserID: {}, Reason: {}",
-                item.getUserId(), t.getMessage());
+        // BillingItemProcessor에서 금액 계산 로직 수행 중 발생한 에러
+        if (t instanceof BillingException) {
+            BillingException be = (BillingException) t;
+            log.error(">> [Skip In Process] 비즈니스 에러 - UserID: {}, Code: {}, Message: {}",
+                    be.getUserId(), be.getErrorCode(), be.getMessage());
+        } else {
+            log.error(">> [Skip In Process] 일반 에러 - UserID: {}, Message: {}",
+                    item.getUserId(), t.getMessage());
+        }
     }
 
     @Override
     public void onSkipInWrite(BillingCalculationResult item, Throwable t) {
-        // 쓰기 단계에서 에러 발생 시 (예: 중복 키 제약조건 위반, DB 커넥션, 트랜잭션 실패 등)
-        log.error(">> [Skip In Write] UserID: {}, Reason: {}",
-                item.getUserId(), t.getMessage());
+        // BillingItemWriter에서 최종 정산 결과를 DB에 저장할 때 발생한 에러
+        // (예: 중복 데이터 삽입, JSON 변환 오류 등)
+        log.error(">> [Skip In Write] UserID: {}, TotalPrice: {}, Reason: {}",
+                item.getUserId(), item.getTotalPrice(), t.getMessage());
     }
 }

@@ -1,5 +1,6 @@
 package com.touplus.billing_batch.jobs.billing;
 
+import com.touplus.billing_batch.common.BillingException;
 import com.touplus.billing_batch.jobs.billing.step.listener.BillingSkipListener;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -36,10 +37,10 @@ public class BillingJobConfig {
                 .reader(reader)
                 .processor(processor)
                 .writer(writer)
-                .faultTolerant()
-                .skip(Exception.class)
-                .skipLimit(10)
-                .listener(billingSkipListener) // 리스너 등록
+                .faultTolerant()                 // 2. 내결함성 기능 활성화
+                .skip(BillingException.class)           // 3. 모든 예외에 대해 Skip 허용  --> 에러 발생 시 step 중단 없이 리스너가 가로챔
+                .skipLimit(10)                   // 4. 최대 10번까지 Skip 허용
+                .listener(billingSkipListener)   // 5. 리스너 등록
                 .build();
     }
 
