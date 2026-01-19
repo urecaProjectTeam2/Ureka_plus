@@ -3,6 +3,7 @@ package com.touplus.billing_batch.jobs.billing.step.reader;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.touplus.billing_batch.domain.dto.*;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.batch.core.StepExecution;
@@ -15,7 +16,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import com.touplus.billing_batch.domain.entity.*;
-import com.touplus.billing_batch.domain.dto.BillingUserBillingInfoDto;
 import com.touplus.billing_batch.domain.repository.*;
 
 @Component
@@ -98,18 +98,22 @@ public class BillingItemReader implements ItemStreamReader<BillingUserBillingInf
 
         List<Long> userIds = users.stream().map(BillingUser::getUserId).toList();
 
-        // 2. 청크 단위로 각 테이블 벌크 조회
-        Map<Long, List<UserSubscribeProduct>> uspMap = uspRepository.findByUserIdIn(userIds).stream()
-                .collect(Collectors.groupingBy(p -> p.getUser().getUserId()));
+        // 엔티티 -> DTO 변환 + Map 생성
+        Map<Long, List<UserSubscribeProductDto>> uspMap = uspRepository.findByUserIdIn(userIds).stream()
+                .map(UserSubscribeProductDto::fromEntity)
+                .collect(Collectors.groupingBy(UserSubscribeProductDto::getUserId));
 
-        Map<Long, List<Unpaid>> unpaidMap = unpaidRepository.findByUserIdIn(userIds).stream()
-                .collect(Collectors.groupingBy(u -> u.getUser().getUserId()));
+        Map<Long, List<UnpaidDto>> unpaidMap = unpaidRepository.findByUserIdIn(userIds).stream()
+                .map(UnpaidDto::fromEntity)
+                .collect(Collectors.groupingBy(UnpaidDto::getUserId));
 
-        Map<Long, List<AdditionalCharge>> chargeMap = chargeRepository.findByUserIdIn(userIds).stream()
-                .collect(Collectors.groupingBy(c -> c.getUser().getUserId()));
+        Map<Long, List<AdditionalChargeDto>> chargeMap = chargeRepository.findByUserIdIn(userIds).stream()
+                .map(AdditionalChargeDto::fromEntity)
+                .collect(Collectors.groupingBy(AdditionalChargeDto::getUserId));
 
-        Map<Long, List<UserSubscribeDiscount>> discountMap = discountRepository.findByUserIdIn(userIds).stream()
-                .collect(Collectors.groupingBy(d -> d.getBillingUser().getUserId()));
+        Map<Long, List<UserSubscribeDiscountDto>> discountMap = discountRepository.findByUserIdIn(userIds).stream()
+                .map(UserSubscribeDiscountDto::fromEntity)
+                .collect(Collectors.groupingBy(UserSubscribeDiscountDto::getUserId));
 
         // 3. DTO 조립 후 버퍼에 추가
         for (BillingUser user : users) {
@@ -122,5 +126,6 @@ public class BillingItemReader implements ItemStreamReader<BillingUserBillingInf
             );
             buffer.add(dto);
         }
+        entityManager.clear();
     }
 }

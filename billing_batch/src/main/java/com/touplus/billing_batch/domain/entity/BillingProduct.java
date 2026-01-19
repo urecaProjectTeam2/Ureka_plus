@@ -2,28 +2,25 @@ package com.touplus.billing_batch.domain.entity;
 
 import com.touplus.billing_batch.domain.enums.ProductType;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
-@Entity
-@Table(name = "billing_product")
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class BillingProduct {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "product_id")
+    @Column(name = "product_id", nullable = false)
     private Long productId;
 
+    @Column(name = "product_name")
     private String productName;
 
-    @Enumerated(EnumType.STRING)
+    @Column(name = "product_type")
     private ProductType productType;
 
+    @Column(name = "price")
     private Integer price;
 }

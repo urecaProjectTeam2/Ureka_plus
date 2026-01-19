@@ -1,6 +1,5 @@
 package com.touplus.billing_batch.domain.dto;
 
-import com.touplus.billing_batch.domain.entity.BillingUser;
 import com.touplus.billing_batch.domain.entity.Unpaid;
 import lombok.*;
 
@@ -21,9 +20,11 @@ public class UnpaidDto {
 
     // Entity -> DTO 변환
     public static UnpaidDto fromEntity(Unpaid entity) {
+        if (entity == null) return null;
+
         return UnpaidDto.builder()
                 .unpaidId(entity.getId())
-                .userId(entity.getUser() != null ? entity.getUser().getUserId() : null)
+                .userId(entity.getUserId())
                 .unpaidPrice(entity.getUnpaidPrice())
                 .unpaidMonth(entity.getUnpaidMonth())
                 .paid(entity.getPaid() != null ? entity.getPaid() : Boolean.FALSE)
@@ -31,10 +32,10 @@ public class UnpaidDto {
     }
 
     // DTO -> Entity 변환
-    public Unpaid toEntity(BillingUser user) {
+    public Unpaid toEntity() {
         return Unpaid.builder()
                 .id(this.unpaidId)
-                .user(user)
+                .userId(this.userId)
                 .unpaidPrice(this.unpaidPrice)
                 .unpaidMonth(this.unpaidMonth)
                 .paid(this.paid != null ? this.paid : Boolean.FALSE)

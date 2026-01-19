@@ -2,19 +2,18 @@ package com.touplus.billing_batch.domain.dto;
 
 import com.touplus.billing_batch.domain.entity.BillingResult;
 import com.touplus.billing_batch.domain.enums.SendStatus;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Data
-@Builder
-@AllArgsConstructor
+@Getter
+@Setter
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class BillingResultDto {
+
     private Long id;
     private LocalDate settlementMonth;
     private Long userId;
@@ -26,6 +25,8 @@ public class BillingResultDto {
 
     // Entity -> DTO
     public static BillingResultDto fromEntity(BillingResult entity) {
+        if (entity == null) return null;
+
         return BillingResultDto.builder()
                 .id(entity.getId())
                 .settlementMonth(entity.getSettlementMonth())
@@ -48,6 +49,7 @@ public class BillingResultDto {
                 .settlementDetails(this.settlementDetails)
                 .sendStatus(this.sendStatus)
                 .batchExecutionId(this.batchExecutionId)
+                .processedAt(this.processedAt)
                 .build();
     }
 }

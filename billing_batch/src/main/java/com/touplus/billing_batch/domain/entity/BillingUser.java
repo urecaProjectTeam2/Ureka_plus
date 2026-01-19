@@ -7,7 +7,6 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "billing_user")
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
@@ -15,7 +14,6 @@ import lombok.NoArgsConstructor;
 public class BillingUser {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     private Long userId;
 }
