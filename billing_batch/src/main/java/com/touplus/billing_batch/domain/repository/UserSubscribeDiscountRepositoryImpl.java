@@ -16,7 +16,7 @@ import java.util.List;
 
 @Repository
 @RequiredArgsConstructor
-public class UserSubscribeDiscountRepositoryImpl extends UserSubscribeDiscountRepository {
+public class UserSubscribeDiscountRepositoryImpl implements UserSubscribeDiscountRepository {
 
     private final NamedParameterJdbcTemplate namedJdbcTemplate;
 

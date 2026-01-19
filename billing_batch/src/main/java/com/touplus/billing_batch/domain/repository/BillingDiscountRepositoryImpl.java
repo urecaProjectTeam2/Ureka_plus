@@ -13,7 +13,7 @@ import java.util.Map;
 
 @Repository
 @RequiredArgsConstructor
-public class BillingDiscountRepositoryImpl extends BillingDiscountRepository {
+public class BillingDiscountRepositoryImpl implements BillingDiscountRepository {
 
     private final NamedParameterJdbcTemplate namedJdbcTemplate;
 
@@ -47,7 +47,7 @@ public class BillingDiscountRepositoryImpl extends BillingDiscountRepository {
         String sql = """
             SELECT *
             FROM billing_discount
-            WHERE billing_discount_id = :id
+            WHERE discount_id = :id
         """;
 
         return namedJdbcTemplate.queryForObject(
