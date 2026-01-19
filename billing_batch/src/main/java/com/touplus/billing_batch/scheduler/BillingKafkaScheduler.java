@@ -39,7 +39,7 @@ public class BillingKafkaScheduler {
                 message.setUserId(billing.getUserId());
                 message.setTotalPrice(billing.getTotalPrice());
                 message.setSettlementDetails(billing.getSettlementDetails());
-                message.setSendStatus(billing.getSendStatus().name());
+                message.setSendStatus(billing.getSendStatus());
                 message.setBatchExecutionId(billing.getBatchExecutionId());
                 message.setProcessedAt(billing.getProcessedAt());
 

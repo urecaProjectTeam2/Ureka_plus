@@ -12,7 +12,6 @@ import com.touplus.billing_batch.domain.entity.UserSubscribeProduct;
 import com.touplus.billing_batch.domain.repository.BillingProductRepository;
 import com.touplus.billing_batch.domain.repository.UserSubscribeProductRepository;
 
-
 @Component
 public class BillingItemProcessor
         implements ItemProcessor<BillingUser, BillingCalculationResult> {
