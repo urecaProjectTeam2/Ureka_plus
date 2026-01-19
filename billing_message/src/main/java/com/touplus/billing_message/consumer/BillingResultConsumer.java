@@ -1,17 +1,17 @@
 package com.touplus.billing_message.consumer;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import com.touplus.billing_message.domain.dto.BillingResultDto;
 import com.touplus.billing_message.domain.entity.BillingSnapshot;
-import com.touplus.billing_message.domain.respository.BillingSnapshotRepository;
+import com.touplus.billing_message.domain.respository.BillingSnapshotJdbcRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,68 +21,57 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class BillingResultConsumer {
 
-    private final BillingSnapshotRepository billingSnapshotRepository;
+    private final BillingSnapshotJdbcRepository jdbcRepository;
 
     @KafkaListener(
         topics = "billing-result",
         groupId = "billing-message-group",
         containerFactory = "kafkaListenerContainerFactory"
-    // 수동 커밋을 위해 container factory에서 AckMode MANUAL 설정 필요 - 나중에 여기에 적으면 될 듯
     )
-    @Transactional
-    public void consume(BillingResultDto message, Acknowledgment ack) {
-    	 System.out.println("빌링 메시지 잘 돌아가나요?1");
+    public void consume(
+            List<BillingResultDto> messages,
+            Acknowledgment ack
+    ) {
         try {
-        	// 메시지 정구 달이 현재 시점 기준으로 한 달 전이어야 함, ex) 청구 달 :12, 현재 처리 달:1
-             LocalDate now = LocalDate.now();
-             
-             LocalDate messageMonth = message.getSettlementMonth();
-             
-             if (messageMonth == null) {
-                 log.warn("settlementMonth가 null입니다. billingId={}", message.getId());
-                 ack.acknowledge();
-                 return;
-             }
-             messageMonth = messageMonth.plusMonths(1);
-             System.out.println("SettlementMonth=" + message.getSettlementMonth());
+        	log.info("Kafka batch size={}", messages.size());
+            LocalDate now = LocalDate.now();
+            List<BillingSnapshot> toUpsert = new ArrayList<>();
 
-             
-             // 데이터를 처리하는 달이 아니면 return
-             if (messageMonth.getYear() != now.getYear() || messageMonth.getMonth() != now.getMonth()) {
-                 log.info(messageMonth + "가 아닌 달", message.getId());
-                 System.out.println("빌링 메시지 잘 돌아가나요?2");
-                 ack.acknowledge();
-                 return;
-             }
-             
-            boolean exists = billingSnapshotRepository.existsByUserIdAndSettlementMonth(
-                message.getUserId(), message.getSettlementMonth()
-            );
+            for (BillingResultDto message : messages) {
+                LocalDate settlementMonth = message.getSettlementMonth();
+                if (settlementMonth == null) continue;
 
-            if (exists) { // snapshot에 중복 데이터가 있으면
-                log.info("snapshot에 중복 데이터 있음", message.getId());
-                ack.acknowledge();
-                return;          
+                LocalDate processMonth = settlementMonth.plusMonths(1);
+                if (processMonth.getYear() != now.getYear()
+                    || processMonth.getMonth() != now.getMonth()) {
+                    continue;
+                }
+
+                toUpsert.add(new BillingSnapshot(
+                        message.getId(),
+                        settlementMonth,
+                        message.getUserId(),
+                        message.getTotalPrice(),
+                        message.getSettlementDetails() != null
+                                ? message.getSettlementDetails().toString()
+                                : "{}"
+                ));
             }
-        	
-            BillingSnapshot snapshot = new BillingSnapshot(
-                    message.getId(),
-                    message.getSettlementMonth(),
-                    message.getUserId(),
-                    message.getTotalPrice(),
-                    message.getSettlementDetails() != null
-                            ? message.getSettlementDetails().toString() : "{}"
-            );
 
-            billingSnapshotRepository.save(snapshot);
-            log.info("billing_snapshot 저장 완료 billingId={}", snapshot.getBillingId());
+            if (!toUpsert.isEmpty()) {
+                jdbcRepository.batchUpsertByUserMonth(toUpsert);
+                log.info("billing_snapshot upsert 요청={}건", toUpsert.size());
+            }
+
             ack.acknowledge();
 
         } catch (Exception e) {
-            // db 실패 등 처리 에러가 날 경우
-            log.error("Kafka 메시지 처리 실패 billingId={}", message.getId(), e);
+            log.error("Kafka batch 처리 실패", e);
+            // ACK 안 함 → 재처리
         }
     }
+
+
 
     // Map에서 Long 가져오기
     private Long getLong(Map<String, Object> map, String key) {
