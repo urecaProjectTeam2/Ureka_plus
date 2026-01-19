@@ -33,7 +33,8 @@ public class BillingResultConsumer {
             Acknowledgment ack
     ) {
         try {
-        	log.info("Kafka batch size={}", messages.size());
+        	log.error("배치 사이즈 에러", messages.size());
+        	log.info("배치 사이즈 일반", messages.size());
             LocalDate now = LocalDate.now();
             List<BillingSnapshot> toUpsert = new ArrayList<>();
 
@@ -58,13 +59,15 @@ public class BillingResultConsumer {
                 ));
             }
 
+            log.error("for문 정상 종료, toUpsert size={}", toUpsert.size());
+            
             if (!toUpsert.isEmpty()) {
                 jdbcRepository.batchUpsertByUserMonth(toUpsert);
                 log.info("billing_snapshot upsert 요청={}건", toUpsert.size());
             }
 
             ack.acknowledge();
-
+            log.info("데이터 넣기 끝!");
         } catch (Exception e) {
             log.error("Kafka batch 처리 실패", e);
             // ACK 안 함 → 재처리

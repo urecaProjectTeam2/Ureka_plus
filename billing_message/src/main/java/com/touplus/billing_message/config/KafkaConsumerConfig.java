@@ -29,13 +29,19 @@ public class KafkaConsumerConfig {
     public ConsumerFactory<String, BillingResultDto> consumerFactory() {
         Map<String, Object> props = kafkaProperties.buildConsumerProperties(null);
 
+        JsonDeserializer<BillingResultDto> deserializer =
+                new JsonDeserializer<>(BillingResultDto.class);
+        deserializer.addTrustedPackages("*"); // ⭐ 필수
+        deserializer.setRemoveTypeHeaders(false);
+        deserializer.setUseTypeMapperForKey(false);
+
         return new DefaultKafkaConsumerFactory<>(
                 props,
                 new StringDeserializer(),
-                new JsonDeserializer<>(BillingResultDto.class, false)
+                deserializer
         );
     }
-    
+
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, BillingResultDto> kafkaListenerContainerFactory(
             ConsumerFactory<String, BillingResultDto> consumerFactory) {

@@ -14,6 +14,9 @@ spring:
     # 도커 서비스명(kafka:29092)이 아니라 내 컴퓨터 포트(localhost:9092)로 접속
     bootstrap-servers: localhost:9092
     consumer:
-      group-id: billing-group
-      auto-offset-reset: earliest
+      group-id: billing-message-group
+      auto-offset-reset: earliest     
+      enable-auto-commit: false
       max-poll-records: 500
+      fetch-min-size: 1048576
+      fetch-max-wait: 500
