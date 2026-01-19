@@ -1,14 +1,11 @@
 package com.touplus.billing_batch.domain.entity;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
 import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "user_subscribe_product", indexes = {
-        @Index(name = "idx_usp_user_active", columnList = "user_id, deleted_at")
-})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,7 +14,7 @@ import java.time.LocalDateTime;
 public class UserSubscribeProduct {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "user_subscribe_product_id", nullable = false)
     private Long userSubscribeProductId;
 
     @Column(name = "created_month", nullable = false)
@@ -26,12 +23,9 @@ public class UserSubscribeProduct {
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 
-    // ===== FK 연관관계 =====
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "fk_usp_user"))
-    private BillingUser user;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false, foreignKey = @ForeignKey(name = "fk_usp_product"))
-    private BillingProduct product;
+    @Column(name = "product_id", nullable = false)
+    private Long productId;
 }

@@ -26,19 +26,19 @@ public class UserSubscribeDiscountDto {
         return UserSubscribeDiscountDto.builder()
                 .udsId(entity.getUdsId())
                 .discountSubscribeMonth(entity.getDiscountSubscribeMonth())
-                .userId(entity.getBillingUser() != null ? entity.getBillingUser().getUserId() : null)
-                .discountId(entity.getBillingDiscount() != null ? entity.getBillingDiscount().getDiscountId() : null)
-                .productId(entity.getBillingProduct() != null ? entity.getBillingProduct().getProductId() : null)
+                .userId(entity.getUserId())
+                .discountId(entity.getDiscountId())
+                .productId(entity.getProductId())
                 .build();
     }
 
-    public UserSubscribeDiscount toEntity(BillingUser user, BillingDiscount discount, BillingProduct product) {
+    public UserSubscribeDiscount toEntity() {
         return UserSubscribeDiscount.builder()
                 .udsId(this.udsId)
                 .discountSubscribeMonth(this.discountSubscribeMonth)
-                .billingUser(user)
-                .billingDiscount(discount)
-                .billingProduct(product)
+                .userId(this.userId)
+                .discountId(this.discountId)
+                .productId(this.productId)
                 .build();
     }
 }

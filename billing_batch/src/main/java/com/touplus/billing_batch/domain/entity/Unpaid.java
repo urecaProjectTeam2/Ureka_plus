@@ -4,11 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
 
-@Entity
-@Table(name = "unpaid", indexes = {
-        @Index(name = "idx_unpaid_month_paid", columnList = "unpaid_month, is_paid"),
-        @Index(name = "idx_unpaid_user", columnList = "user_id")
-})
 @Getter
 @Setter
 @NoArgsConstructor
@@ -17,13 +12,11 @@ import java.time.LocalDate;
 public class Unpaid {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "unpaid_id")
+    @Column(name = "unpaid_id", nullable = false)
     private Long id;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "fk_unpaid_user"))
-    private BillingUser user;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
     @Column(name = "unpaid_price", nullable = false)
     private Integer unpaidPrice;

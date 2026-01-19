@@ -1,7 +1,5 @@
 package com.touplus.billing_batch.domain.dto;
 
-import com.touplus.billing_batch.domain.entity.BillingProduct;
-import com.touplus.billing_batch.domain.entity.BillingUser;
 import com.touplus.billing_batch.domain.entity.UserSubscribeProduct;
 import lombok.*;
 
@@ -23,33 +21,25 @@ public class UserSubscribeProductDto {
 
     // Entity -> DTO 변환
     public static UserSubscribeProductDto fromEntity(UserSubscribeProduct entity) {
+        if (entity == null) return null;
+
         return UserSubscribeProductDto.builder()
                 .userSubscribeProductId(entity.getUserSubscribeProductId())
                 .createdMonth(entity.getCreatedMonth())
                 .deletedAt(entity.getDeletedAt())
-                .userId(entity.getUser() != null ? entity.getUser().getUserId() : null)
-                .productId(entity.getProduct() != null ? entity.getProduct().getProductId() : null)
+                .userId(entity.getUserId())
+                .productId(entity.getProductId())
                 .build();
     }
 
     // DTO -> Entity 변환
     public UserSubscribeProduct toEntity() {
-        BillingUser user = null;
-        if (this.userId != null) {
-            user = BillingUser.builder().userId(this.userId).build();
-        }
-
-        BillingProduct product = null;
-        if (this.productId != null) {
-            product = BillingProduct.builder().productId(this.productId).build();
-        }
-
         return UserSubscribeProduct.builder()
                 .userSubscribeProductId(this.userSubscribeProductId)
                 .createdMonth(this.createdMonth)
                 .deletedAt(this.deletedAt)
-                .user(user)
-                .product(product)
+                .userId(this.userId)
+                .productId(this.productId)
                 .build();
     }
 }
