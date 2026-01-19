@@ -15,10 +15,8 @@ import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
@@ -31,13 +29,11 @@ public class MessageDispatchService {
     private final UserBanRepository userBanRepository;
     private final MessageSender messageSender;
     private final MessagePolicy messagePolicy;
+    private final MessageClaimService messageClaimService;
     private final TaskExecutor messageTaskExecutor;
 
-    @Value("${message.dispatch.batch-size:40}")
-    private int batchSize;
-
     public void dispatchDueMessages() {
-        List<Long> messageIds = claimNextMessages(LocalDateTime.now());
+        List<Long> messageIds = messageClaimService.claimNextMessages(LocalDateTime.now());
         if (messageIds.isEmpty()) {
             log.debug("No due messages found");
             return;
@@ -47,21 +43,6 @@ public class MessageDispatchService {
         for (Long messageId : messageIds) {
             messageTaskExecutor.execute(() -> processMessage(messageId));
         }
-    }
-
-    @Transactional
-    public List<Long> claimNextMessages(LocalDateTime now) {
-        log.info("Claiming messages at: {}", now);  // 추가
-        List<Long> messageIds = messageRepository.lockNextMessageIds(now, batchSize);
-        log.info("Found messageIds: {}", messageIds);  // 추가
-        if (messageIds.isEmpty()) {
-            return messageIds;
-        }
-
-        // TEMP: use SENT as in-progress marker until SENDING is added.
-        messageRepository.markSentByIds(messageIds);
-        log.debug("Claimed {} messages", messageIds.size());
-        return messageIds;
     }
 
     public void processMessage(Long messageId) {
