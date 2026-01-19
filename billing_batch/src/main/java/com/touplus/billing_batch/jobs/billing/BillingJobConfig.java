@@ -1,5 +1,6 @@
 package com.touplus.billing_batch.jobs.billing;
 
+import com.touplus.billing_batch.jobs.billing.step.listener.BillingSkipListener;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
@@ -27,13 +28,18 @@ public class BillingJobConfig {
             PlatformTransactionManager transactionManager,
             BillingItemReader reader,
             BillingItemProcessor processor,
-            BillingItemWriter writer
+            BillingItemWriter writer,
+            BillingSkipListener billingSkipListener // 리스너 주입
     ) {
         return new StepBuilder("billingStep", jobRepository)
                 .<BillingUser, BillingCalculationResult>chunk(100, transactionManager)
                 .reader(reader)
                 .processor(processor)
                 .writer(writer)
+                .faultTolerant()
+                .skip(Exception.class)
+                .skipLimit(10)
+                .listener(billingSkipListener) // 리스너 등록
                 .build();
     }
 
