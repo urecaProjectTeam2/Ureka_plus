@@ -2,20 +2,23 @@ package com.touplus.billing_batch.domain.dto;
 
 import com.touplus.billing_batch.domain.entity.BillingResult;
 import com.touplus.billing_batch.domain.enums.SendStatus;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-@Data
+@Getter
+@Setter
+@ToString
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class BillingResultDto {
+
+    @EqualsAndHashCode.Include
     private Long id;
+
     private LocalDate settlementMonth;
     private Long userId;
     private Integer totalPrice;
