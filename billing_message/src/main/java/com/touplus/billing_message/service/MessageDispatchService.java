@@ -29,7 +29,6 @@ public class MessageDispatchService {
         this.messageDispatchTaskExecutor = messageTaskExecutor;
     }
 
-
     public void dispatchDueMessages() {
         List<Long> messageIds = messageClaimService.claimNextMessages(LocalDateTime.now());
         if (messageIds.isEmpty()) {
