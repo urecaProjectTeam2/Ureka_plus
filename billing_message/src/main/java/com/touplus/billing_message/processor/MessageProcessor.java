@@ -4,6 +4,7 @@ import com.touplus.billing_message.domain.entity.BillingSnapshot;
 import com.touplus.billing_message.domain.entity.Message;
 import com.touplus.billing_message.domain.entity.User;
 import com.touplus.billing_message.domain.respository.MessageRepository;
+import com.touplus.billing_message.domain.respository.MessageJdbcRepository;
 import com.touplus.billing_message.domain.respository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,17 +26,80 @@ public class MessageProcessor {
 
     private final UserRepository userRepository;
     private final MessageRepository messageRepository;
+    private final MessageJdbcRepository messageJdbcRepository;
 
     /**
-     * BillingSnapshot을 받아 Message를 생성하고 저장
+     * BillingSnapshot 목록을 받아 일괄 처리 (Batch)
+     */
+    @Transactional
+    public void processBatch(java.util.List<BillingSnapshot> snapshots) {
+        if (snapshots.isEmpty()) return;
+
+        // 1. 중복 체크 (DB에 이미 있는 billingId 조회)
+        java.util.List<Long> billingIds = snapshots.stream()
+            .map(BillingSnapshot::getBillingId)
+            .toList();
+        
+        java.util.Set<Long> existingBillingIds = messageRepository.findExistingBillingIds(billingIds);
+
+        // 2. 처리할 대상 필터링
+        java.util.List<BillingSnapshot> targetSnapshots = snapshots.stream()
+            .filter(s -> !existingBillingIds.contains(s.getBillingId()))
+            .toList();
+
+        if (targetSnapshots.isEmpty()) {
+            log.info("모든 데이터가 중복되어 처리를 건너뜁니다. count={}", snapshots.size());
+            return;
+        }
+
+        // 3. 유저 정보 일괄 조회
+        java.util.List<Long> userIds = targetSnapshots.stream()
+            .map(BillingSnapshot::getUserId)
+            .distinct()
+            .toList();
+        
+        java.util.Map<Long, User> userMap = userRepository.findAllById(userIds).stream()
+            .collect(java.util.stream.Collectors.toMap(User::getUserId, u -> u));
+
+        // 4. Message 생성
+        java.util.List<Message> messages = new java.util.ArrayList<>();
+        
+        for (BillingSnapshot snapshot : targetSnapshots) {
+            User user = userMap.get(snapshot.getUserId());
+            if (user == null) {
+                log.warn("유저 정보를 찾을 수 없어 건너뜁니다: userId={}", snapshot.getUserId());
+                continue;
+            }
+
+            LocalDateTime scheduledAt = calculateScheduledTime(user);
+            messages.add(new Message(
+                snapshot.getBillingId(),
+                snapshot.getUserId(),
+                scheduledAt
+            ));
+        }
+
+        // 5. Batch Insert
+        if (!messages.isEmpty()) {
+            messageJdbcRepository.batchInsert(messages);
+            log.info("Message 배치 저장 완료: count={}", messages.size());
+        }
+    }
+
+    /**
+     * BillingSnapshot을 받아 Message를 생성하고 저장 (단건 처리)
      */
     @Transactional
     public void process(BillingSnapshot snapshot) {
+        // 0. 중복 체크
+        if (messageRepository.existsByBillingId(snapshot.getBillingId())) {
+            log.debug("이미 존재하는 Message: billingId={}", snapshot.getBillingId());
+            return;
+        }
+
         // 1. 유저 정보 조회
         User user = userRepository.findById(snapshot.getUserId())
             .orElseThrow(() -> new RuntimeException("유저를 찾을 수 없습니다: " + snapshot.getUserId()));
-
-        log.info("유저 정보 조회 완료: userId={}, sendingDay={}", user.getUserId(), user.getSendingDay());
 
         // 2. 발송 예정 시간 계산
         LocalDateTime scheduledAt = calculateScheduledTime(user);
@@ -48,8 +112,6 @@ public class MessageProcessor {
         );
 
         messageRepository.save(message);
-        log.info("Message 저장 완료: billingId={}, userId={}, scheduledAt={}",
-            snapshot.getBillingId(), snapshot.getUserId(), scheduledAt);
     }
 
     /**

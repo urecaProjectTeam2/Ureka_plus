@@ -75,10 +75,8 @@ public class BillingResultConsumer {
 
                 jdbcRepository.batchUpsertByUserMonth(toUpsert.subList(i, end));
 
-                // Message 생성 (각 snapshot에 대해 처리)
-                for (BillingSnapshot snapshot : toUpsert.subList(i, end)) {
-                    messageProcessor.process(snapshot);
-                }
+                // Message 생성 (배치 처리)
+                messageProcessor.processBatch(toUpsert.subList(i, end));
                 
                 Long totalCount = sdr.countAll();
                 if (totalCount == 10000L) {
