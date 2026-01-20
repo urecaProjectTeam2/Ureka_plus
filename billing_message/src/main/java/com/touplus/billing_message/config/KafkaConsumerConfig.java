@@ -27,25 +27,6 @@ public class KafkaConsumerConfig {
         this.kafkaProperties = kafkaProperties;
     }
 
-    /* 재현쓰 코드 : 내꺼에 이거 넣으면 역직렬화 해야 한다고 자꾸 에러떠서 일단 주석 처리함 함 얘기해봐야할 듯
-    @Bean
-    public ConsumerFactory<String, BillingResultDto> consumerFactory() {
-        Map<String, Object> props = kafkaProperties.buildConsumerProperties(null);
-
-        JsonDeserializer<BillingResultDto> deserializer =
-                new JsonDeserializer<>(BillingResultDto.class);
-        deserializer.addTrustedPackages("*"); 
-        deserializer.setRemoveTypeHeaders(false);
-        deserializer.setUseTypeMapperForKey(false);
-
-        return new DefaultKafkaConsumerFactory<>(
-                props,
-                new StringDeserializer(),
-                deserializer
-        );
-    }*/
-
-    // 미수용 코드
     @Bean public ConsumerFactory<String, BillingResultDto> consumerFactory() { 
     	
     	Map<String, Object> props = kafkaProperties.buildConsumerProperties(null); 
