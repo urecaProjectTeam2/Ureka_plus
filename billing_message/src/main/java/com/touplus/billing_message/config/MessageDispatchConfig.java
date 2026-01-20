@@ -11,7 +11,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 public class MessageDispatchConfig {
 
     @Bean
-    public TaskExecutor messageTaskExecutor(
+    public TaskExecutor messageDispatchTaskExecutor(
             @Value("${message.dispatch.pool-size:20}") int poolSize,
             @Value("${message.dispatch.queue-size:200}") int queueSize
     ) {

@@ -14,7 +14,7 @@ public class MessageDispatchService {
 
     private final MessageClaimService messageClaimService;
     private final MessageProcessService messageProcessService;
-    private final TaskExecutor messageTaskExecutor;
+    private final TaskExecutor messageDispatchTaskExecutor;
 
     public void dispatchDueMessages() {
         List<Long> messageIds = messageClaimService.claimNextMessages(LocalDateTime.now());
@@ -25,7 +25,7 @@ public class MessageDispatchService {
 
         log.info("메시지 {}건 발송 시작", messageIds.size());
         for (Long messageId : messageIds) {
-            messageTaskExecutor.execute(() -> processWithExceptionHandling(messageId));
+            messageDispatchTaskExecutor.execute(() -> processWithExceptionHandling(messageId));
         }
     }
 
@@ -61,7 +61,7 @@ public class MessageDispatchService {
 
         log.info("메시지 {}건 발송 시작 (스케줄 무시)", messageIds.size());
         for (Long messageId : messageIds) {
-            messageTaskExecutor.execute(() -> processWithExceptionHandling(messageId));
+            messageDispatchTaskExecutor.execute(() -> processWithExceptionHandling(messageId));
         }
 
         log.info("총 발송 시작: {}건", messageIds.size());
