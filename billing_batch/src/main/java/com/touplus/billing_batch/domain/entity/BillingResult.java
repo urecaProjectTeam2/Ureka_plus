@@ -48,6 +48,6 @@ public class BillingResult {
     }
 
     public void markFail() {
-        // this.sendStatus = SendStatus.FAIL;
+        this.sendStatus = SendStatus.FAIL;
     }
 }

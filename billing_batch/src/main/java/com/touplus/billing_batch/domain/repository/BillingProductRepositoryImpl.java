@@ -30,6 +30,7 @@ public class BillingProductRepositoryImpl implements BillingProductRepository {
     /**
      * JPA: findAll()
      */
+    @Override
     public List<BillingProduct> findAll() {
         String sql = """
             SELECT *
@@ -42,6 +43,7 @@ public class BillingProductRepositoryImpl implements BillingProductRepository {
     /**
      * JPA: findById()
      */
+    @Override
     public BillingProduct findById(Long id) {
         String sql = """
             SELECT *
@@ -59,6 +61,7 @@ public class BillingProductRepositoryImpl implements BillingProductRepository {
     /**
      * JPA: findByIdIn (배치 핵심)
      */
+    @Override
     public List<BillingProduct> findByIdIn(List<Long> productIds) {
         if (productIds == null || productIds.isEmpty()) {
             return List.of();

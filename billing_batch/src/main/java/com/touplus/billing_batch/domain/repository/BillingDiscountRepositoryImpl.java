@@ -31,6 +31,7 @@ public class BillingDiscountRepositoryImpl implements BillingDiscountRepository 
     /**
      * JPA: findAll()
      */
+    @Override
     public List<BillingDiscount> findAll() {
         String sql = """
             SELECT *
@@ -43,6 +44,7 @@ public class BillingDiscountRepositoryImpl implements BillingDiscountRepository 
     /**
      * JPA: findById()
      */
+    @Override
     public BillingDiscount findById(Long id) {
         String sql = """
             SELECT *

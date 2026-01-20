@@ -27,17 +27,14 @@ public class AdditionalChargeRepositoryimpl implements AdditionalChargeRepositor
                 .additionalChargeMonth(
                         rs.getDate("additional_charge_month").toLocalDate()
                 )
-                .user(
-                        BillingUser.builder()
-                                .userId(rs.getLong("user_id"))
-                                .build()
-                )
+                .userId(rs.getLong("user_id"))
                 .build();
     }
 
     /**
      * JPA: findByUser
      */
+    @Override
     public List<AdditionalCharge> findByUser(BillingUser user) {
         String sql = """
             SELECT *
@@ -54,6 +51,7 @@ public class AdditionalChargeRepositoryimpl implements AdditionalChargeRepositor
     /**
      * JPA: findByAdditionalChargeMonth
      */
+    @Override
     public List<AdditionalCharge> findByAdditionalChargeMonth(LocalDate month) {
         String sql = """
             SELECT *
@@ -70,6 +68,7 @@ public class AdditionalChargeRepositoryimpl implements AdditionalChargeRepositor
     /**
      * JPA: findByUserIdIn
      */
+    @Override
     public List<AdditionalCharge> findByUserIdIn(List<Long> userIds) {
         if (userIds == null || userIds.isEmpty()) {
             return List.of();

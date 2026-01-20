@@ -29,21 +29,9 @@ public class UserSubscribeDiscountRepositoryImpl implements UserSubscribeDiscoun
                 .discountSubscribeMonth(
                         rs.getObject("discount_subscribe_month", LocalDate.class)
                 )
-                .billingUser(
-                        BillingUser.builder()
-                                .userId(rs.getLong("user_id"))
-                                .build()
-                )
-                .billingDiscount(
-                        BillingDiscount.builder()
-                                .discountId(rs.getLong("discount_id"))
-                                .build()
-                )
-                .billingProduct(
-                        BillingProduct.builder()
-                                .productId(rs.getLong("product_id"))
-                                .build()
-                )
+                .userId(rs.getLong("user_id"))
+                .discountId(rs.getLong("discount_id"))
+                .productId(rs.getLong("product_id"))
                 .build();
     }
 
@@ -51,6 +39,7 @@ public class UserSubscribeDiscountRepositoryImpl implements UserSubscribeDiscoun
      * JPA:
      * findByUserIdIn(List<Long> userIds)
      */
+    @Override
     public List<UserSubscribeDiscount> findByUserIdIn(List<Long> userIds) {
         if (userIds == null || userIds.isEmpty()) {
             return List.of();

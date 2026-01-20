@@ -29,17 +29,14 @@ public class UnpaidRepositoryImpl implements UnpaidRepository{
                         rs.getDate("unpaid_month").toLocalDate()
                 )
                 .paid(rs.getBoolean("is_paid"))
-                .user(
-                        BillingUser.builder()
-                                .userId(rs.getLong("user_id"))
-                                .build()
-                )
+                .userId(rs.getLong("user_id"))
                 .build();
     }
 
     /**
      * JPA: findByUser
      */
+    @Override
     public List<Unpaid> findByUser(BillingUser user) {
         String sql = """
             SELECT *
@@ -56,6 +53,7 @@ public class UnpaidRepositoryImpl implements UnpaidRepository{
     /**
      * JPA: findByPaidFalseAndUnpaidMonthBefore
      */
+    @Override
     public List<Unpaid> findByPaidFalseAndUnpaidMonthBefore(LocalDate month) {
         String sql = """
             SELECT *
@@ -74,6 +72,7 @@ public class UnpaidRepositoryImpl implements UnpaidRepository{
      * JPA:
      * findByUserIdIn AND paid = false
      */
+    @Override
     public List<Unpaid> findByUserIdIn(List<Long> userIds) {
         if (userIds == null || userIds.isEmpty()) {
             return List.of();

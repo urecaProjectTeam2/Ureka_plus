@@ -11,6 +11,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Repository
@@ -46,6 +47,7 @@ public class BillingResultRepositoryImpl implements BillingResultRepository {
      * @Lock(PESSIMISTIC_WRITE)
      * List<BillingResult> findBySendStatusOrderById(SendStatus status)
      */
+    @Override
     public List<BillingResult> findBySendStatusForUpdate(SendStatus status) {
 
         String sql = """
@@ -69,4 +71,33 @@ public class BillingResultRepositoryImpl implements BillingResultRepository {
 
         return namedJdbcTemplate.query(sql, params, this::mapRow);
     }
+
+    @Override
+    public void saveAll(List<BillingResult> results) throws Exception {
+
+        String sql = """
+        INSERT INTO billing_result
+        (settlement_month, user_id, total_price, settlement_details, send_status, batch_execution_id, processed_at)
+        VALUES
+        (:settlementMonth, :userId, :totalPrice, :settlementDetails, :sendStatus, :batchExecutionId, :processedAt)
+    """;
+
+        List<MapSqlParameterSource> batchParams = new ArrayList<>(results.size());
+
+        for (BillingResult result : results) {
+            batchParams.add(new MapSqlParameterSource()
+                    .addValue("settlementMonth", result.getSettlementMonth())
+                    .addValue("userId", result.getUserId())
+                    .addValue("totalPrice", result.getTotalPrice())
+                    .addValue("settlementDetails", result.getSettlementDetails())
+                    .addValue("sendStatus", result.getSendStatus().name())
+                    .addValue("batchExecutionId", result.getBatchExecutionId())
+                    .addValue("processedAt", result.getProcessedAt())
+            );
+        }
+
+        namedJdbcTemplate.batchUpdate(sql, batchParams.toArray(new MapSqlParameterSource[0]));
+    }
+
+
 }

@@ -33,6 +33,7 @@ public class BillingUserRepositoryImpl implements BillingUserRepository{
      * JPA:
      * findUsersGreaterThanId(Long lastUserId, Pageable pageable)
      */
+    @Override
     public List<BillingUser> findUsersGreaterThanId(
             Long lastUserId,
             Pageable pageable

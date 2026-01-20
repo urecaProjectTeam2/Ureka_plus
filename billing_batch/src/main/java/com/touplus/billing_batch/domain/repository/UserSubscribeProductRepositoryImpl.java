@@ -35,16 +35,8 @@ public class UserSubscribeProductRepositoryImpl
                 .deletedAt(
                         rs.getObject("deleted_at", LocalDateTime.class)
                 )
-                .user(
-                        BillingUser.builder()
-                                .userId(rs.getLong("user_id"))
-                                .build()
-                )
-                .product(
-                        BillingProduct.builder()
-                                .productId(rs.getLong("product_id"))
-                                .build()
-                )
+                .userId(rs.getLong("user_id"))
+                .productId(rs.getLong("product_id"))
                 .build();
     }
 

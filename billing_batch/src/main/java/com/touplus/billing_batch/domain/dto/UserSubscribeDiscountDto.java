@@ -24,16 +24,6 @@ public class UserSubscribeDiscountDto {
     private Long discountId;
     private Long productId;
 
-    // 조인했을 때 담을 용도의 변수
-    private String productName;
-    private ProductType productType;
-    private Integer productPrice;
-
-    private String discountName;
-    private DiscountType isCash;
-    private Integer cash;
-    private Double percent;
-
     public static UserSubscribeDiscountDto fromEntity(UserSubscribeDiscount entity) {
         return UserSubscribeDiscountDto.builder()
                 .udsId(entity.getUdsId())

@@ -16,6 +16,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 
 @Component
 @StepScope
@@ -30,6 +31,11 @@ public class FinalBillingResultProcessor
 
     @Override
     public BillingResult process(BillingWorkDto work) throws Exception {
+        // Unpaid 리스트 초기화
+        if (work.getUnpaids() == null) {
+            work.setUnpaids(new ArrayList<>());
+        }
+
         // 미납금 합산
         int totalUnpaid = 0;
         for (UnpaidDto u : work.getRawData().getUnpaids()) {

@@ -14,7 +14,7 @@ public class KafkaController {
 
     @GetMapping("/publish")
     public String publish() {
-        billingKafkaScheduler.sendBillingResult();
+        billingKafkaScheduler.runBillingKafkaJob();
         return "Message sent to Kafka topic!";
     }
 }

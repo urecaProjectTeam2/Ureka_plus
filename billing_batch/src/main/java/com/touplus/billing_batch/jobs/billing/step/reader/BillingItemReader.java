@@ -126,6 +126,5 @@ public class BillingItemReader implements ItemStreamReader<BillingUserBillingInf
             );
             buffer.add(dto);
         }
-        entityManager.clear();
     }
 }

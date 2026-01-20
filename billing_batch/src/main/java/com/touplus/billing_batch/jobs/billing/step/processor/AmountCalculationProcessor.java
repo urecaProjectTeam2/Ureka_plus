@@ -1,18 +1,23 @@
 package com.touplus.billing_batch.jobs.billing.step.processor;
 
-import com.touplus.billing_batch.domain.dto.AdditionalChargeDto;
-import com.touplus.billing_batch.domain.dto.BillingUserBillingInfoDto;
-import com.touplus.billing_batch.domain.dto.BillingWorkDto;
+import com.touplus.billing_batch.common.BillingReferenceCache;
+import com.touplus.billing_batch.domain.dto.*;
 import com.touplus.billing_batch.domain.dto.SettlementDetailsDto.DetailItem;
-import com.touplus.billing_batch.domain.dto.UserSubscribeProductDto;
+import com.touplus.billing_batch.domain.enums.ProductType;
+import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.stereotype.Component;
 
+import java.util.Map;
+
 @Component
 @StepScope
+@RequiredArgsConstructor
 public class AmountCalculationProcessor
         implements ItemProcessor<BillingUserBillingInfoDto, BillingWorkDto> {
+
+    private final BillingReferenceCache referenceCache;
 
     @Override
     public BillingWorkDto process(BillingUserBillingInfoDto item) throws Exception {
@@ -20,23 +25,38 @@ public class AmountCalculationProcessor
                 .rawData(item)
                 .build();
 
-        // 상품 가격 합산
+        Map<Long, BillingProductDto> productMap = referenceCache.getProductMap();
+
         int productSum = 0;
+
         for (UserSubscribeProductDto usp : item.getProducts()) {
-            productSum += usp.getPrice();
+            BillingProductDto product = productMap.get(usp.getProductId());
+
+            // 캐시 상품이 존재하면 상세 정보 가져오기
+            String productName = product != null ? product.getProductName() : "UNKNOWN";
+            ProductType productType = product != null ? product.getProductType() : null;
+            int price = product != null && product.getPrice() != null ? product.getPrice() : 0;
+
+            productSum += price;
+
+            // 상세 내역 생성 (JSON 최종용)
             DetailItem detail = DetailItem.builder()
-                    .productType(usp.getProductType().name().toUpperCase())
-                    .productName(usp.getProductName())
-                    .price(usp.getPrice())
+                    .productType(productType != null ? productType.name().toUpperCase() : "UNKNOWN")
+                    .productName(productName)
+                    .price(price)
                     .build();
 
-            // 상품 타입별로 분류
-            switch (usp.getProductType()) {
-                case mobile -> workDto.getMobile().add(detail);
-                case internet -> workDto.getInternet().add(detail);
-                case iptv -> workDto.getIptv().add(detail);
-                case dps -> workDto.getDps().add(detail);
-                case addon -> workDto.getAddon().add(detail);
+            // 타입별로 분류
+            if (productType != null) {
+                switch (productType) {
+                    case mobile -> workDto.getMobile().add(detail);
+                    case internet -> workDto.getInternet().add(detail);
+                    case iptv -> workDto.getIptv().add(detail);
+                    case dps -> workDto.getDps().add(detail);
+                    case addon -> workDto.getAddon().add(detail);
+                }
+            } else {
+                workDto.getAddon().add(detail);
             }
         }
 
@@ -54,11 +74,9 @@ public class AmountCalculationProcessor
         }
 
         workDto.setAdditionalCharges(additionalSum);
-
-        // 총 상품 금액 + 총 추가요금
         workDto.setBaseAmount(productSum + additionalSum);
+        workDto.setTotalPrice(workDto.getBaseAmount());
 
         return workDto;
     }
-
 }
