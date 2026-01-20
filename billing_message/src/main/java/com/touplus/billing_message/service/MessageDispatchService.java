@@ -2,19 +2,33 @@ package com.touplus.billing_message.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 
+import lombok.extern.slf4j.Slf4j;
+
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class MessageDispatchService {
 
     private final MessageClaimService messageClaimService;
     private final MessageProcessService messageProcessService;
     private final TaskExecutor messageDispatchTaskExecutor;
+
+
+    public MessageDispatchService(
+            MessageClaimService messageClaimService,
+            MessageProcessService messageProcessService,
+            @Qualifier("messageDispatchTaskExecutor")
+            TaskExecutor messageTaskExecutor
+    ) {
+        this.messageClaimService = messageClaimService;
+        this.messageProcessService = messageProcessService;
+        this.messageDispatchTaskExecutor = messageTaskExecutor;
+    }
+
 
     public void dispatchDueMessages() {
         List<Long> messageIds = messageClaimService.claimNextMessages(LocalDateTime.now());
