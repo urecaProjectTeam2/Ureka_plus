@@ -1,59 +1,43 @@
 package com.touplus.billing_batch.domain.entity;
 
 import com.touplus.billing_batch.domain.enums.ErrorType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+@Entity
+@Table(name = "batch_billing_error_log")
 @Getter
-@Setter
-@NoArgsConstructor
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 @AllArgsConstructor
 @Builder
 public class BillingErrorLog {
 
     @Id
-    @Column(name = "error_log_id", nullable = false)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "error_log_id")
     private Long id;
 
-    @Column(name = "job_execution_id")
     private Long jobExecutionId;
-
-    @Column(name = "step_execution_id")
     private Long stepExecutionId;
-
-    @Column(name = "job_name")
     private String jobName;
-
-    @Column(name = "step_name")
     private String stepName;
-
-    @Column(name = "settlement_month")
     private LocalDate settlementMonth;
-
-    @Column(name = "user_id")
     private Long userId;
 
-    @Column(name = "error_type")
+    @Enumerated(EnumType.STRING)
     private ErrorType errorType;
 
-    @Column(name = "error_code")
     private String errorCode;
-
-    @Column(name = "error_message")
     private String errorMessage;
 
-    @Column(name = "is_recoverable")
     @Builder.Default
-    private boolean isRecoverable = true;
+    private boolean resolved = true;
 
-    @Column(name = "processed")
     @Builder.Default
     private boolean processed = false;
 
-    @Column(name = "occurred_at")
     @Builder.Default
     private LocalDateTime occurredAt = LocalDateTime.now();
 

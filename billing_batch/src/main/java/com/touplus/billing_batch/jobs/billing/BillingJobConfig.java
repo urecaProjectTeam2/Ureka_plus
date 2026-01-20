@@ -1,10 +1,12 @@
 package com.touplus.billing_batch.jobs.billing;
 
 import com.touplus.billing_batch.common.BillingException;
+import com.touplus.billing_batch.common.listener.BillingJobListener;
 import com.touplus.billing_batch.domain.dto.BillingUserBillingInfoDto;
 import com.touplus.billing_batch.domain.entity.BillingResult;
 import com.touplus.billing_batch.jobs.billing.partitioner.UserRangePartitioner;
 import com.touplus.billing_batch.jobs.billing.step.listener.BillingSkipListener;
+import com.touplus.billing_batch.jobs.billing.step.listener.BillingStepListener;
 import com.touplus.billing_batch.jobs.billing.step.processor.AmountCalculationProcessor;
 import com.touplus.billing_batch.jobs.billing.step.processor.DiscountCalculationProcessor;
 import com.touplus.billing_batch.jobs.billing.step.processor.FinalBillingResultProcessor;
@@ -39,7 +41,9 @@ public class BillingJobConfig {
     private final UserRangePartitioner userRangePartitioner;
     private final BillingItemReader billingItemReader;
     private final BillingItemWriter billingItemWriter;
+    private final BillingJobListener billingJobListener; // job 리스너 주입
     private final BillingSkipListener billingSkipListener; // 리스너 주입
+    private final BillingStepListener billingStepListener; // 리스너 주입
 
     private final AmountCalculationProcessor amountCalculationProcessor;
     private final DiscountCalculationProcessor discountCalculationProcessor;
@@ -49,6 +53,7 @@ public class BillingJobConfig {
     public Job billingJob() {
         return new JobBuilder("monthlyBillingJob", jobRepository)
                 .start(masterStep())
+                .listener(billingJobListener)
                 .build();
     }
 
@@ -71,8 +76,9 @@ public class BillingJobConfig {
                 .writer(billingItemWriter)
                 .faultTolerant()                 // 2. 내결함성 기능 활성화
                 .skip(BillingException.class)    // 3. 모든 예외에 대해 Skip 허용  --> 에러 발생 시 step 중단 없이 리스너가 가로챔
-                .skipLimit(10)                   // 4. 최대 10번까지 Skip 허용
+                .skipLimit(100)                   // 4. 최대 100번까지 Skip 허용
                 .listener(billingSkipListener)   // 5. 리스너 등록
+                .listener(billingStepListener)
                 .build();
     }
 

@@ -36,7 +36,7 @@ public class BillingBatchScheduler {
         try{
             JobParameters params = new JobParametersBuilder()
                     .addString("targetMonth", targetMonth)
-//                    .addLong("time", System.currentTimeMillis()) // 배치 중복 실행 가능하게
+                    .addLong("time", System.currentTimeMillis()) // 배치 중복 실행 가능하게
                     .toJobParameters();
             // =================> 수동 재실행을 어떻게 가능하게 할지 고민.
 

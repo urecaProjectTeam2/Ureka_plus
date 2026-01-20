@@ -39,7 +39,7 @@ public class BillingErrorLogRepositoryImpl
                 )
                 .errorCode(rs.getString("error_code"))
                 .errorMessage(rs.getString("error_message"))
-                .isRecoverable(rs.getBoolean("is_recoverable"))
+                .resolved(rs.getBoolean("resolved"))
                 .processed(rs.getBoolean("processed"))
                 .occurredAt(
                         rs.getObject("occurred_at", LocalDateTime.class)
@@ -64,7 +64,7 @@ public class BillingErrorLogRepositoryImpl
                 error_type,
                 error_code,
                 error_message,
-                is_recoverable,
+                resolved,
                 processed,
                 occurred_at
             ) VALUES (
@@ -77,7 +77,7 @@ public class BillingErrorLogRepositoryImpl
                 :errorType,
                 :errorCode,
                 :errorMessage,
-                :isRecoverable,
+                :resolved,
                 :processed,
                 :occurredAt
             )
@@ -93,7 +93,7 @@ public class BillingErrorLogRepositoryImpl
                 .addValue("errorType", errorLog.getErrorType().name())
                 .addValue("errorCode", errorLog.getErrorCode())
                 .addValue("errorMessage", errorLog.getErrorMessage())
-                .addValue("isRecoverable", errorLog.isRecoverable())
+                .addValue("resolved", errorLog.isResolved())
                 .addValue("processed", errorLog.isProcessed())
                 .addValue("occurredAt", errorLog.getOccurredAt());
 

@@ -10,6 +10,7 @@ import com.touplus.billing_batch.domain.dto.*;
 import com.touplus.billing_batch.domain.enums.DiscountType;
 import com.touplus.billing_batch.domain.enums.ProductType;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
 import org.springframework.stereotype.Component;
@@ -18,6 +19,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+@Slf4j
 @Component
 @StepScope
 @RequiredArgsConstructor
@@ -35,6 +37,11 @@ public class DiscountCalculationProcessor implements ItemProcessor<BillingWorkDt
         Map<Long, BillingDiscountDto> discountMap = referenceCache.getDiscountMap();
         Map<Long, BillingProductDto>  productMap = referenceCache.getProductMap();
 
+        if(discountMap == null || discountMap.isEmpty())
+            throw BillingFatalException.cacheNotFound("할인 정보 캐싱이 이루어지지 않았습니다.");
+        if(productMap == null || productMap.isEmpty())
+            throw BillingFatalException.cacheNotFound("상품 정보 캐싱이 이루어지지 않았습니다.");
+        
         // 할인금액 합산 변수
         long totalDiscount = 0;
 
@@ -44,15 +51,14 @@ public class DiscountCalculationProcessor implements ItemProcessor<BillingWorkDt
             BillingProductDto product = productMap.get(usd.getProductId());
             BillingDiscountDto discount = discountMap.get(usd.getDiscountId());
 
-            if (product == null || discount == null) {
-                continue; // 예외처리 해야됨!! 캐시에 id와 일치하는 상품/할인 정보 없다
+            if (product == null) {
+                throw BillingException.dataNotFound(work.getRawData().getUserId(), "상품 정보(ID: " + usd.getProductId() + ")가 캐시에 없습니다.");
+            }
+            if (discount == null) {
+                throw BillingException.dataNotFound(work.getRawData().getUserId(), "할인 정보(ID: " + usd.getDiscountId() + ")가 캐시에 없습니다.");
             }
 
             // 할인 데이터 이상
-            if(usd==null){
-                throw BillingException.dataNotFound(work.getRawData().getUserId(), "할인 Row가 비어있습니다.");
-            }
-
             if (discount.getIsCash() == null) {
                 throw BillingException.dataNotFound(work.getRawData().getUserId(), "할인 타입이 비어있습니다.");
             }
@@ -61,27 +67,28 @@ public class DiscountCalculationProcessor implements ItemProcessor<BillingWorkDt
                 throw BillingException.dataNotFound(work.getRawData().getUserId(), "할인명이 비어있습니다.");
             }
 
-            // 할인 금애 계산
+            // 할인 금액 계산
             int price = 0;
-            if (discount != null) {
-                if (discount.getIsCash() == DiscountType.CASH && discount.getCash() != null) {
-                    // 정해진 금액 할인
-                    if (discount.getCash() <= 0) {
-                        throw BillingException.invalidDiscountData(work.getRawData().getUserId(), String.valueOf(usd.getDiscountId()));
-                    }
-
-                    price = discount.getCash();
-                } else if (discount.getIsCash() == DiscountType.RATE && discount.getPercent() != null) {
-                    // 특정 비율 할인
-                    if (discount.getPercent() <= 0 || discount.getPercent() > 100) {
-                        throw BillingException.invalidDiscountData(work.getRawData().getUserId(), String.valueOf(usd.getDiscountId()));
-                    }
-                    if (product.getPrice() < 0) {
-                        throw BillingException.invalidDiscountData(work.getRawData().getUserId(), String.valueOf(usd.getDiscountId()) + "연결된 상품에 비정상적인 데이터가 있습니다.");
-                    }
-                    price = (int) ((product.getPrice() * discount.getPercent()) / 100);
+            if (discount.getIsCash() == DiscountType.CASH && discount.getCash() != null) {
+                // 정해진 금액 할인
+                if (discount.getCash() <= 0) {
+                    throw BillingException.invalidDiscountData(work.getRawData().getUserId(), String.valueOf(usd.getDiscountId()));
                 }
+
+                price = discount.getCash();
+            } else if (discount.getIsCash() == DiscountType.RATE && discount.getPercent() != null) {
+                // 특정 비율 할인
+                if (discount.getPercent() <= 0 || discount.getPercent() > 100) {
+                    throw BillingException.invalidDiscountData(work.getRawData().getUserId(), String.valueOf(usd.getDiscountId()));
+                }
+                if (product.getPrice() < 0) {
+                    throw BillingException.invalidProductData(work.getRawData().getUserId(), String.valueOf(usd.getDiscountId()));
+                }
+                price = (int) ((product.getPrice() * discount.getPercent()) / 100);
+            } else {
+                throw BillingException.invalidDiscountData(work.getRawData().getUserId(), String.valueOf(usd.getDiscountId()));
             }
+
 
             totalDiscount += price;
 

@@ -38,6 +38,8 @@ public class AmountCalculationProcessor
                 .build();
 
         Map<Long, BillingProductDto> productMap = referenceCache.getProductMap();
+        if(productMap == null || productMap.isEmpty())
+            throw BillingFatalException.cacheNotFound("상품 정보 캐싱이 이루어지지 않았습니다.");
 
         long productSum = 0;
 
@@ -50,20 +52,17 @@ public class AmountCalculationProcessor
         for (UserSubscribeProductDto usp : products) {
             BillingProductDto product = productMap.get(usp.getProductId());
 
+            if (product == null) {
+                log.error("상품 정보를 찾을 수 없습니다. ProductId: {}, UserId: {}", usp.getProductId(), item.getUserId());
+                throw BillingException.dataNotFound(item.getUserId(), "상품 정보(ID: " + usp.getProductId() + ")가 캐시에 없습니다.");
+            }
+
             // 캐시 상품이 존재하면 상세 정보 가져오기
             String productName = product.getProductName();
             ProductType productType = product.getProductType();
             int price = product.getPrice();
 
-            productSum += price;
-
-            // 상세 내역 생성 (JSON 최종용)
-
             // 상품 데이터 이상
-            if (usp == null) {
-                throw BillingException.dataNotFound(item.getUserId(), "상품 Row가 비어있습니다.");
-            }
-
             if (productType == null) {
                 throw BillingException.dataNotFound(item.getUserId(), "상품 타입이 비어있습니다.");
             }
@@ -78,22 +77,19 @@ public class AmountCalculationProcessor
 
             productSum += price;
             DetailItem detail = DetailItem.builder()
-                    .productType(productType != null ? productType.name().toUpperCase() : "UNKNOWN")
+                    .productType(productType.name().toUpperCase())
                     .productName(productName)
                     .price(price)
                     .build();
 
+            // 상세 내역 생성 (JSON 최종용)
             // 타입별로 분류
-            if (productType != null) {
-                switch (productType) {
-                    case mobile -> workDto.getMobile().add(detail);
-                    case internet -> workDto.getInternet().add(detail);
-                    case iptv -> workDto.getIptv().add(detail);
-                    case dps -> workDto.getDps().add(detail);
-                    case addon -> workDto.getAddon().add(detail);
-                }
-            } else {
-                workDto.getAddon().add(detail);
+            switch (productType) {
+                case mobile -> workDto.getMobile().add(detail);
+                case internet -> workDto.getInternet().add(detail);
+                case iptv -> workDto.getIptv().add(detail);
+                case dps -> workDto.getDps().add(detail);
+                case addon -> workDto.getAddon().add(detail);
             }
         }
 
