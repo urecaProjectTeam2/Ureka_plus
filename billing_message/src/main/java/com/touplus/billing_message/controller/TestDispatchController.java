@@ -33,4 +33,14 @@ public class TestDispatchController {
         messageDispatchService.dispatchDueMessages();
         return "Dispatch triggered for messageId=" + messageId;
     }
+
+    /**
+     * 스케줄 무시하고 WAITED 상태의 모든 메시지 발송 (테스트용)
+     */
+    @GetMapping("/test/dispatch-all")
+    public String dispatchAllWaited() {
+        log.info("스케쥴 무시하고 모든 wiated 상태 발송(테스트)");
+        int count = messageDispatchService.dispatchAllWaited();
+        return "Dispatch triggered for " + count + " messages";
+    }
 }

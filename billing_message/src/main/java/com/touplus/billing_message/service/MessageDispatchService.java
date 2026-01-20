@@ -1,16 +1,5 @@
 package com.touplus.billing_message.service;
 
-import com.touplus.billing_message.domain.entity.Message;
-import com.touplus.billing_message.domain.entity.MessageSendLog;
-import com.touplus.billing_message.domain.entity.MessageSnapshot;
-import com.touplus.billing_message.domain.entity.MessageType;
-import com.touplus.billing_message.domain.respository.MessageRepository;
-import com.touplus.billing_message.domain.respository.MessageSendLogRepository;
-import com.touplus.billing_message.domain.respository.MessageSnapshotRepository;
-import com.touplus.billing_message.domain.respository.UserBanInfo;
-import com.touplus.billing_message.domain.respository.UserBanRepository;
-import com.touplus.billing_message.sender.MessageSender;
-import com.touplus.billing_message.sender.SendResult;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
@@ -23,89 +12,59 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class MessageDispatchService {
 
-    private final MessageRepository messageRepository;
-    private final MessageSnapshotRepository messageSnapshotRepository;
-    private final MessageSendLogRepository messageSendLogRepository;
-    private final UserBanRepository userBanRepository;
-    private final MessageSender messageSender;
-    private final MessagePolicy messagePolicy;
     private final MessageClaimService messageClaimService;
+    private final MessageProcessService messageProcessService;
     private final TaskExecutor messageTaskExecutor;
 
     public void dispatchDueMessages() {
         List<Long> messageIds = messageClaimService.claimNextMessages(LocalDateTime.now());
         if (messageIds.isEmpty()) {
-            log.debug("No due messages found");
+            log.debug("발송 대상 메시지 없음");
             return;
         }
 
-        log.info("Dispatching {} messages", messageIds.size());
+        log.info("메시지 {}건 발송 시작", messageIds.size());
         for (Long messageId : messageIds) {
-            messageTaskExecutor.execute(() -> processMessage(messageId));
+            messageTaskExecutor.execute(() -> processWithExceptionHandling(messageId));
         }
     }
 
-    public void processMessage(Long messageId) {
-        Message message = messageRepository.findById(messageId).orElse(null);
-        if (message == null) {
-            log.warn("Message not found messageId={}", messageId);
-            return;
-        }
-
-        log.info("Processing messageId={} retryCount={}", messageId, message.getRetryCount());
-        MessageSnapshot snapshot = messageSnapshotRepository.findById(messageId).orElse(null);
-        if (snapshot == null) {
-            log.warn("Missing message_snapshot for messageId={}", messageId);
-            LocalDateTime nextRetry = messagePolicy.nextRetryAt(LocalDateTime.now(), message.getRetryCount());
-            messageRepository.markFailed(messageId, nextRetry);
-            return;
-        }
-
-        UserBanInfo banInfo = userBanRepository.findBanInfo(message.getUserId()).orElse(null);
-        LocalDateTime now = LocalDateTime.now();
-        if (messagePolicy.isInBanWindow(now, banInfo)) {
-            LocalDateTime nextAllowed = messagePolicy.nextAllowedTime(now, banInfo);
-            messageRepository.defer(messageId, nextAllowed);
-            log.info("Deferred messageId={} until {}", messageId, nextAllowed);
-            return;
-        }
-
-        MessageType messageType = message.getRetryCount() >= 3
-                ? MessageType.SMS
-                : MessageType.EMAIL;
-
-        SendResult result;
+    /**
+     * 예외 처리를 포함한 메시지 처리
+     */
+    private void processWithExceptionHandling(Long messageId) {
         try {
-            result = messageSender.send(messageType, snapshot);
+            messageProcessService.processMessage(messageId);
         } catch (Exception e) {
-            log.error("Message send failed messageId={}", messageId, e);
-            LocalDateTime nextRetry = messagePolicy.nextRetryAt(LocalDateTime.now(), message.getRetryCount());
-            LocalDateTime adjustedRetry = messagePolicy.adjustForBan(nextRetry, banInfo);
-            messageRepository.markFailed(messageId, adjustedRetry);
-            log.info("Retry scheduled messageId={} at {}", messageId, adjustedRetry);
-            return;
+            log.error("메시지 처리 중 예기치 않은 오류 messageId={}", messageId, e);
+            // 예외 발생 시 메시지를 WAITED 상태로 되돌려 재처리 가능하게 함
+            try {
+                messageProcessService.handleSendFailure(messageId, 0, null);
+            } catch (Exception recoveryEx) {
+                log.error("메시지 복구 실패 messageId={}", messageId, recoveryEx);
+            }
+        }
+    }
+
+    /**
+     * 스케줄 무시하고 WAITED 상태의 메시지 발송 (테스트용)
+     * 한 번의 배치만 처리 (최대 40건)
+     * 
+     * @return 발송 시작한 메시지 수
+     */
+    public int dispatchAllWaited() {
+        List<Long> messageIds = messageClaimService.claimNextMessagesIgnoreSchedule();
+        if (messageIds.isEmpty()) {
+            log.info("발송 대상 메시지 없음");
+            return 0;
         }
 
-        messageSendLogRepository.save(
-                new MessageSendLog(
-                        messageId,
-                        message.getRetryCount(),
-                        messageType,
-                        result.code(),
-                        result.message(),
-                        LocalDateTime.now()
-                )
-        );
-
-        if (result.success()) {
-            messageRepository.markSent(messageId);
-            log.info("Message sent messageId={} type={}", messageId, messageType);
-            return;
+        log.info("메시지 {}건 발송 시작 (스케줄 무시)", messageIds.size());
+        for (Long messageId : messageIds) {
+            messageTaskExecutor.execute(() -> processWithExceptionHandling(messageId));
         }
 
-        LocalDateTime nextRetry = messagePolicy.nextRetryAt(LocalDateTime.now(), message.getRetryCount());
-        LocalDateTime adjustedRetry = messagePolicy.adjustForBan(nextRetry, banInfo);
-        messageRepository.markFailed(messageId, adjustedRetry);
-        log.info("Message failed messageId={} type={} retryAt={}", messageId, messageType, adjustedRetry);
+        log.info("총 발송 시작: {}건", messageIds.size());
+        return messageIds.size();
     }
 }
