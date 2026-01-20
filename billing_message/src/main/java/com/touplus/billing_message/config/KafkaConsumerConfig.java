@@ -1,7 +1,9 @@
 package com.touplus.billing_message.config;
 
+import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.boot.autoconfigure.kafka.KafkaProperties;
 import org.springframework.context.annotation.Bean;
@@ -25,16 +27,16 @@ public class KafkaConsumerConfig {
         this.kafkaProperties = kafkaProperties;
     }
 
-    @Bean
-    public ConsumerFactory<String, BillingResultDto> consumerFactory() {
-        Map<String, Object> props = kafkaProperties.buildConsumerProperties(null);
-
-        return new DefaultKafkaConsumerFactory<>(
-                props,
-                new StringDeserializer(),
-                new JsonDeserializer<>(BillingResultDto.class, false)
-        );
-    }
+    @Bean public ConsumerFactory<String, BillingResultDto> consumerFactory() { 
+    	
+    	Map<String, Object> props = kafkaProperties.buildConsumerProperties(null); 
+    	
+    	return new DefaultKafkaConsumerFactory<>( 
+    			props, 
+    			new StringDeserializer(), 
+    			new JsonDeserializer<>(BillingResultDto.class, false) 
+    			); 
+    	}
     
     @Bean
     public ConcurrentKafkaListenerContainerFactory<String, BillingResultDto> kafkaListenerContainerFactory(

@@ -29,12 +29,9 @@ public class BillingKafkaScheduler {
     @Transactional
     public void sendBillingResult() {
         List<BillingResult> targets = billingResultRepository.findBySendStatusOrderById(SendStatus.READY);
-        log.info("빌링 카프카 스케줄 열림?");
 
         for (BillingResult billing : targets) {
             try {
-                log.info("빌링 카프카 스케줄", billing.getId());
-
                 // Entity → DTO 변환
                 BillingResultMessage message = new BillingResultMessage();
                 message.setId(billing.getId());
@@ -55,7 +52,7 @@ public class BillingKafkaScheduler {
                 ).get(); // 동기 전송
 
                 billing.markSuccess();
-                log.info("Successfully sent billingResultId={}", billing.getId()); 
+                log.info("Kafka 전송 성공 billingResultId={}", billing.getId()); 
             } catch (Exception e) {
                 log.error("Kafka 전송 실패 billingResultId={}", billing.getId(), e);
                 billing.markFail();

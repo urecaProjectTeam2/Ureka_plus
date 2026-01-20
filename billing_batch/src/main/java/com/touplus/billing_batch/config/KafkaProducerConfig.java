@@ -33,7 +33,7 @@ public class KafkaProducerConfig {
         objectMapper.registerModule(new JavaTimeModule());
 
         JsonSerializer<BillingResultMessage> serializer = new JsonSerializer<>(objectMapper);
-        serializer.setAddTypeInfo(true); // 타입 정보 포함
+        serializer.setAddTypeInfo(true); 
 
         return new DefaultKafkaProducerFactory<>(props, new StringSerializer(), serializer);
     }

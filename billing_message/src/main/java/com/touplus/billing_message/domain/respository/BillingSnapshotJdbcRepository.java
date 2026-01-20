@@ -18,12 +18,9 @@ public class BillingSnapshotJdbcRepository {
     public void batchUpsertByUserMonth(List<BillingSnapshot> snapshots) {
 
         String sql = """
-            INSERT INTO billing_snapshot
+            INSERT IGNORE INTO billing_snapshot
             (billing_id, settlement_month, user_id, total_price, settlement_details)
             VALUES (?, ?, ?, ?, ?)
-            ON DUPLICATE KEY UPDATE
-                total_price = VALUES(total_price),
-                settlement_details = VALUES(settlement_details)
         """;
 
         jdbcTemplate.batchUpdate(

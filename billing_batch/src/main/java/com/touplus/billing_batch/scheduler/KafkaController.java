@@ -18,7 +18,6 @@ public class KafkaController {
     @GetMapping("/publish")
     public String publish() {
         billingKafkaScheduler.sendBillingResult();
-        log.info("컨트롤러 로그 솔직히 이건 찍혀야 함", "로그");
         return "Message sent to Kafka topic!";
     }
 }
