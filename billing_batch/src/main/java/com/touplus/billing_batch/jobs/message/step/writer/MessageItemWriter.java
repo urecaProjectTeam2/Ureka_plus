@@ -45,7 +45,7 @@ public class MessageItemWriter implements ItemWriter<BillingResultDto> {
         List<CompletableFuture<?>> futures = new ArrayList<>();
 
         for (BillingResultDto dto : chunk) {
-            // 📍 1. 비동기 + 재시도 로직 통합
+            // 1. 비동기 + 재시도 로직 통합
             CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
                 retryTemplate.execute(context -> {
                     try {
@@ -65,15 +65,15 @@ public class MessageItemWriter implements ItemWriter<BillingResultDto> {
             futures.add(future);
         }
 
-        // 📍 2. 모든 비동기 작업이 끝날 때까지 대기
+        //  2. 모든 비동기 작업이 끝날 때까지 대기
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
 
-        // 📍 3. 성공 데이터 DB 일괄 업데이트
+        //  3. 성공 데이터 DB 일괄 업데이트
         if (!successIds.isEmpty()) {
             updateSendStatus(successIds, "SUCCESS");
         }
 
-        // 📍 4. 실패 데이터가 하나라도 있으면 예외를 던져 SkipListener 호출
+        //  4. 실패 데이터가 하나라도 있으면 예외를 던져 SkipListener 호출
         if (!failedItems.isEmpty()) {
             throw new RuntimeException("Kafka 최종 전송 실패 건 존재: " + failedItems.size() + "건");
         }

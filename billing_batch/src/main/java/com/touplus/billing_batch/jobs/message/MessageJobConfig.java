@@ -33,7 +33,7 @@ public class MessageJobConfig {
 
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
-    // 📍 1. 필드 주입 제거 (순환 고리 끊기)
+    //  1. 필드 주입 제거 (순환 고리 끊기)
     // private final MessageItemWriter messageItemWriter;
     private final MessageSkipListener messageSkipListener;
     private final MessageStepLogger messageStepLogger;
@@ -48,11 +48,11 @@ public class MessageJobConfig {
 
     @Bean
     public Step messageStep(JdbcCursorItemReader<BillingResultDto> messageReader,
-                            MessageItemWriter messageItemWriter) { // 📍 2. 파라미터로 주입받음
+                            MessageItemWriter messageItemWriter) { //  2. 파라미터로 주입받음
         return new StepBuilder("messageStep", jobRepository)
                 .<BillingResultDto, BillingResultDto>chunk(chunkSize, transactionManager)
                 .reader(messageReader)
-                .writer(messageItemWriter) // 📍 3. 전달받은 파라미터 사용
+                .writer(messageItemWriter) //  3. 전달받은 파라미터 사용
                 .faultTolerant()
                 .skip(Exception.class)
                 .skipLimit(1000)

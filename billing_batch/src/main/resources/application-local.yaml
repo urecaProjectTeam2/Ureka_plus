@@ -7,8 +7,8 @@ spring:
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
     url: jdbc:mysql://localhost:13306/billing_batch
-    username: haram #${DB_USER}
-    password: Haram1111! #${DB_PASSWORD}
+    username: ${DB_USER} #로컬로 테스트 시, 직접 값 입력하기
+    password: ${DB_PASSWORD} #로컬로 테스트 시, 직접 값 입력하기
     hikari:
       maximum-pool-size: 50
 
