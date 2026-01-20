@@ -29,14 +29,15 @@ public class BillingBatchScheduler {
 //    @Scheduled(cron = "0 0 2 1 * ?") // 매월 1일 02시
     public void runMonthlyBilling() {
 
-        // 정산 대상이 되는 월 계산
-        String targetMonth = LocalDate.now().minusMonths(1).format(DateTimeFormatter.ofPattern("yyyy-MM"));
+        // 정산 대상이 되는 월 계산. 정산 해당 월 1일로 계산
+        String targetMonth = LocalDate.now().minusMonths(1).withDayOfMonth(1).toString();
 
         try{
             JobParameters params = new JobParametersBuilder()
                     .addString("targetMonth", targetMonth)
-                    .addLong("time", System.currentTimeMillis()) // 배치 중복 실행 가능하게
+//                    .addLong("time", System.currentTimeMillis()) // 배치 중복 실행 가능하게
                     .toJobParameters();
+            // =================> 수동 재실행을 어떻게 가능하게 할지 고민.
 
             jobLauncher.run(billingJob, params);
 
