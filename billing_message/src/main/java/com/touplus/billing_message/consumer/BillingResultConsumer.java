@@ -1,6 +1,7 @@
 package com.touplus.billing_message.consumer;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -36,9 +37,12 @@ public class BillingResultConsumer {
     public void consume(
             List<BillingResultDto> messages,
             Acknowledgment ack // offset
-    ) {
+    ) {         
         try {
+        	long filterStart = System.currentTimeMillis();
             LocalDate now = LocalDate.now();
+            log.info("데이터 넣기 시작 시각 : {}", LocalDateTime.now());
+        	
             List<BillingSnapshot> toUpsert = new ArrayList<>();
 
             for (BillingResultDto message : messages) {
@@ -64,9 +68,12 @@ public class BillingResultConsumer {
                 ));
             }
             
-            if (!toUpsert.isEmpty()) {
-                jdbcRepository.batchUpsertByUserMonth(toUpsert);
-                log.info("스냅 샷 생성 완료={}건", toUpsert.size());
+            // 배치 사이즈 최적화
+            int batchSize = 500;
+            for (int i = 0; i < toUpsert.size(); i += batchSize) {
+                int end = Math.min(i + batchSize, toUpsert.size());
+
+                jdbcRepository.batchUpsertByUserMonth(toUpsert.subList(i, end));
 
                 // 이 부분도 아까 말했던 에러 ㅠ
                 // Message 생성 (각 snapshot에 대해 처리)
@@ -74,15 +81,16 @@ public class BillingResultConsumer {
                     messageProcessor.process(snapshot);
                 }*/
                 
-                // DB 실제 데이터 개수 확인, 스냅샷 1만개면 로그 찍음, 100만개 처리할 때 숫자 바꿔줘야 함
                 Long totalCount = sdr.countAll();
                 if (totalCount == 10000L) {
-                    log.info("데이터 넣기 끝! 총 DB 행 수={}", totalCount);
+                	log.info("데이터 넣기 끝난 시각 : {}", LocalDateTime.now());
+                	log.info("스냅샷 데이터 다 넣음!");
+                	
                     ack.acknowledge();
                     return;
                 }
             }
-
+            
             ack.acknowledge();
         } catch (Exception e) {
         	// 중복 제외 기타 오류 발생시

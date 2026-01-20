@@ -3,7 +3,7 @@ spring:
   config:
     activate:
       on-profile: local # 이 설정은 'local' 프로필일 때만 작동함
-
+        
   datasource:
     # 도커 내부(host.docker.internal)가 아니라 내 컴퓨터(localhost)로 접속
     url: jdbc:mysql://localhost:13306/billing_message
