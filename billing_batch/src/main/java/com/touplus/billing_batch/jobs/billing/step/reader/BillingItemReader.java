@@ -3,7 +3,10 @@ package com.touplus.billing_batch.jobs.billing.step.reader;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.touplus.billing_batch.common.BillingException;
+import com.touplus.billing_batch.common.BillingFatalException;
 import com.touplus.billing_batch.domain.dto.*;
+import com.touplus.billing_batch.jobs.billing.step.listener.BillingErrorLogger;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import org.springframework.batch.core.StepExecution;
@@ -13,6 +16,7 @@ import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemStreamReader;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
@@ -31,9 +35,6 @@ public class BillingItemReader implements ItemStreamReader<BillingUserBillingInf
 
     private final Deque<BillingUserBillingInfoDto> buffer = new ArrayDeque<>();
     private final int chunkSize = 1000;
-
-    @PersistenceContext
-    private EntityManager entityManager;
 
     @Value("#{stepExecutionContext['minValue']}")
     private Long minValue;
@@ -69,9 +70,7 @@ public class BillingItemReader implements ItemStreamReader<BillingUserBillingInf
     @Override
     public void open(ExecutionContext executionContext) {
         if (minValue == null || maxValue == null) {
-            throw new IllegalStateException(
-                    "Partition minValue / maxValue not set"
-            );
+            throw BillingFatalException.cacheNotFound("Partition minValue / maxValue not set");
         }
 
         if (executionContext.containsKey(CTX_LAST_PROCESSED_USER_ID)) {
@@ -95,18 +94,28 @@ public class BillingItemReader implements ItemStreamReader<BillingUserBillingInf
     }
 
     @Override
-    public BillingUserBillingInfoDto read() {
+    public BillingUserBillingInfoDto read() throws Exception {
+        //  버퍼가 비었으면 채우기 (조회 실패 시 Fatal)
         if (buffer.isEmpty()) {
             fillBuffer();
         }
+
         BillingUserBillingInfoDto dto = buffer.poll();
+
+        // 개별 DTO 검증: 상품 정보가 없으면 Skip 가능
         if (dto != null) {
+            if (true) {
+//            if (dto.getProducts() == null || dto.getProducts().isEmpty()) {
+                throw new BillingException("상품 정보 없음", "ERR_NO_PRODUCT", dto.getUserId());
+            }
             lastProcessedUserId = dto.getUserId();
         }
+
         return dto;
     }
 
-    private void fillBuffer() {
+
+    private void fillBuffer() throws Exception {
         // 1. No-Offset 방식: userId 기준 다음 청크 조회
         List<BillingUser> users =
                 userRepository.findUsersInRange(
@@ -116,7 +125,9 @@ public class BillingItemReader implements ItemStreamReader<BillingUserBillingInf
                         Pageable.ofSize(chunkSize)
                 );
 
-        if (users.isEmpty()) return;
+        if (users.isEmpty()) {
+            throw BillingFatalException.noUsersInPartition(minValue, maxValue);
+        }
 
         List<Long> userIds = users.stream().map(BillingUser::getUserId).toList();
 

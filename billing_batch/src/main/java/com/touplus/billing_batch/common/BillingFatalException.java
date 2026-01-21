@@ -29,6 +29,14 @@ public class BillingFatalException extends RuntimeException {
         );
     }
 
+    public static BillingFatalException noUsersInPartition(Long minValue, Long maxValue) {
+        return new BillingFatalException(
+                "Partition 조회 결과 없음: minValue=" + minValue + ", maxValue=" + maxValue,
+                "FATAL_NO_USERS_IN_PARTITION",
+                0L
+        );
+    }
+
     public static BillingFatalException invalidDiscountAmount(Long userId, long totalDiscount) {
         return new BillingFatalException(
                 "할인 로직 이상 userId=" + userId
