@@ -277,5 +277,6 @@ public class MessageSnapshotService {
                 .replace("{settlementDetails}",
                         billing.getSettlementDetails());
     }
+    
 }
 

@@ -7,7 +7,7 @@ spring:
     properties:
       hibernate:
         jdbc:
-          batch_size: 100
+          batch_size: 1000
         order_inserts: true
         order_updates: true
 
@@ -17,7 +17,7 @@ spring:
     username: ${DB_USER}
     password: ${DB_PASSWORD}
     hikari:
-      maximum-pool-size: 30 # 컨슈머 모듈이므로 적절히 조절
+      maximum-pool-size: 50 # 컨슈머 모듈이므로 적절히 조절
 
   kafka:
     # 도커 서비스명(kafka:29092)이 아니라 내 컴퓨터 포트(localhost:9092)로 접속
@@ -29,7 +29,7 @@ spring:
       group-id: billing-message-group
       auto-offset-reset: earliest
       enable-auto-commit: false # 수동 커밋 모드 (안정성 확보)
-      max-poll-records: 500     # 한 번에 가져올 메시지 양
+      max-poll-records: 1000     # 한 번에 가져올 메시지 양
 
       # [추가] Deserializer 설정 (batch 모듈과 쌍을 맞춰야 데이터가 읽힙니다)
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
@@ -45,3 +45,9 @@ spring:
     listener:
       # 컨슈머가 수동으로 커밋할 수 있도록 설정 (AckMode)
       ack-mode: manual_immediate
+      
+      message:
+  dispatch:
+    pool-size: 500
+    queue-size: 1000
+    batch-size: 1000

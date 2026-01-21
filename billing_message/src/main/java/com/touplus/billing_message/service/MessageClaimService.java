@@ -20,7 +20,7 @@ public class MessageClaimService {
 
     private final MessageRepository messageRepository;
 
-    @Value("${message.dispatch.batch-size:500}")
+    @Value("${message.dispatch.batch-size:1000}")
     private int batchSize;
 
     @Transactional

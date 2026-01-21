@@ -177,11 +177,11 @@ public class MessageProcessService {
 
         // SENT는 스킵
         if (message.getStatus() == MessageStatus.SENT) {
-            log.debug("이미 발송 완료 messageId={}", messageId);
+            log.debug("이미 SENT 처리됨 messageId={}", messageId);
             return;
         }
 
-        // CREATED만 처리
+        // CREATED만 처리(CREATED가 아니면 넘어감)
         if (message.getStatus() != MessageStatus.CREATED) {
             log.debug("처리 대상 아님 messageId={} status={}",
                     messageId, message.getStatus());
@@ -195,12 +195,12 @@ public class MessageProcessService {
         MessageType messageType =
                 message.getRetryCount() >= 3 ? MessageType.SMS : MessageType.EMAIL;
 
-        // snapshot 필수
+        // snapshot 조회, 없으면 생성
         MessageSnapshot snapshot =
                 messageSnapshotRepository.findById(messageId).orElse(null);
 
         if (snapshot == null) {
-            log.error("Snapshot 없음 (치명적) messageId={}", messageId);
+            log.error("Snapshot 없음 messageId={}", messageId);
 
             LocalDateTime retryAt =
                     messagePolicy.nextRetryAt(LocalDateTime.now(), message.getRetryCount());
