@@ -70,13 +70,13 @@ public class UserSubscribeProductRepositoryImpl
      * findByUserIdIn(List<Long> userIds)
      */
     @Override
-    public List<UserSubscribeProduct> findByUserIdIn(List<Long> userIds) {
+    public List<UserSubscribeProduct> findByUserIdIn(List<Long> userIds, LocalDate startDate, LocalDate endDate) {
 
         if (userIds == null || userIds.isEmpty()) {
             return List.of();
         }
 
-        String sql = """
+        String sql =  """
             SELECT
                 user_subscribe_product_id,
                 created_month,
@@ -85,11 +85,14 @@ public class UserSubscribeProductRepositoryImpl
                 product_id
             FROM user_subscribe_product
             WHERE user_id IN (:userIds)
-              AND deleted_at IS NULL
+              AND created_month <= :endDate
+              AND (deleted_at IS NULL OR deleted_at >= :startDate)
         """;
 
-        MapSqlParameterSource params =
-                new MapSqlParameterSource("userIds", userIds);
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("userIds", userIds)
+                .addValue("startDate", startDate)
+                .addValue("endDate", endDate);
 
         return namedJdbcTemplate.query(sql, params, this::mapRow);
     }

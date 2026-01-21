@@ -12,5 +12,5 @@ public interface AdditionalChargeRepository {
 
     List<AdditionalCharge> findByAdditionalChargeMonth(LocalDate month);
 
-    List<AdditionalCharge> findByUserIdIn(List<Long> userIds);
+    List<AdditionalCharge> findByUserIdIn(List<Long> userIds, LocalDate startDate, LocalDate endDate);
 }

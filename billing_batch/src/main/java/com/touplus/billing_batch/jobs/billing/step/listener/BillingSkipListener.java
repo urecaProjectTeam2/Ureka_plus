@@ -46,7 +46,6 @@ public class BillingSkipListener implements SkipListener<BillingUserBillingInfoD
     }
 
     @Override
-
     public void onSkipInWrite(BillingResult item, Throwable t) {
         log.error(">> [Skip In Write] UserID: {}, Reason: {}", item.getUserId(), t.getMessage());
         billingErrorLogger.saveErrorLog(stepExecution, item.getUserId(), t, "WRITER", false);

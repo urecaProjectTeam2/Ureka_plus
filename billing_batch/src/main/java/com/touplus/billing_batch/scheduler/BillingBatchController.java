@@ -18,12 +18,12 @@ public class BillingBatchController {
 
     @GetMapping("/billing")
     public ResponseEntity<String> runBillingJob(
-            @RequestParam(required = false) String settlementMonth
+            @RequestParam(value = "forceFullScan", defaultValue = "false") boolean forceFullScan
     ) throws Exception {
 
         log.info("[Get batch/billing] 배치 수동 호출");
 
-        billingBatchScheduler.runMonthlyBilling();
+        billingBatchScheduler.runBillingJob(forceFullScan);
 
         return ResponseEntity.ok(
                 "[Get batch/billing] Billing batch started."

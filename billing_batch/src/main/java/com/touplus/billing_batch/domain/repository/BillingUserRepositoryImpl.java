@@ -10,6 +10,7 @@ import org.springframework.stereotype.Repository;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.time.LocalDate;
 import java.util.List;
 
 import static java.lang.Long.getLong;
@@ -82,22 +83,38 @@ public class BillingUserRepositoryImpl implements BillingUserRepository{
             Long minValue,
             Long maxValue,
             Long lastProcessedUserId,
+            boolean forceFullScan,
+            LocalDate startDate,
+            LocalDate endDate,
             Pageable pageable
     ) {
 
         String sql = """
-        SELECT user_id
-        FROM billing_user
-        WHERE user_id BETWEEN :minValue AND :maxValue
-          AND user_id > :lastProcessedUserId
-        ORDER BY user_id
-        LIMIT :limit
+            SELECT b.user_id
+            FROM billing_user b
+            WHERE b.user_id BETWEEN :minValue AND :maxValue
+              AND b.user_id > :lastProcessedUserId
+              /* forceFullScan이 true면 뒤의 NOT EXISTS 조건을 무시하고 전체 조회 */
+              AND (
+                  :forceFullScan = true
+                  OR NOT EXISTS (
+                      SELECT 1
+                      FROM tmp_billing_result r
+                      WHERE r.user_id = b.user_id
+                        AND r.settlement_month BETWEEN :startDate AND :endDate
+                  )
+              )
+            ORDER BY b.user_id
+            LIMIT :limit
     """;
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("minValue", minValue)
                 .addValue("maxValue", maxValue)
                 .addValue("lastProcessedUserId", lastProcessedUserId)
+                .addValue("forceFullScan", forceFullScan)
+                .addValue("startDate", startDate)
+                .addValue("endDate", endDate)
                 .addValue("limit", pageable.getPageSize());
 
         return namedJdbcTemplate.query(sql, params, this::mapRow);

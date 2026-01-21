@@ -1,5 +1,6 @@
 package com.touplus.billing_batch.jobs.billing.step.reader;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -9,6 +10,7 @@ import com.touplus.billing_batch.domain.dto.*;
 import com.touplus.billing_batch.jobs.billing.step.listener.BillingErrorLogger;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.StepExecution;
 import org.springframework.batch.core.annotation.BeforeStep;
 import org.springframework.batch.item.ExecutionContext;
@@ -23,6 +25,7 @@ import org.springframework.stereotype.Component;
 import com.touplus.billing_batch.domain.entity.*;
 import com.touplus.billing_batch.domain.repository.*;
 
+@Slf4j
 @Component
 @StepScope
 public class BillingItemReader implements ItemStreamReader<BillingUserBillingInfoDto> {
@@ -34,13 +37,19 @@ public class BillingItemReader implements ItemStreamReader<BillingUserBillingInf
     private final UserSubscribeDiscountRepository discountRepository;
 
     private final Deque<BillingUserBillingInfoDto> buffer = new ArrayDeque<>();
-    private final int chunkSize = 1000;
+    private final int chunkSize = 2000;
 
     @Value("#{stepExecutionContext['minValue']}")
     private Long minValue;
 
     @Value("#{stepExecutionContext['maxValue']}")
     private Long maxValue;
+
+    @Value("#{jobParameters['targetMonth']}")
+    private String targetMonth;
+
+    @Value("#{jobParameters['forceFullScan'] ?: false}")
+    private boolean forceFullScan;
 
     // DB 조회용
     private Long lastProcessedUserId = 0L;  // 실제 read()로 반환된 ID
@@ -69,6 +78,10 @@ public class BillingItemReader implements ItemStreamReader<BillingUserBillingInf
 
     @Override
     public void open(ExecutionContext executionContext) {
+        if (forceFullScan) {
+            log.info(">> [NOTICE] 전체 재정산 모드(forceFullScan=true)로 동작합니다. 모든 데이터를 다시 처리합니다.");
+        }
+
         if (minValue == null || maxValue == null) {
             throw BillingFatalException.cacheNotFound("Partition minValue / maxValue not set");
         }
@@ -94,7 +107,7 @@ public class BillingItemReader implements ItemStreamReader<BillingUserBillingInf
     }
 
     @Override
-    public BillingUserBillingInfoDto read() throws Exception {
+    public BillingUserBillingInfoDto read() {
         //  버퍼가 비었으면 채우기 (조회 실패 시 Fatal)
         if (buffer.isEmpty()) {
             fillBuffer();
@@ -104,8 +117,7 @@ public class BillingItemReader implements ItemStreamReader<BillingUserBillingInf
 
         // 개별 DTO 검증: 상품 정보가 없으면 Skip 가능
         if (dto != null) {
-            if (true) {
-//            if (dto.getProducts() == null || dto.getProducts().isEmpty()) {
+            if (dto.getProducts() == null || dto.getProducts().isEmpty()) {
                 throw new BillingException("상품 정보 없음", "ERR_NO_PRODUCT", dto.getUserId());
             }
             lastProcessedUserId = dto.getUserId();
@@ -114,25 +126,34 @@ public class BillingItemReader implements ItemStreamReader<BillingUserBillingInf
         return dto;
     }
 
+    private void fillBuffer() {
+        // targetMonth 시작일-종료일 계산
+        LocalDate startDate = LocalDate.parse(targetMonth);
+        LocalDate endDate = startDate.withDayOfMonth(startDate.lengthOfMonth());
 
-    private void fillBuffer() throws Exception {
         // 1. No-Offset 방식: userId 기준 다음 청크 조회
         List<BillingUser> users =
                 userRepository.findUsersInRange(
                         minValue,
                         maxValue,
                         lastProcessedUserId,
+                        forceFullScan,
+                        startDate,
+                        endDate,
                         Pageable.ofSize(chunkSize)
                 );
 
         if (users.isEmpty()) {
+            if (lastProcessedUserId >= minValue) {
+                return; // buffer 그대로 비워두면 read()에서 null 반환 → Step 정상 종료
+            }
             throw BillingFatalException.noUsersInPartition(minValue, maxValue);
         }
 
         List<Long> userIds = users.stream().map(BillingUser::getUserId).toList();
 
         // 엔티티 -> DTO 변환 + Map 생성
-        Map<Long, List<UserSubscribeProductDto>> uspMap = uspRepository.findByUserIdIn(userIds).stream()
+        Map<Long, List<UserSubscribeProductDto>> uspMap = uspRepository.findByUserIdIn(userIds, startDate, endDate).stream()
                 .map(UserSubscribeProductDto::fromEntity)
                 .collect(Collectors.groupingBy(UserSubscribeProductDto::getUserId));
 
@@ -140,11 +161,11 @@ public class BillingItemReader implements ItemStreamReader<BillingUserBillingInf
                 .map(UnpaidDto::fromEntity)
                 .collect(Collectors.groupingBy(UnpaidDto::getUserId));
 
-        Map<Long, List<AdditionalChargeDto>> chargeMap = chargeRepository.findByUserIdIn(userIds).stream()
+        Map<Long, List<AdditionalChargeDto>> chargeMap = chargeRepository.findByUserIdIn(userIds, startDate, endDate).stream()
                 .map(AdditionalChargeDto::fromEntity)
                 .collect(Collectors.groupingBy(AdditionalChargeDto::getUserId));
 
-        Map<Long, List<UserSubscribeDiscountDto>> discountMap = discountRepository.findByUserIdIn(userIds).stream()
+        Map<Long, List<UserSubscribeDiscountDto>> discountMap = discountRepository.findByUserIdIn(userIds, startDate, endDate).stream()
                 .map(UserSubscribeDiscountDto::fromEntity)
                 .collect(Collectors.groupingBy(UserSubscribeDiscountDto::getUserId));
 

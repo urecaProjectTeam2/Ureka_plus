@@ -69,7 +69,7 @@ public class AdditionalChargeRepositoryimpl implements AdditionalChargeRepositor
      * JPA: findByUserIdIn
      */
     @Override
-    public List<AdditionalCharge> findByUserIdIn(List<Long> userIds) {
+    public List<AdditionalCharge> findByUserIdIn(List<Long> userIds, LocalDate startDate, LocalDate endDate) {
         if (userIds == null || userIds.isEmpty()) {
             return List.of();
         }
@@ -78,10 +78,15 @@ public class AdditionalChargeRepositoryimpl implements AdditionalChargeRepositor
             SELECT *
             FROM additional_charge
             WHERE user_id IN (:userIds)
+                AND additional_charge_month >= :startDate
+                AND additional_charge_month <= :endDate
         """;
 
         MapSqlParameterSource params =
-                new MapSqlParameterSource("userIds", userIds);
+                new MapSqlParameterSource()
+                        .addValue("userIds", userIds)
+                        .addValue("startDate", startDate)
+                        .addValue("endDate", endDate);
 
         return namedJdbcTemplate.query(sql, params, this::mapRow);
     }

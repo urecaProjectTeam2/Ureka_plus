@@ -70,7 +70,7 @@ public class BillingJobConfig {
     @Bean
     public Step workerStep() {
         return new StepBuilder("workerStep", jobRepository)
-                .<BillingUserBillingInfoDto, BillingResult>chunk(1000, transactionManager) // 청크 단위를 크게 가져가 성능 최적화
+                .<BillingUserBillingInfoDto, BillingResult>chunk(2000, transactionManager) // 청크 단위를 크게 가져가 성능 최적화
                 .reader(billingItemReader)
                 .processor(compositeProcessor())
                 .writer(billingItemWriter)

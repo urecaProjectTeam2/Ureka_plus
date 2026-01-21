@@ -2,6 +2,7 @@ package com.touplus.billing_batch.domain.repository;
 
 import com.touplus.billing_batch.domain.entity.UserSubscribeProduct;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface UserSubscribeProductRepository {
@@ -16,5 +17,5 @@ public interface UserSubscribeProductRepository {
      * JPA:
      * findByUserIdIn(List<Long> userIds)
      */
-    List<UserSubscribeProduct> findByUserIdIn(List<Long> userIds);
+    List<UserSubscribeProduct> findByUserIdIn(List<Long> userIds, LocalDate startDate, LocalDate endDate);
 }
