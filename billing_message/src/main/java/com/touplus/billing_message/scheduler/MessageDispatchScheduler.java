@@ -28,10 +28,7 @@ public class MessageDispatchScheduler {
         messageDispatchService.dispatchDueMessages();
     }
 
-    /**
-     * 스케줄러 2 - 333ms 지연 시작
-     */
-    @Scheduled(fixedDelayString = "${message.dispatch.poll-delay-ms:1000}", initialDelay = 333)
+    @Scheduled(fixedDelayString = "${message.dispatch.poll-delay-ms:1000}", initialDelay = 100)
     public void dispatch2() {
         if (!hasWaitingMessages())
             return;
@@ -39,14 +36,27 @@ public class MessageDispatchScheduler {
         messageDispatchService.dispatchDueMessages();
     }
 
-    /**
-     * 스케줄러 3 - 666ms 지연 시작
-     */
-    @Scheduled(fixedDelayString = "${message.dispatch.poll-delay-ms:1000}", initialDelay = 666)
+    @Scheduled(fixedDelayString = "${message.dispatch.poll-delay-ms:1000}", initialDelay = 200)
     public void dispatch3() {
         if (!hasWaitingMessages())
             return;
         log.debug("[Scheduler-3] 배치 처리 시작");
+        messageDispatchService.dispatchDueMessages();
+    }
+
+    @Scheduled(fixedDelayString = "${message.dispatch.poll-delay-ms:1000}", initialDelay = 300)
+    public void dispatch4() {
+        if (!hasWaitingMessages())
+            return;
+        log.debug("[Scheduler-4] 배치 처리 시작");
+        messageDispatchService.dispatchDueMessages();
+    }
+
+    @Scheduled(fixedDelayString = "${message.dispatch.poll-delay-ms:1000}", initialDelay = 400)
+    public void dispatch5() {
+        if (!hasWaitingMessages())
+            return;
+        log.debug("[Scheduler-5] 배치 처리 시작");
         messageDispatchService.dispatchDueMessages();
     }
 

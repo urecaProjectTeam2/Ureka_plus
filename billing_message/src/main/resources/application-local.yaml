@@ -17,8 +17,8 @@ spring:
     username: ${DB_USER}
     password: ${DB_PASSWORD}
     hikari:
-      maximum-pool-size: 100 # 50 → 100 (다중 스케줄러용)
-      minimum-idle: 20        # 유휴 커넥션 유지
+      maximum-pool-size: 50   # DB 작업용
+      minimum-idle: 25        # 유휴 커넥션 유지
 
   kafka:
     # 도커 서비스명(kafka:29092)이 아니라 내 컴퓨터 포트(localhost:9092)로 접속
@@ -49,7 +49,7 @@ spring:
       
 message:
   dispatch:
-    pool-size: 100            # 500 → 100 (1코어 DB용 최적화)
-    queue-size: 300           # 1000 → 300
-    batch-size: 1000          # 유지
-    poll-delay-ms: 1000       # 2000 → 1000 (빠른 폴링)
+    pool-size: 500            # 배치 크기와 동일 (1배치=1초)
+    queue-size: 1500
+    batch-size: 500           # pool-size와 동일
+    poll-delay-ms: 300        # 더 빠른 폴링
