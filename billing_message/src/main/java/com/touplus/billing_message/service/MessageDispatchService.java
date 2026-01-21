@@ -1,7 +1,9 @@
 package com.touplus.billing_message.service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.core.task.TaskExecutor;
@@ -9,6 +11,8 @@ import org.springframework.stereotype.Service;
 
 import com.touplus.billing_message.domain.entity.Message;
 import com.touplus.billing_message.domain.entity.MessageType;
+import com.touplus.billing_message.domain.respository.MessageRepository;
+import com.touplus.billing_message.domain.respository.MessageJdbcRepository;
 
 import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -21,34 +25,42 @@ public class MessageDispatchService {
     private final MessageProcessService messageProcessService;
     private final TaskExecutor messageDispatchTaskExecutor;
     private final MessageSnapshotService messageSnapshotService;
+    private final MessageRepository messageRepository;
+    private final MessageJdbcRepository messageJdbcRepository;
 
     public MessageDispatchService(
             MessageClaimService messageClaimService,
             MessageProcessService messageProcessService,
             MessageSnapshotService messageSnapshotService,
-            @Qualifier("messageDispatchTaskExecutor")
-            TaskExecutor messageTaskExecutor
-    ) {
+            MessageRepository messageRepository,
+            MessageJdbcRepository messageJdbcRepository,
+            @Qualifier("messageDispatchTaskExecutor") TaskExecutor messageTaskExecutor) {
         this.messageClaimService = messageClaimService;
         this.messageProcessService = messageProcessService;
         this.messageSnapshotService = messageSnapshotService;
+        this.messageRepository = messageRepository;
+        this.messageJdbcRepository = messageJdbcRepository;
         this.messageDispatchTaskExecutor = messageTaskExecutor;
     }
 
-   /* 미수 : 이것저것 주석 처리하고 파란색 주석 없는 건 다 내가 추가한 거 -> 배치로 빨리 돌리려고
-    	public void dispatchDueMessages() {
-        List<Long> messageIds = messageClaimService.claimNextMessages(LocalDateTime.now());
-        if (messageIds.isEmpty()) {
-            log.debug("발송 대상 메시지 없음");
-            return;
-        }
+    /*
+     * 미수 : 이것저것 주석 처리하고 파란색 주석 없는 건 다 내가 추가한 거 -> 배치로 빨리 돌리려고
+     * public void dispatchDueMessages() {
+     * List<Long> messageIds =
+     * messageClaimService.claimNextMessages(LocalDateTime.now());
+     * if (messageIds.isEmpty()) {
+     * log.debug("발송 대상 메시지 없음");
+     * return;
+     * }
+     * 
+     * log.info("메시지 {}건 발송 시작", messageIds.size());
+     * for (Long messageId : messageIds) {
+     * messageDispatchTaskExecutor.execute(() ->
+     * processWithExceptionHandling(messageId));
+     * }
+     * }
+     */
 
-        log.info("메시지 {}건 발송 시작", messageIds.size());
-        for (Long messageId : messageIds) {
-            messageDispatchTaskExecutor.execute(() -> processWithExceptionHandling(messageId));
-        }
-    }*/
-  
     /**
      * 예외 처리를 포함한 메시지 처리
      */
@@ -72,28 +84,31 @@ public class MessageDispatchService {
      * 
      * @return 발송 시작한 메시지 수
      */
-   /* public int dispatchAllWaited() {
-        List<Long> messageIds = messageClaimService.claimNextMessagesIgnoreSchedule();
-        if (messageIds.isEmpty()) {
-            log.info("발송 대상 메시지 없음");
-            return 0;
-        }
+    /*
+     * public int dispatchAllWaited() {
+     * List<Long> messageIds =
+     * messageClaimService.claimNextMessagesIgnoreSchedule();
+     * if (messageIds.isEmpty()) {
+     * log.info("발송 대상 메시지 없음");
+     * return 0;
+     * }
+     * 
+     * log.info("메시지 {}건 발송 시작 (스케줄 무시)", messageIds.size());
+     * for (Long messageId : messageIds) {
+     * messageDispatchTaskExecutor.execute(() ->
+     * processWithExceptionHandling(messageId));
+     * }
+     * 
+     * log.info("총 발송 시작: {}건", messageIds.size());
+     * return messageIds.size();
+     * }
+     */
 
-        log.info("메시지 {}건 발송 시작 (스케줄 무시)", messageIds.size());
-        for (Long messageId : messageIds) {
-            messageDispatchTaskExecutor.execute(() -> processWithExceptionHandling(messageId));
-        }
-
-        log.info("총 발송 시작: {}건", messageIds.size());
-        return messageIds.size();
-    }*/
-    
-    // 미수 : 배치 때문에 추가된 코드 
+    // 미수 : 배치 때문에 추가된 코드
     @Transactional
     public List<Long> prepareDispatch(LocalDateTime now) {
 
-        List<Message> messages =
-            messageClaimService.claimNextMessagesAsEntities(now);
+        List<Message> messages = messageClaimService.claimNextMessagesAsEntities(now);
 
         if (messages.isEmpty()) {
             return List.of();
@@ -107,18 +122,58 @@ public class MessageDispatchService {
     }
 
     public void dispatchPreparedMessages(List<Long> messageIds) {
+        // CompletableFuture로 모든 발송 완료 대기 후 Bulk UPDATE (JDBC 버전)
+        List<CompletableFuture<ProcessResult>> futures = messageIds.stream()
+                .map(id -> CompletableFuture.supplyAsync(
+                        () -> processAndReturnResultJdbc(id),
+                        messageDispatchTaskExecutor))
+                .toList();
 
-        for (Long messageId : messageIds) {
-            messageDispatchTaskExecutor.execute(
-                () -> processWithExceptionHandling(messageId)
-            );
+        // 모든 발송 완료 대기
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+        // 결과 수집
+        List<Long> sentIds = new ArrayList<>();
+
+        for (CompletableFuture<ProcessResult> future : futures) {
+            try {
+                ProcessResult result = future.get();
+                if (result != null && result.success()) {
+                    sentIds.add(result.messageId());
+                }
+            } catch (Exception e) {
+                log.error("결과 수집 실패", e);
+            }
         }
+
+        // Bulk UPDATE (JDBC)
+        if (!sentIds.isEmpty()) {
+            messageJdbcRepository.bulkMarkSent(sentIds);
+            log.info("Bulk SENT 처리 (JDBC): {}건", sentIds.size());
+        }
+    }
+
+    /**
+     * JDBC 버전 - 발송 처리 후 결과 반환
+     */
+    private ProcessResult processAndReturnResultJdbc(Long messageId) {
+        try {
+            return messageProcessService.processMessageAndReturnResultJdbc(messageId);
+        } catch (Exception e) {
+            log.error("메시지 처리 실패 (JDBC) messageId={}", messageId, e);
+            return new ProcessResult(messageId, false);
+        }
+    }
+
+    /**
+     * 발송 결과 DTO
+     */
+    public record ProcessResult(Long messageId, boolean success) {
     }
 
     public void dispatchDueMessages() {
 
-        List<Long> messageIds =
-            prepareDispatch(LocalDateTime.now());
+        List<Long> messageIds = prepareDispatch(LocalDateTime.now());
 
         if (messageIds.isEmpty()) {
             log.debug("발송 대상 메시지 없음");
@@ -129,20 +184,23 @@ public class MessageDispatchService {
         dispatchPreparedMessages(messageIds);
     }
 
-    
-    /*public int dispatchAllWaited() {
-        List<Long> messageIds = messageClaimService.claimNextMessages(LocalDateTime.now());
-        
-        if (messageIds.isEmpty()) {
-            log.info("발송 대상 메시지 없음");
-            return 0;
-        }
-
-        log.info("메시지 {}건 발송 시작 - WAITED만", messageIds.size());
-        for (Long messageId : messageIds) {
-            messageDispatchTaskExecutor.execute(() -> processWithExceptionHandling(messageId));
-        }
-
-        return messageIds.size();
-    }*/
+    /*
+     * public int dispatchAllWaited() {
+     * List<Long> messageIds =
+     * messageClaimService.claimNextMessages(LocalDateTime.now());
+     * 
+     * if (messageIds.isEmpty()) {
+     * log.info("발송 대상 메시지 없음");
+     * return 0;
+     * }
+     * 
+     * log.info("메시지 {}건 발송 시작 - WAITED만", messageIds.size());
+     * for (Long messageId : messageIds) {
+     * messageDispatchTaskExecutor.execute(() ->
+     * processWithExceptionHandling(messageId));
+     * }
+     * 
+     * return messageIds.size();
+     * }
+     */
 }
