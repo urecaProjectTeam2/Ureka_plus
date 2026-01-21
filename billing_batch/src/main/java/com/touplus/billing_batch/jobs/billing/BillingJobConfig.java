@@ -1,7 +1,7 @@
 package com.touplus.billing_batch.jobs.billing;
 
 import com.touplus.billing_batch.common.BillingException;
-import com.touplus.billing_batch.common.listener.BillingJobListener;
+import com.touplus.billing_batch.jobs.billing.step.listener.BillingJobListener;
 import com.touplus.billing_batch.domain.dto.BillingUserBillingInfoDto;
 import com.touplus.billing_batch.domain.entity.BillingResult;
 import com.touplus.billing_batch.jobs.billing.partitioner.UserRangePartitioner;
@@ -11,7 +11,6 @@ import com.touplus.billing_batch.jobs.billing.step.processor.AmountCalculationPr
 import com.touplus.billing_batch.jobs.billing.step.processor.DiscountCalculationProcessor;
 import com.touplus.billing_batch.jobs.billing.step.processor.FinalBillingResultProcessor;
 import com.touplus.billing_batch.jobs.billing.step.reader.BillingItemReader;
-import com.touplus.billing_batch.jobs.billing.step.writer.BillingItemWriter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
@@ -20,6 +19,7 @@ import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
 
 import org.springframework.batch.item.ItemProcessor;
+import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.support.CompositeItemProcessor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,7 +40,10 @@ public class BillingJobConfig {
     private final PlatformTransactionManager transactionManager;
     private final UserRangePartitioner userRangePartitioner;
     private final BillingItemReader billingItemReader;
-    private final BillingItemWriter billingItemWriter;
+
+//    private final BillingItemWriter billingItemWriter;
+    private final ItemWriter<BillingResult> billingItemWriter;  // 인터페이스 타입으로 주입 --> JdbcBatchItemWriter가 들어오도록 함.
+
     private final BillingJobListener billingJobListener; // job 리스너 주입
     private final BillingSkipListener billingSkipListener; // 리스너 주입
     private final BillingStepListener billingStepListener; // 리스너 주입
@@ -73,10 +76,10 @@ public class BillingJobConfig {
                 .<BillingUserBillingInfoDto, BillingResult>chunk(1000, transactionManager) // 청크 단위를 크게 가져가 성능 최적화
                 .reader(billingItemReader)
                 .processor(compositeProcessor())
-                .writer(billingItemWriter)
+                .writer(billingItemWriter)  // JdbcBatchItemWriter 주입
                 .faultTolerant()                 // 2. 내결함성 기능 활성화
                 .skip(BillingException.class)    // 3. 모든 예외에 대해 Skip 허용  --> 에러 발생 시 step 중단 없이 리스너가 가로챔
-                .skipLimit(100)                   // 4. 최대 100번까지 Skip 허용
+                .skipLimit(1000)                   // 4. 최대 100번까지 Skip 허용
                 .listener(billingSkipListener)   // 5. 리스너 등록
                 .listener(billingStepListener)
                 .build();
@@ -86,7 +89,8 @@ public class BillingJobConfig {
     public TaskExecutor taskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(10); // 기본 유지 스레드 수
-        executor.setMaxPoolSize(20); // 최대 생성 가능 스레드 수
+        executor.setMaxPoolSize(15); // 파티션 개수(gridSize)보다 약간 여유 있게 수정 // 최대 생성 가능 스레드 수 20 --> 15
+        executor.setQueueCapacity(100); // 큐를 설정하여 스레드 폭주 방지
         executor.setThreadNamePrefix("billing-thread-"); // 스레드 이름 앞에 붙는 접두가
         executor.initialize();
         return executor;

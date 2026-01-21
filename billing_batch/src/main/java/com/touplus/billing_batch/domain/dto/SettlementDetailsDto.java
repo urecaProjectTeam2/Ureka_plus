@@ -1,5 +1,6 @@
 package com.touplus.billing_batch.domain.dto;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.touplus.billing_batch.domain.enums.ProductType;
 import lombok.*;
 
@@ -7,6 +8,9 @@ import java.util.List;
 
 @Getter
 @Builder
+@NoArgsConstructor
+@AllArgsConstructor
+@JsonInclude(JsonInclude.Include.NON_EMPTY) // 빈 리스트나 Null인 필드는 JSON 생성 시, 아예 제외하여 데이터 크기를 줄이는 용도.
 public class SettlementDetailsDto {
 
     private List<DetailItem> mobile;      // 휴대폰 요금
