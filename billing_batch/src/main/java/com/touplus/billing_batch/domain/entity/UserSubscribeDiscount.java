@@ -3,6 +3,7 @@ package com.touplus.billing_batch.domain.entity;
 import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Getter
 @Setter
@@ -26,4 +27,7 @@ public class UserSubscribeDiscount {
 
     @Column(name = "product_id", nullable = false)
     private Long productId;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

@@ -12,6 +12,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -23,6 +24,7 @@ public class UserSubscribeDiscountDto {
     private Long userId;
     private Long discountId;
     private Long productId;
+    private LocalDateTime deletedAt;
 
     public static UserSubscribeDiscountDto fromEntity(UserSubscribeDiscount entity) {
         return UserSubscribeDiscountDto.builder()
@@ -31,6 +33,7 @@ public class UserSubscribeDiscountDto {
                 .userId(entity.getUserId())
                 .discountId(entity.getDiscountId())
                 .productId(entity.getProductId())
+                .deletedAt(entity.getDeletedAt())
                 .build();
     }
 
@@ -41,6 +44,7 @@ public class UserSubscribeDiscountDto {
                 .userId(this.userId)
                 .discountId(this.discountId)
                 .productId(this.productId)
+                .deletedAt((this.deletedAt))
                 .build();
     }
 }

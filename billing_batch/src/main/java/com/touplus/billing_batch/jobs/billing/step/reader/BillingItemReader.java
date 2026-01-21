@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import com.touplus.billing_batch.common.BillingException;
 import com.touplus.billing_batch.common.BillingFatalException;
 import com.touplus.billing_batch.domain.dto.*;
 import jakarta.persistence.EntityManager;
@@ -16,6 +17,7 @@ import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemStreamReader;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
@@ -36,9 +38,6 @@ public class BillingItemReader implements ItemStreamReader<BillingUserBillingInf
     private final Deque<BillingUserBillingInfoDto> buffer = new ArrayDeque<>();
     private final int chunkSize = 2000;
 
-    @PersistenceContext
-    private EntityManager entityManager;
-
     @Value("#{stepExecutionContext['minValue']}")
     private Long minValue;
 
@@ -50,7 +49,6 @@ public class BillingItemReader implements ItemStreamReader<BillingUserBillingInf
 
     @Value("#{jobParameters['forceFullScan'] ?: false}")
     private boolean forceFullScan;
-
 
     // DB 조회용
     private Long lastProcessedUserId = 0L;  // 실제 read()로 반환된 ID
@@ -162,7 +160,7 @@ public class BillingItemReader implements ItemStreamReader<BillingUserBillingInf
         List<Long> userIds = users.stream().map(BillingUser::getUserId).toList();
 
         // 엔티티 -> DTO 변환 + Map 생성
-        Map<Long, List<UserSubscribeProductDto>> uspMap = uspRepository.findByUserIdIn(userIds).stream()
+        Map<Long, List<UserSubscribeProductDto>> uspMap = uspRepository.findByUserIdIn(userIds, startDate, endDate).stream()
                 .map(UserSubscribeProductDto::fromEntity)
                 .collect(Collectors.groupingBy(UserSubscribeProductDto::getUserId));
 
@@ -174,11 +172,11 @@ public class BillingItemReader implements ItemStreamReader<BillingUserBillingInf
                 .map(UnpaidDto::fromEntity)
                 .collect(Collectors.groupingBy(UnpaidDto::getUserId));
 
-        Map<Long, List<AdditionalChargeDto>> chargeMap = chargeRepository.findByUserIdIn(userIds).stream()
+        Map<Long, List<AdditionalChargeDto>> chargeMap = chargeRepository.findByUserIdIn(userIds, startDate, endDate).stream()
                 .map(AdditionalChargeDto::fromEntity)
                 .collect(Collectors.groupingBy(AdditionalChargeDto::getUserId));
 
-        Map<Long, List<UserSubscribeDiscountDto>> discountMap = discountRepository.findByUserIdIn(userIds).stream()
+        Map<Long, List<UserSubscribeDiscountDto>> discountMap = discountRepository.findByUserIdIn(userIds, startDate, endDate).stream()
                 .map(UserSubscribeDiscountDto::fromEntity)
                 .collect(Collectors.groupingBy(UserSubscribeDiscountDto::getUserId));
 

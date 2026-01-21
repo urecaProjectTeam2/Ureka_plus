@@ -76,11 +76,18 @@ public class BillingResultRepositoryImpl implements BillingResultRepository {
     public void saveAll(List<BillingResult> results) throws Exception {
 
         String sql = """
-        INSERT INTO tmp_billing_result
-        (settlement_month, user_id, total_price, settlement_details, send_status, batch_execution_id, processed_at)
-        VALUES
-        (:settlementMonth, :userId, :totalPrice, :settlementDetails, :sendStatus, :batchExecutionId, :processedAt)
-    """;
+            INSERT INTO tmp_billing_result
+            (settlement_month, user_id, total_price, settlement_details, send_status, batch_execution_id, processed_at)
+            VALUES
+            (:settlementMonth, :userId, :totalPrice, :settlementDetails, :sendStatus, :batchExecutionId, :processedAt)
+            ON DUPLICATE KEY UPDATE
+                settlement_month = VALUES(settlement_month),
+                total_price = VALUES(total_price),
+                settlement_details = VALUES(settlement_details),
+                send_status = VALUES(send_status),
+                batch_execution_id = VALUES(batch_execution_id),
+                processed_at = VALUES(processed_at)
+        """;
 
         List<MapSqlParameterSource> batchParams = new ArrayList<>(results.size());
 
