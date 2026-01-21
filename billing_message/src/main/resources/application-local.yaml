@@ -5,34 +5,42 @@ spring:
       on-profile: local
 
   datasource:
-    url: jdbc:mysql://localhost:13306/billing_message
-    username: ${DB_USER}
-    password: ${DB_PASSWORD}
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # ?rewriteBatchedStatements=true&allowMultiQueries=true 옵션 설명
+    # (기존) 1000건 저장 시: DB와 1000번 대화
+    # (변경) 1000건 저장 시: DB와 1번 대화
+    url: jdbc:mysql://localhost:13306/billing_batch?rewriteBatchedStatements=true&allowMultiQueries=true
+    username: ${DB_USER} #로컬로 테스트 시, 직접 값 입력하기
+    password: ${DB_PASSWORD} #로컬로 테스트 시, 직접 값 입력하기
     hikari:
-      maximum-pool-size: 30 # 컨슈머 모듈이므로 적절히 조절
+      maximum-pool-size: 50
+
+  # 배치 메타데이터 테이블 자동 생성 및 자동 실행 방지
+  batch:
+    jdbc:
+      initialize-schema: always
+    job:
+      enabled: false
 
   kafka:
     bootstrap-servers: localhost:9092
-    # [수정] 터널링 환경에 맞춰 SASL 인증 설정 제거 (이미 SSH로 보안 통로가 확보됨)
-    # security.protocol 및 sasl 관련 설정 삭제
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
-    consumer:
-      group-id: billing-message-group
-      auto-offset-reset: earliest
-      enable-auto-commit: false # 수동 커밋 모드 (안정성 확보)
-      max-poll-records: 500     # 한 번에 가져올 메시지 양
-
-      # [추가] Deserializer 설정 (batch 모듈과 쌍을 맞춰야 데이터가 읽힙니다)
-      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
-      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      retries: 5
+      batch-size: 65536         # 64KB (spring.kafka.producer.batch-size)
+      compression-type: lz4     # 압축 (spring.kafka.producer.compression-type)
+      acks: all                 # 안정성 (spring.kafka.producer.acks)
 
       properties:
-        # [추가] 역직렬화 시 신뢰할 수 있는 패키지 지정 (에러 방지)
-        spring.json.trusted.packages: "com.touplus.billing_batch.domain.dto,com.touplus.billing_message.domain.dto"
-        # 대량 처리를 위한 성능 옵션
-        fetch.min.bytes: 1048576  # 1MB가 모일 때까지 기다림 (네트워크 효율)
-        fetch.max.wait.ms: 500    # 최대 500ms 대기
+        linger.ms: 20           # 20ms 대기 ( Throughput 향상 핵심)
+        max.request.size: 5242880 # 5MB로 확장
 
-    listener:
-      # 컨슈머가 수동으로 커밋할 수 있도록 설정 (AckMode)
-      ack-mode: manual_immediate
+    consumer:
+      group-id: billing-group
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer
+      properties:
+        spring.json.trusted.packages: "com.touplus.billing_batch.domain.dto"

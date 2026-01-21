@@ -76,8 +76,8 @@ public class MessageJobConfig {
     @Bean(name = "messageTaskExecutor")
     public TaskExecutor messageTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(10);
-        executor.setMaxPoolSize(20);
+        executor.setCorePoolSize(20);   // 서버 사양에 따라서 수정 ( 20~30)
+        executor.setMaxPoolSize(30);
         executor.setQueueCapacity(2000);
         executor.setThreadNamePrefix("Batch-Thread-");
         executor.initialize();
