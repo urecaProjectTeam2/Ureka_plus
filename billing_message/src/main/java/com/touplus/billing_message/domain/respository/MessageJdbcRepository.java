@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.util.List;
 
@@ -17,8 +18,8 @@ public class MessageJdbcRepository {
     public void batchInsert(List<Message> messages) {
         String sql = """
             INSERT INTO message
-            (billing_id, user_id, status, scheduled_at, retry_count)
-            VALUES (?, ?, ?, ?, ?)
+            (billing_id, user_id, status, scheduled_at, retry_count, ban_end_time)
+            VALUES (?, ?, ?, ?, ?, ?)
         """;
 
         jdbcTemplate.batchUpdate(
@@ -32,7 +33,10 @@ public class MessageJdbcRepository {
                 // LocalDateTime -> Timestamp 변환 필요
                 ps.setTimestamp(4, m.getScheduledAt() != null ? Timestamp.valueOf(m.getScheduledAt()) : null);
                 ps.setInt(5, m.getRetryCount());
+                // LocalTime -> Time 변환
+                ps.setTime(6, m.getBanEndTime() != null ? Time.valueOf(m.getBanEndTime()) : null);
             }
         );
     }
 }
+

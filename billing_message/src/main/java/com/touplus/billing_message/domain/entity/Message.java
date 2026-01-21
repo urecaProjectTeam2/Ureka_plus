@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 
 /**
  * message 테이블 Entity
@@ -41,14 +42,19 @@ public class Message {
     @Column(name = "retry_count", nullable = false)
     private Integer retryCount;
 
+    @Column(name = "ban_end_time")
+    private LocalTime banEndTime;  // 발송 금지 종료 시간 (User에서 복사)
+
     /**
      * Message 생성자
      */
-    public Message(Long billingId, Long userId, LocalDateTime scheduledAt) {
+    public Message(Long billingId, Long userId, LocalDateTime scheduledAt, LocalTime banEndTime) {
         this.billingId = billingId;
         this.userId = userId;
         this.status = MessageStatus.WAITED;  // 고정값
         this.scheduledAt = scheduledAt;
         this.retryCount = 0;                 // 고정값
+        this.banEndTime = banEndTime;
     }
 }
+

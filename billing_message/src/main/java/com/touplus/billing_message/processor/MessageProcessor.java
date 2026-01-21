@@ -75,7 +75,8 @@ public class MessageProcessor {
             messages.add(new Message(
                 snapshot.getBillingId(),
                 snapshot.getUserId(),
-                scheduledAt
+                scheduledAt,
+                user.getBanEndTime()  // User에서 banEndTime 복사
             ));
         }
 
@@ -108,7 +109,8 @@ public class MessageProcessor {
         Message message = new Message(
             snapshot.getBillingId(),
             snapshot.getUserId(),
-            scheduledAt
+            scheduledAt,
+            user.getBanEndTime()  // User에서 banEndTime 복사
         );
 
         messageRepository.save(message);
