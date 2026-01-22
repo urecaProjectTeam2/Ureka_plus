@@ -25,15 +25,15 @@ public class TestController {
      * billing_snapshot에서 데이터 가져와서 MessageProcessor 테스트
      * 사용: http://localhost:8080/test/process/{billingId}
      */
-    @GetMapping("/test/process/{billingId}")
-    public String testProcess(@PathVariable Long billingId) {
-        log.info("테스트 시작 - billingId={}", billingId);
-
-        BillingSnapshot snapshot = snapshotRepository.findById(billingId)
-            .orElseThrow(() -> new RuntimeException("Snapshot 없음: " + billingId));
-
-        //messageProcessor.process(snapshot);
-
-        return "Message 생성 완료! billingId=" + billingId;
-    }
+//    @GetMapping("/test/process/{billingId}")
+//    public String testProcess(@PathVariable Long billingId) {
+//        log.info("테스트 시작 - billingId={}", billingId);
+//
+//        BillingSnapshot snapshot = snapshotRepository.findById(billingId)
+//            .orElseThrow(() -> new RuntimeException("Snapshot 없음: " + billingId));
+//
+//        messageProcessor.process(snapshot);
+//
+//        return "Message 생성 완료! billingId=" + billingId;
+//    }
 }

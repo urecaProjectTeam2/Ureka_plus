@@ -38,8 +38,38 @@ public class MessageProcessor {
 
     private static final int MAX_RETRY = 3;
 
+    /**
+     * 외부에서 User Map을 전달받아 처리 (DB 조회 제거로 성능 향상)
+     */
+    public void processBatchWithUsers(List<BillingSnapshot> snapshots, Map<Long, User> userMap) {
+        if (snapshots.isEmpty())
+            return;
+
+        // Message 생성
+        List<Message> messages = new ArrayList<>();
+        for (BillingSnapshot snapshot : snapshots) {
+            User user = userMap.get(snapshot.getUserId());
+            if (user == null)
+                continue;
+
+            messages.add(new Message(
+                    snapshot.getBillingId(),
+                    snapshot.getUserId(),
+                    calculateScheduledTime(user),
+                    user.getBanEndTime()));
+        }
+
+        if (messages.isEmpty())
+            return;
+
+        // INSERT
+        int inserted = insertBatch(messages);
+        log.info("Message insert: expected={}, actual={}", messages.size(), inserted);
+    }
+
     public void processBatch(List<BillingSnapshot> snapshots) {
-        if (snapshots.isEmpty()) return;
+        if (snapshots.isEmpty())
+            return;
 
         int retry = 0;
         List<BillingSnapshot> target = snapshots;
@@ -60,17 +90,18 @@ public class MessageProcessor {
             List<Message> messages = new ArrayList<>();
             for (BillingSnapshot snapshot : target) {
                 User user = userMap.get(snapshot.getUserId());
-                if (user == null) continue;
+                if (user == null)
+                    continue;
 
                 messages.add(new Message(
                         snapshot.getBillingId(),
                         snapshot.getUserId(),
                         calculateScheduledTime(user),
-                        user.getBanEndTime()
-                ));
+                        user.getBanEndTime()));
             }
 
-            if (messages.isEmpty()) return;
+            if (messages.isEmpty())
+                return;
 
             // 3. INSERT (짧은 트랜잭션)
             int inserted = insertBatch(messages);
@@ -81,10 +112,8 @@ public class MessageProcessor {
             }
 
             // 4. 누락만 재시도
-            Set<Long> savedBillingIds =
-                    messageRepository.findExistingBillingIds(
-                            target.stream().map(BillingSnapshot::getBillingId).toList()
-                    );
+            Set<Long> savedBillingIds = messageRepository.findExistingBillingIds(
+                    target.stream().map(BillingSnapshot::getBillingId).toList());
 
             target = target.stream()
                     .filter(s -> !savedBillingIds.contains(s.getBillingId()))
@@ -110,17 +139,13 @@ public class MessageProcessor {
         LocalDate today = LocalDate.now();
         int sendingDay = user.getSendingDay();
 
-        // 날짜 결정
-        LocalDate sendDate =
-                today.getDayOfMonth() < sendingDay
-                        ? today.withDayOfMonth(sendingDay)
-                        : today.plusMonths(1).withDayOfMonth(sendingDay);
+        LocalDate sendDate = today.getDayOfMonth() < sendingDay
+                ? today.withDayOfMonth(sendingDay)
+                : today.plusMonths(1).withDayOfMonth(sendingDay);
 
-        // 시간 결정
-        LocalTime sendTime =
-                user.getBanEndTime() != null
-                        ? user.getBanEndTime().plusMinutes(1)
-                        : LocalTime.of(9, 0);
+        LocalTime sendTime = user.getBanEndTime() != null
+                ? user.getBanEndTime().plusMinutes(1)
+                : LocalTime.of(9, 0);
 
         return LocalDateTime.of(sendDate, sendTime);
     }

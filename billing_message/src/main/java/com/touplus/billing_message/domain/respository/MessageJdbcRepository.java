@@ -4,7 +4,6 @@ import com.touplus.billing_message.domain.entity.Message;
 import com.touplus.billing_message.domain.entity.MessageStatus;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Time;
@@ -23,36 +22,35 @@ public class MessageJdbcRepository {
 
     /**
      * Batch Insert (INSERT IGNORE)
+     * 
      * @return 성공적으로 INSERT된 건수 (중복은 0, 성공은 1)
      */
     public int batchInsert(List<Message> messages) {
         String sql = """
-            INSERT IGNORE INTO message
-            (billing_id, user_id, status, scheduled_at, retry_count, ban_end_time)
-            VALUES (?, ?, ?, ?, ?, ?)
-        """;
+                    INSERT IGNORE INTO message
+                    (billing_id, user_id, status, scheduled_at, retry_count, ban_end_time)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                """;
 
         int[][] results = jdbcTemplate.batchUpdate(
-            sql,
-            messages,
-            messages.size(),
-            (ps, m) -> {
-                ps.setLong(1, m.getBillingId());
-                ps.setLong(2, m.getUserId());
-                ps.setString(3, m.getStatus().name());
-                // LocalDateTime -> Timestamp 변환 필요
-                ps.setTimestamp(4, m.getScheduledAt() != null ? Timestamp.valueOf(m.getScheduledAt()) : null);
-                ps.setInt(5, m.getRetryCount());
-                // LocalTime -> Time 변환
-                ps.setTime(6, m.getBanEndTime() != null ? Time.valueOf(m.getBanEndTime()) : null);
-            }
-        );
-        
-        // affectedRows 합계 반환 (INSERT IGNORE: 성공=1, 중복=0)
+
+                sql,
+                messages,
+                messages.size(),
+                (ps, m) -> {
+                    ps.setLong(1, m.getBillingId());
+                    ps.setLong(2, m.getUserId());
+                    ps.setString(3, m.getStatus().name());
+                    ps.setTimestamp(4, m.getScheduledAt() != null ? Timestamp.valueOf(m.getScheduledAt()) : null);
+                    ps.setInt(5, m.getRetryCount());
+                    ps.setTime(6, m.getBanEndTime() != null ? Time.valueOf(m.getBanEndTime()) : null);
+                });
+
         int successCount = 0;
         for (int[] batch : results) {
             for (int affected : batch) {
-                if (affected > 0) successCount++;
+                if (affected > 0)
+                    successCount++;
             }
         }
         return successCount;
