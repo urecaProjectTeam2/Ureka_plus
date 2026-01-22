@@ -1,6 +1,5 @@
 package com.touplus.billing_message.service;
 
-import com.touplus.billing_message.domain.respository.UserBanInfo;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -9,40 +8,33 @@ import org.springframework.stereotype.Component;
 @Component
 public class MessagePolicy {
 
-    public boolean isInBanWindow(LocalDateTime now, UserBanInfo banInfo) {
-        if (banInfo == null || banInfo.start() == null || banInfo.end() == null) {
+    /**
+     * 현재 시간이 ban 시간대인지 확인
+     * banEndTime만 사용 (scheduled_at이 이미 banEndTime+1분으로 설정되어 있으므로 보통 false)
+     */
+    public boolean isInBanWindow(LocalDateTime now, LocalTime banEndTime) {
+        if (banEndTime == null) {
             return false;
         }
-        LocalTime start = banInfo.start();
-        LocalTime end = banInfo.end();
         LocalTime time = now.toLocalTime();
-
-        if (start.equals(end)) {
-            return true;
-        }
-
-        if (start.isBefore(end)) {
-            return !time.isBefore(start) && time.isBefore(end);
-        }
-        return !time.isBefore(start) || time.isBefore(end);
+        // banEndTime 이전이면 ban 시간대
+        return time.isBefore(banEndTime);
     }
 
-    public LocalDateTime nextAllowedTime(LocalDateTime now, UserBanInfo banInfo) {
-        LocalTime start = banInfo.start();
-        LocalTime end = banInfo.end();
-        LocalTime time = now.toLocalTime();
-
-        if (start.isBefore(end)) {
-            return now.toLocalDate().atTime(end);
+    /**
+     * 다음 발송 가능 시간 계산
+     */
+    public LocalDateTime nextAllowedTime(LocalDateTime now, LocalTime banEndTime) {
+        if (banEndTime == null) {
+            return now;
         }
-
-        if (!time.isBefore(start)) {
-            LocalDate nextDay = now.toLocalDate().plusDays(1);
-            return nextDay.atTime(end);
-        }
-        return now.toLocalDate().atTime(end);
+        // banEndTime + 1분
+        return now.toLocalDate().atTime(banEndTime).plusMinutes(1);
     }
 
+    /**
+     * 재시도 시간 계산
+     */
     public LocalDateTime nextRetryAt(LocalDateTime now, int currentRetryCount) {
         int nextRetry = currentRetryCount + 1;
         if (nextRetry <= 1) {
@@ -54,13 +46,17 @@ public class MessagePolicy {
         return now.plusMinutes(6);
     }
 
-    public LocalDateTime adjustForBan(LocalDateTime candidate, UserBanInfo banInfo) {
-        if (banInfo == null) {
+    /**
+     * ban 시간대 고려하여 재시도 시간 조정
+     */
+    public LocalDateTime adjustForBan(LocalDateTime candidate, LocalTime banEndTime) {
+        if (banEndTime == null) {
             return candidate;
         }
-        if (!isInBanWindow(candidate, banInfo)) {
+        if (!isInBanWindow(candidate, banEndTime)) {
             return candidate;
         }
-        return nextAllowedTime(candidate, banInfo);
+        return nextAllowedTime(candidate, banEndTime);
     }
 }
+

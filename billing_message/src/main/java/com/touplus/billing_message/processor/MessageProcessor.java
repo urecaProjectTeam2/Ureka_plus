@@ -28,32 +28,28 @@ public class MessageProcessor {
     private final MessageRepository messageRepository;
     private final MessageJdbcRepository messageJdbcRepository;
 
+    private static final int MAX_RETRY = 3;
+
     /**
      * BillingSnapshot 목록을 받아 일괄 처리 (Batch)
+     * - INSERT IGNORE로 중복 자동 무시
+     * - COUNT 비교로 누락 감지, 누락 시에만 상세 검사
      */
     @Transactional
     public void processBatch(java.util.List<BillingSnapshot> snapshots) {
+        processBatchWithRetry(snapshots, 0);
+    }
+
+    private void processBatchWithRetry(java.util.List<BillingSnapshot> snapshots, int retryCount) {
         if (snapshots.isEmpty()) return;
 
-        // 1. 중복 체크 (DB에 이미 있는 billingId 조회)
-        java.util.List<Long> billingIds = snapshots.stream()
-            .map(BillingSnapshot::getBillingId)
-            .toList();
-        
-        java.util.Set<Long> existingBillingIds = messageRepository.findExistingBillingIds(billingIds);
+        String retryLabel = retryCount > 0 ? String.format(" (retry %d번)", retryCount) : "";
 
-        // 2. 처리할 대상 필터링
-        java.util.List<BillingSnapshot> targetSnapshots = snapshots.stream()
-            .filter(s -> !existingBillingIds.contains(s.getBillingId()))
-            .toList();
+        // 1. COUNT 전
+        long beforeCount = messageRepository.count();
 
-        if (targetSnapshots.isEmpty()) {
-            log.info("모든 데이터가 중복되어 처리를 건너뜁니다. count={}", snapshots.size());
-            return;
-        }
-
-        // 3. 유저 정보 일괄 조회
-        java.util.List<Long> userIds = targetSnapshots.stream()
+        // 2. 유저 정보 일괄 조회
+        java.util.List<Long> userIds = snapshots.stream()
             .map(BillingSnapshot::getUserId)
             .distinct()
             .toList();
@@ -61,13 +57,13 @@ public class MessageProcessor {
         java.util.Map<Long, User> userMap = userRepository.findAllById(userIds).stream()
             .collect(java.util.stream.Collectors.toMap(User::getUserId, u -> u));
 
-        // 4. Message 생성
+        // 3. Message 생성
         java.util.List<Message> messages = new java.util.ArrayList<>();
         
-        for (BillingSnapshot snapshot : targetSnapshots) {
+        for (BillingSnapshot snapshot : snapshots) {
             User user = userMap.get(snapshot.getUserId());
             if (user == null) {
-                log.warn("유저 정보를 찾을 수 없어 건너뜁니다: userId={}", snapshot.getUserId());
+                log.warn("유저 정보를 찾을 수 없어 건너뜁니다{}: userId={}", retryLabel, snapshot.getUserId());
                 continue;
             }
 
@@ -75,14 +71,48 @@ public class MessageProcessor {
             messages.add(new Message(
                 snapshot.getBillingId(),
                 snapshot.getUserId(),
-                scheduledAt
+                scheduledAt,
+                user.getBanEndTime()
             ));
         }
 
-        // 5. Batch Insert
+        // 4. Batch Insert (INSERT IGNORE - 중복 자동 무시)
         if (!messages.isEmpty()) {
             messageJdbcRepository.batchInsert(messages);
-            log.info("Message 배치 저장 완료: count={}", messages.size());
+            log.info("Message 배치 저장 완료{}: count={}", retryLabel, messages.size());
+        }
+
+        // 5. COUNT 비교로 누락 확인
+        long afterCount = messageRepository.count();
+        long expectedCount = beforeCount + messages.size();
+        
+        if (afterCount == expectedCount) {
+            // YES: 정상 완료
+            return;
+        }
+        
+        // NO: 누락 발생 - 상세 검사 및 재시도
+        log.warn("⚠️ COUNT 불일치{}: expected={} actual={}", retryLabel, expectedCount, afterCount);
+        
+        if (retryCount >= MAX_RETRY) {
+            log.error("❌ 최종 실패! (최대 재시도 초과)");
+            return;
+        }
+        
+        // 누락된 것만 찾아서 재시도
+        java.util.List<Long> billingIds = snapshots.stream()
+            .map(BillingSnapshot::getBillingId)
+            .toList();
+        
+        java.util.Set<Long> savedBillingIds = messageRepository.findExistingBillingIds(billingIds);
+        
+        java.util.List<BillingSnapshot> missing = snapshots.stream()
+            .filter(s -> !savedBillingIds.contains(s.getBillingId()))
+            .toList();
+
+        if (!missing.isEmpty()) {
+            log.warn("⚠️ 누락 {}건 재시도{}", missing.size(), retryLabel);
+            processBatchWithRetry(missing, retryCount + 1);
         }
     }
 
@@ -108,7 +138,8 @@ public class MessageProcessor {
         Message message = new Message(
             snapshot.getBillingId(),
             snapshot.getUserId(),
-            scheduledAt
+            scheduledAt,
+            user.getBanEndTime()  // User에서 banEndTime 복사
         );
 
         messageRepository.save(message);
