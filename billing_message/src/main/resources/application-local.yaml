@@ -31,7 +31,7 @@ spring:
     # security.protocol 및 sasl 관련 설정 삭제
 
     consumer:
-      group-id: billing-message-group
+      group-id: billing-message-group2
       auto-offset-reset: earliest
       enable-auto-commit: false # 수동 커밋 모드 (안정성 확보)
       max-poll-records: 1000     # 한 번에 가져올 메시지 양

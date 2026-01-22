@@ -1,0 +1,167 @@
+* [33m745543f[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32mmessage[m[33m, [m[1;31morigin/messageMisu[m[33m, [m[1;31morigin/message[m[33m)[m 승현짱 에러 수정
+*   [33md837908[m Merge remote-tracking branch 'origin/message' into message
+[32m|[m[33m\[m  
+[32m|[m *   [33m164f4e1[m Merge pull request #6 from urecaProjectTeam2/hyun
+[32m|[m [34m|[m[35m\[m  
+* [34m|[m [35m|[m [33m41d753e[m chore: 0120/ dispatch taskExecutor 변수명 변경
+[35m|[m [34m|[m[35m/[m  
+[35m|[m[35m/[m[34m|[m   
+* [34m|[m [33m4b75a69[m[33m ([m[1;31morigin/hyun[m[33m)[m Merge branch 'message' into hyun
+[36m|[m[34m\[m[34m|[m 
+* [34m|[m [33m30b566a[m feat(message/sender) : 메시지를 조회해서 snapshot 저장-> 발송 로직(미완) -snapshot저장 -> message 상태 created -메시지 발송 -> message 상태 sent - 3회 시도후 sms 발송
+* [34m|[m [33m4cfb3c1[m fix(message/sender) : 0120/ 트랜젝셔널이 같은 클래스 내부 호출 미동작->messageDispatch, calim 분리
+* [34m|[m [33ma918a31[m chore : docker-compose.yml message모듈 컨테이너 서버시간 변경
+* [34m|[m [33mfa235d0[m feat(message/send): 0120/ MessageDispatchService log 추가
+* [34m|[m   [33ma8533a3[m merge message branch changes
+[1;32m|[m[1;33m\[m [34m\[m  
+* [1;33m|[m [34m|[m [33mcc0bcd8[m feat(message/send): 0119/ 메시지 병렬 디스패치 및 스케줄 활성화 추가
+* [1;33m|[m [34m|[m [33m5f5cbab[m feat(message/send): 0119/ 메시지 정책 및 모킹 전송 추가
+* [1;33m|[m [34m|[m [33md4a1e5d[m feat(message/send): 0119/ 레포/db접근
+* [1;33m|[m [34m|[m [33m72185a7[m feat(message/send): 0119/도메인 엔티티/enum 생성
+[1;33m|[m [1;33m|[m [34m|[m * [33m947f591[m[33m ([m[1;31morigin/messageJaehyeon[m[33m, [m[1;32mmessageJaehyeon[m[33m)[m kafka 처리 단위 1000으로 지정
+[1;33m|[m [1;33m|[m [34m|[m[34m/[m  
+[1;33m|[m [1;33m|[m *   [33m2b88425[m consumer -> processor 통합 오류 수정
+[1;33m|[m [1;33m|[m [1;35m|[m[1;36m\[m  
+[1;33m|[m [1;33m|[m [1;35m|[m * [33mf4cf651[m[33m ([m[1;32mmessageMisu[m[33m)[m docs,refactor:0120/59/billing_message/snapshot,consumer 저장 속도 개선 및 snapshot repository 병합
+[1;33m|[m [1;33m|[m * [1;36m|[m [33m20b78a5[m processor 성능 향상
+[1;33m|[m [1;33m|[m [1;36m|[m[1;36m/[m  
+[1;33m|[m [1;33m|[m * [33ma7c2b62[m 주석 해제 후 consumer -> process 흐름 완성
+[1;33m|[m [1;33m|[m * [33m870b4e5[m fix:0120/59/billing_message/snapshot 저장 속도 개선 및 배치 for문 추가
+[1;33m|[m [1;33m|[m * [33m98ae6a9[m fix,chore:0119/44/billing_message/consumer,config,repository/snapshot 저장 속도 개선
+[1;33m|[m [1;33m|[m *   [33m01f165f[m Merge branch 'message' of https://github.com/urecaProjectTeam2/Ureka_plus into messageMisu
+[1;33m|[m [1;33m|[m [31m|[m[1;33m\[m  
+[1;33m|[m [1;33m|[m [31m|[m[1;33m/[m  
+[1;33m|[m [1;33m|[m[1;33m/[m[31m|[m   
+[1;33m|[m * [31m|[m [33mabf47bc[m 병합3
+[1;33m|[m * [31m|[m [33me26ff4c[m 컨슈머/메세지 저장 병합2
+[1;33m|[m * [31m|[m   [33m9d26a5d[m 컨슈머/메세지 저장 병합
+[1;33m|[m [33m|[m[34m\[m [31m\[m  
+[1;33m|[m [33m|[m * [31m|[m [33m971d711[m message 저장 작업
+[1;33m|[m [33m|[m [34m|[m * [33m01d871a[m 미수 임시 저장
+[1;33m|[m [33m|[m [34m|[m[33m/[m  
+[1;33m|[m [33m|[m[33m/[m[34m|[m   
+[1;33m|[m * [34m|[m [33m15bb3a5[m snapshot 속도 개선
+[1;33m|[m [34m|[m[34m/[m  
+[1;33m|[m * [33m7557cfb[m feat:0119/58/billing-message/billing snapshot 중복 입력 방지 및 수동 offset 설정
+[1;33m|[m * [33maa2b9c8[m offset과 테스트 코드 추가
+[1;33m|[m *   [33m5a69c86[m test
+[1;33m|[m [35m|[m[36m\[m  
+[1;33m|[m * [36m|[m [33ma54d041[m 메시지 변경 임시 저장
+[1;33m|[m [36m|[m [36m|[m * [33m4d39f83[m[33m ([m[1;31morigin/batch/minsu[m[33m)[m feat:   0120/14/minsu billing_batch/src/main/java/com/touplus/billing_batch/common/BillingReferenceCache.java 캐시 관련 코드 추가 feat:   0120/14/minsu billing_batch/src/main/java/com/touplus/billing_batch/common/listener/BillingJobListener.java 캐시 관련 코드 추가 style:  0120/14/minsu billing_batch/src/main/java/com/touplus/billing_batch/domain/dto/UserSubscribeDiscountDto.java 및 UserSubscribeProductDto.java dto 안 쓰는 join값 관련 삭제 style:  0120/14/minsu  billing_batch/src/main/java/com/touplus/billing_batch/domain/entity/BillingResult.java 주석 삭제 fix:     0120/14/minsu  billing_batch/src/main/java/com/touplus/billing_batch/domain/repository/* impl @override 누락된 거 추가 feat:   0120/14/minsu  billing_batch/src/main/java/com/touplus/billing_batch/jobs/billing/step/* 캐싱으로 하는 방법으로 코드 수정 및 dto 변경에 따른 코드 수정 feat:   0120/14/minsu  billing_batch/src/main/java/com/touplus/billing_batch/jobs/billing/step/writer/BillingItemWriter.java write 만들기 fix:     0120/14/minsu  billing_batch/src/main/java/com/touplus/billing_batch/scheduler/BillingBatchController.java 코드 수정에 따른 코드 수정 feat:   0120/14/minsu  billing_batch/src/main/java/com/touplus/billing_batch/scheduler/BillingKafkaScheduler.java kafka 스케쥴러 배치 스케쥴러 참고하여 생성 feat:   0120/14/minsu  billing_batch/src/main/java/com/touplus/billing_batch/scheduler/KafkaController.java 유원이가 수정한 코드 테스트를 위해 반영
+[1;33m|[m [36m|[m [36m|[m * [33mba2193e[m[33m ([m[1;31morigin/batch/yuwon[m[33m)[m feat: 0120/12/배치 Processor 코드 작성, 프로세서 내부 로직 변경(프로세서 별로 상세 내역 저장)
+[1;33m|[m [36m|[m [36m|[m * [33m130a280[m feat: 0120/12/배치 Processor 코드 작성 중 임시 커밋, 프로세서 내부 로직 변경(상세 내역 임시 저장)
+[1;33m|[m [36m|[m [36m|[m *   [33ma84fe90[m Merge branch 'batch/minsu' into batch/yuwon
+[1;33m|[m [36m|[m [36m|[m [1;32m|[m[1;33m\[m  
+[1;33m|[m [36m|[m [36m|[m [1;32m|[m * [33mf9d6aeb[m - style:   0119/17/minsu billing_batch/src/main/java/com/touplus/billing_batch/domain/dto 및 entity JDBC에 맞게 코드 수정 - style:   0119/17/minsu billing_batch/src/main/java/com/touplus/billing_batch/jobs/billing/step/reader/BillingItemReader.java 위 변경에 따른 코드 수
+[1;33m|[m [36m|[m [36m|[m * [1;33m|[m [33m9d05b9c[m feat: 0120/12/배치 Processor 코드 작성 중 임시 커밋
+[1;33m|[m [36m|[m [36m|[m [1;33m|[m[1;33m/[m  
+[1;33m|[m [36m|[m [36m|[m *   [33md493bd7[m[33m ([m[1;31morigin/batch/haram[m[33m)[m config + repository 병합 완료
+[1;33m|[m [36m|[m [36m|[m [1;34m|[m[1;35m\[m  
+[1;33m|[m [36m|[m [36m|[m [1;34m|[m * [33m9b2fec5[m feat: 0119/16/BillingJobConfig, BillingBatchScheduler 수정
+[1;33m|[m [36m|[m [36m|[m [1;34m|[m * [33mc46197f[m feat: 0119/13/BillingResultDto 함수 추가
+[1;33m|[m [36m|[m [36m|[m * [1;35m|[m [33m2800054[m - fix : 0119/16 minsu 쿼리문 테스트 후 버그 수정
+[1;33m|[m [36m|[m [36m|[m * [1;35m|[m [33m776d393[m - style: 0119/16/minsu    billing_batch/src/main/java/com/touplus/billing_batch/domain/repository/* JDBC로 변경 interface 추가
+[1;33m|[m [36m|[m [36m|[m * [1;35m|[m   [33m1cbf6f5[m Merge branch 'batch/haram' of https://github.com/urecaProjectTeam2/Ureka_plus into batch/minsu
+[1;33m|[m [36m|[m [36m|[m [1;36m|[m[31m\[m [1;35m\[m  
+[1;33m|[m [36m|[m [36m|[m [1;36m|[m * [1;35m|[m [33m67cac4b[m 에러로그 & 일반 액션 로그 entity dto repository 수정 --> BillingSkipListener에서 호출하도록 수정
+[1;33m|[m [36m|[m [36m|[m [1;36m|[m * [1;35m|[m [33mf36b383[m 정산/ 프로세스 단위에서의 예외처리 & 리스너 로직 적용 & jobConfig에서 일단 exception --> business exception 순으로 필터링하여 예외처리 호출
+[1;33m|[m [36m|[m [36m|[m [1;36m|[m * [1;35m|[m [33m00ff461[m billing/step/listener/billingSkipListener 코드 추가 & billingJobConfig 에 리스너 코드 추가
+[1;33m|[m [36m|[m [36m|[m [1;36m|[m * [1;35m|[m [33m379b64a[m[33m ([m[1;31morigin/batch/all[m[33m)[m 패키지 구조 변경
+[1;33m|[m [36m|[m [36m|[m [1;36m|[m [1;35m|[m[1;35m/[m  
+[1;33m|[m [36m|[m [36m|[m * [1;35m/[m [33m4c356af[m - feat:   0119/13/minsu billing_batch/src/main/java/com/touplus/billing_batch/domain/dto/BillingUserBillingInfoDto batch 주고 받는 데이터 추가
+[1;33m|[m [36m|[m [36m|[m [1;35m|[m[1;35m/[m  
+[1;33m|[m [36m|[m [36m|[m * [33m2ac23fe[m 패키지 이름 변경 및 listner 추가
+[1;33m|[m [36m|[m [36m|[m * [33mb03ffa3[m feat: 0119/11/Dto 및 Entity 변경 사항 추가
+[1;33m|[m [36m|[m [36m|[m *   [33m91b3a94[m Merge branch 'batch/all' of https://github.com/urecaProjectTeam2/Ureka_plus into batch/all
+[1;33m|[m [36m|[m [36m|[m [32m|[m[33m\[m  
+[1;33m|[m [36m|[m [36m|[m [32m|[m *   [33m040e730[m Merge pull request #5 from urecaProjectTeam2/batch/minsu
+[1;33m|[m [36m|[m [36m|[m [32m|[m [34m|[m[35m\[m  
+[1;33m|[m [36m|[m [36m|[m [32m|[m [34m|[m * [33m89d80a3[m feat: 0119/11/Entity에 관계성 관련으로 추가 및 @Column 추가
+[1;33m|[m [36m|[m [36m|[m [32m|[m [34m|[m[34m/[m  
+[1;33m|[m [36m|[m [36m|[m * [34m/[m [33mf60b1f2[m feat: 0119/11/Dto 및 Entity 변경 사항 추가
+[1;33m|[m [36m|[m [36m|[m [34m|[m[34m/[m  
+[1;33m|[m [36m|[m [36m|[m *   [33mb650f68[m Merge pull request #4 from urecaProjectTeam2/batch/yuwon
+[1;33m|[m [36m|[m [36m|[m [36m|[m[1;31m\[m  
+[1;33m|[m [36m|[m [36m|[m [36m|[m * [33m8873f5b[m feat: batch 사용 DTO, Entity, Repository 생성
+[1;33m|[m [36m|[m [36m|[m * [1;31m|[m   [33m008db9b[m Merge pull request #3 from urecaProjectTeam2/batch/minsu
+[1;33m|[m [36m|[m [36m|[m [1;31m|[m[1;33m\[m [1;31m\[m  
+[1;33m|[m [36m|[m [36m|[m [1;31m|[m [1;33m|[m[1;31m/[m  
+[1;33m|[m [36m|[m [36m|[m [1;31m|[m[1;31m/[m[1;33m|[m   
+[1;33m|[m [36m|[m [36m|[m [1;31m|[m * [33me8b1a65[m feat: 0119/10/minsu 정산에 필요한 Entity 및 Dto 추가
+[1;33m|[m [36m|[m [36m|[m [1;31m|[m[1;31m/[m  
+[1;33m|[m [36m|[m [36m|[m * [33ma8b30e9[m import문 수정, 중복 코드 삭제, DB연결 성공
+[1;33m|[m [36m|[m [36m|[m * [33mfa2a524[m refactor: 0118/19/minsu newMain을 한 것을 merge
+[1;33m|[m [36m|[m [36m|[m *   [33mde2f1e7[m refactor : 메인을 가져오기 위한 임시 저장
+[1;33m|[m [36m|[m [36m|[m [1;34m|[m[36m\[m  
+[1;33m|[m [36m|[m [36m|[m [1;34m|[m[36m/[m  
+[1;33m|[m [36m|[m [36m|[m[36m/[m[1;34m|[m   
+[1;33m|[m [36m|[m * [1;34m|[m [33md31f76b[m chore : .
+[1;33m|[m [36m|[m * [1;34m|[m [33mf78d31f[m Merge pull request #2 from urecaProjectTeam2/new_main
+[1;33m|[m [36m|[m[36m/[m[31m|[m [1;34m|[m 
+[1;33m|[m [36m|[m * [1;34m|[m [33m438e9a8[m Merge branch 'main' into new_main
+[1;33m|[m [36m|[m[1;33m/[m[36m|[m [1;34m|[m 
+[1;33m|[m[1;33m/[m[36m|[m[36m/[m [1;34m/[m  
+[1;33m|[m * [1;34m|[m   [33md3782b4[m Merge pull request #1 from urecaProjectTeam2/kafka_v2
+[1;33m|[m [34m|[m[35m\[m [1;34m\[m  
+[1;33m|[m [34m|[m * [1;34m|[m [33m397436b[m change java files
+[1;33m|[m [34m|[m[34m/[m[1;31m|[m [1;34m|[m 
+* [34m|[m [1;31m|[m [1;34m|[m   [33m2fe5655[m[33m ([m[1;31morigin/new_main[m[33m, [m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m 아키텍처 구동 완료 (VER1)
+[34m|[m[1;31m\[m [34m\[m [1;31m\[m [1;34m\[m  
+[34m|[m [1;31m|[m[34m/[m [1;31m/[m [1;34m/[m  
+[34m|[m[34m/[m[1;31m|[m [1;31m/[m [1;34m/[m   
+[34m|[m [1;31m|[m[1;31m/[m [1;34m/[m    
+[34m|[m * [1;34m|[m [33m4b1c8e8[m kafka docker: kafka publish & subscribe 전체 코드 (수정 전 docker 환경에서 테스트 완료)
+[34m|[m * [1;34m|[m [33mb7e7a29[m kafka docker: 수정 전 버전 실행 테스트 완료
+[34m|[m * [1;34m|[m [33mab4c7bc[m kafka docker
+[34m|[m [1;33m|[m * [33mf10107a[m refactor 메인 가져오기 위한 임시 커밋
+[34m|[m [1;33m|[m [1;33m|[m * [33mbf9635b[m[33m ([m[1;31morigin/yuwon[m[33m)[m feat: batch code 임시 커밋
+[34m|[m [1;33m|[m [1;33m|[m[1;33m/[m  
+[34m|[m [1;33m|[m * [33mf1dee4c[m - feat: 0118/16/billing_batch/src/main/resources/application-local.yaml 에 batch 관련 메타 데이터 자동 생성을 위한 코드 추가 - feat: 0118/16/billing_batch/src/main/java/com/touplus/billing_batch/scheduler/BillingBatchScheduler.java 및 BillingBatchController.java 테스트를 위한 스케줄러 및 controller 추가 - 0118/16/ billing_batch/build.gradle controller를 위한 자바 스프링 web 관련 의존성 추가
+[34m|[m [1;33m|[m * [33m2e1d529[m - feat: 0118/16/billing_batch/src/main/resources/application-local.yaml 에 batch 관련 메타 데이터 자동 생성을 위한 코드 추가 - feat: 0118/16/billing_batch/src/main/java/com/touplus/billing_batch/scheduler/BillingBatchScheduler.java 및 BillingBatchController.java 테스트를 위한 스케줄러 및 controller 추가 - 0118/16/ billing_batch/build.gradle controller를 위한 자바 스프링 web 관련 의존성 추가
+[34m|[m [1;33m|[m *   [33m6d18ed9[m Merge branch 'main' into batch/minsu
+[34m|[m [1;33m|[m [1;35m|[m[34m\[m  
+[34m|[m [1;33m|[m[34m_[m[1;35m|[m[34m/[m  
+[34m|[m[34m/[m[1;33m|[m [1;35m|[m   
+* [1;33m|[m [1;35m|[m [33ma476867[m chore : local.yaml추가 -로컬 개발용 설정
+[1;36m|[m [1;33m|[m * [33m99df906[m refactor : 0116/20/Batch를 위한 기본적인 코드 업데이트 및 pull을 위해 임시 커밋
+[1;36m|[m [1;33m|[m[1;36m/[m  
+[1;36m|[m[1;36m/[m[1;33m|[m   
+* [1;33m|[m   [33mb9c2641[m Merge branch 'hyuuuun'
+[31m|[m[32m\[m [1;33m\[m  
+[31m|[m * [1;33m\[m   [33m9d441df[m Merge remote-tracking branch 'origin/kafka' into hyuuuun
+[31m|[m [33m|[m[34m\[m [1;33m\[m  
+[31m|[m [33m|[m * [1;33m|[m [33m53252a6[m kafka 관련 패키지 생성 및 위치 변경. 현재 BuilingResultMessage란 Dto를 이용하여 Kafka 송수신 되게 코드 수정
+[31m|[m [33m|[m [1;33m|[m[1;33m/[m  
+[31m|[m * [1;33m|[m [33ma27ac59[m merge : kafka branch
+[31m|[m [35m|[m[1;33m\[m[1;33m|[m 
+[31m|[m [35m|[m * [33m5787500[m feat: 0116/13/ kafka 통신 관련 중간 공유를 위해 push 함
+[31m|[m * [36m|[m [33mdf29c4a[m[33m ([m[1;31morigin/hyuuuun[m[33m)[m chore : db 스키마 연결 변경 batch->billing_batch
+[31m|[m * [36m|[m [33m26a3279[m chore : -message 모듈 gradle session jdbc 의존성 제거 - dockerfile alpine -> 기본 -docker compose redis 삭제
+[31m|[m * [36m|[m [33m4a4ca8c[m chore : docker compose 수정 - vm db 연결 .env 파일에 DB_USER=$$$ DB_PASSWORD=%%% 입력할것
+[31m|[m * [36m|[m [33m2429c76[m chore : docker-compose.yml 수정
+[31m|[m * [36m|[m [33m0ffeb10[m chore : .gitignore .env 추가
+* [36m|[m [36m|[m [33m30b4f28[m add PR template
+[36m|[m [36m|[m[36m/[m  
+[36m|[m[36m/[m[36m|[m   
+* [36m|[m [33m2de15dd[m setting docker file for new thing
+[36m|[m[36m/[m  
+* [33m7748cc9[m[33m ([m[1;31morigin/develop[m[33m)[m package changes
+* [33m449db0c[m Update README with project topic and questions section
+* [33mf3245f6[m Add questions section with link to Notion
+* [33m2234644[m Add ERD section to the README
+* [33m62dbd5b[m Add images to 서버구조 section in readme
+* [33m4eb6deb[m Update README with server structure details
+* [33m20aa163[m docs: 0114/readme 수정
+* [33m8990f51[m chore: 0114/서버구조 이미지
+* [33mb1723a0[m docs: 0114/readme 수정
+* [33m671aa94[m Revise features section in readme.md for clarity
+* [33m179a304[m docs : 0114/47/readme 수정
+* [33m8c1d652[m Fix formatting in readme.md headings
+* [33mb375b93[m Revise readme structure and content
+* [33m695b62d[m Update readme with new project sections
+* [33mcb79eb4[m Update readme with flowchart and title change
+* [33m673cbc4[m docs: readme.md 추가
+* [33m02302f5[m chore: 0114/ .gitkeep 파일 생성빈폴더 추적 목적 추후 삭제 가능
+* [33mda7a7f6[m chore: 0113/33/도커 설정 추가
+* [33ma70f760[m chore: rootproject billing->ureka_plus
+* [33m3f5b58f[m chore: 프로젝트 패키지 구조 설정

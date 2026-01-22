@@ -7,6 +7,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -20,13 +21,18 @@ public class MessageJdbcRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
-    public void batchInsert(List<Message> messages) {
+    /**
+     * Batch Insert (INSERT IGNORE)
+     * @return 성공적으로 INSERT된 건수 (중복은 0, 성공은 1)
+     */
+    public int batchInsert(List<Message> messages) {
         String sql = """
-                    INSERT INTO message
-                    (billing_id, user_id, status, scheduled_at, retry_count)
-                    VALUES (?, ?, ?, ?, ?)
-                """;
+            INSERT IGNORE INTO message
+            (billing_id, user_id, status, scheduled_at, retry_count, ban_end_time)
+            VALUES (?, ?, ?, ?, ?, ?)
+        """;
 
+<<<<<<< HEAD
         jdbcTemplate.batchUpdate(
                 sql,
                 messages,
@@ -35,9 +41,39 @@ public class MessageJdbcRepository {
                     ps.setLong(1, m.getBillingId());
                     ps.setLong(2, m.getUserId());
                     ps.setString(3, m.getStatus().name());
+                    // LocalDateTime -> Timestamp 변환 필요
                     ps.setTimestamp(4, m.getScheduledAt() != null ? Timestamp.valueOf(m.getScheduledAt()) : null);
                     ps.setInt(5, m.getRetryCount());
-                });
+                    // LocalTime -> Time 변환
+                    ps.setTime(6, m.getBanEndTime() != null ? Time.valueOf(m.getBanEndTime()) : null);
+                }
+        );
+=======
+        int[][] results = jdbcTemplate.batchUpdate(
+            sql,
+            messages,
+            messages.size(),
+            (ps, m) -> {
+                ps.setLong(1, m.getBillingId());
+                ps.setLong(2, m.getUserId());
+                ps.setString(3, m.getStatus().name());
+                // LocalDateTime -> Timestamp 변환 필요
+                ps.setTimestamp(4, m.getScheduledAt() != null ? Timestamp.valueOf(m.getScheduledAt()) : null);
+                ps.setInt(5, m.getRetryCount());
+                // LocalTime -> Time 변환
+                ps.setTime(6, m.getBanEndTime() != null ? Time.valueOf(m.getBanEndTime()) : null);
+            }
+        );
+        
+        // affectedRows 합계 반환 (INSERT IGNORE: 성공=1, 중복=0)
+        int successCount = 0;
+        for (int[] batch : results) {
+            for (int affected : batch) {
+                if (affected > 0) successCount++;
+            }
+        }
+        return successCount;
+>>>>>>> c01ac7d6668deb472d9b3781185934e35f9b93bd
     }
 
     /**
@@ -68,7 +104,7 @@ public class MessageJdbcRepository {
                 .map(id -> "?")
                 .collect(Collectors.joining(","));
 
-        String sql = "SELECT message_id, billing_id, user_id, status, scheduled_at, retry_count " +
+        String sql = "SELECT message_id, billing_id, user_id, status, scheduled_at, retry_count, ban_end_time " +
                 "FROM message WHERE message_id IN (" + placeholders + ")";
 
         return jdbcTemplate.query(sql, messageIds.toArray(), (rs, rowNum) -> new MessageDto(
@@ -79,14 +115,17 @@ public class MessageJdbcRepository {
                 rs.getTimestamp("scheduled_at") != null
                         ? rs.getTimestamp("scheduled_at").toLocalDateTime()
                         : null,
-                rs.getInt("retry_count")));
+                rs.getInt("retry_count"),
+                rs.getTime("ban_end_time") != null
+                        ? rs.getTime("ban_end_time").toLocalTime()
+                        : null));
     }
 
     /**
      * 메시지 단건 조회 (JDBC)
      */
     public MessageDto findById(Long messageId) {
-        String sql = "SELECT message_id, billing_id, user_id, status, scheduled_at, retry_count " +
+        String sql = "SELECT message_id, billing_id, user_id, status, scheduled_at, retry_count, ban_end_time " +
                 "FROM message WHERE message_id = ?";
 
         List<MessageDto> results = jdbcTemplate.query(sql, new Object[] { messageId }, (rs, rowNum) -> new MessageDto(
@@ -97,7 +136,10 @@ public class MessageJdbcRepository {
                 rs.getTimestamp("scheduled_at") != null
                         ? rs.getTimestamp("scheduled_at").toLocalDateTime()
                         : null,
-                rs.getInt("retry_count")));
+                rs.getInt("retry_count"),
+                rs.getTime("ban_end_time") != null
+                        ? rs.getTime("ban_end_time").toLocalTime()
+                        : null));
 
         return results.isEmpty() ? null : results.get(0);
     }
@@ -127,6 +169,7 @@ public class MessageJdbcRepository {
             Long userId,
             MessageStatus status,
             LocalDateTime scheduledAt,
-            Integer retryCount) {
+            Integer retryCount,
+            java.time.LocalTime banEndTime) {
     }
 }

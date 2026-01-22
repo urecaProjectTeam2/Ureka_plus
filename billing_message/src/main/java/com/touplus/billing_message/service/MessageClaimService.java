@@ -37,26 +37,6 @@ public class MessageClaimService {
         log.debug("메시지 {}건 선점 완료, CREATED로 변경", messageIds.size());
         return messageIds;
     }
-
-    /**
-     * 스케줄 무시하고 WAITED 상태의 메시지 선점 (테스트용)
-     */
-
-    /* 이거 주석 처리하고 아래 추가
-    @Transactional
-    public List<Long> claimNextMessagesIgnoreSchedule() {
-        log.info("메시지 조회 (스케줄 무시)");
-        List<Long> messageIds = messageRepository.lockNextMessageIdsIgnoreSchedule(batchSize);
-        log.info("조회된 메시지 IDs: {}", messageIds);
-        if (messageIds.isEmpty()) {
-            return messageIds;
-        }
-
-        // 상태를 CREATED로 변경
-        messageRepository.markCreatedByIds(messageIds);
-        log.debug("메시지 {}건 선점 완료, CREATED로 변경", messageIds.size());
-        return messageIds;
-    }*/
     
     @Transactional
     public List<Message> claimNextMessagesAsEntities(LocalDateTime now) {

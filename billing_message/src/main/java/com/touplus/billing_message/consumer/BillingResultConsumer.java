@@ -33,7 +33,7 @@ public class BillingResultConsumer {
 
     @KafkaListener(
         topics = "billing-result-topic-2512",
-        groupId = "billing-message-group",
+        groupId = "billing-message-group1",
         containerFactory = "kafkaListenerContainerFactory" // offset 수동 저장
     )
     public void consume(
@@ -55,11 +55,10 @@ public class BillingResultConsumer {
                 // 청구 월이 현재 시간의 월보다 -1 되어야 함 ex) 청구 : 12월, 지불 : 1월
                 LocalDate processMonth = settlementMonth.plusMonths(1);
                 if (processMonth.getYear() != now.getYear()
-                    || processMonth.getMonth() != now.getMonth()
-                    || bsr.existsByUserIdAndSettlementMonth(
-                            message.getUserId(), settlementMonth)) {
+                    || processMonth.getMonth() != now.getMonth()) {
                     continue;
                 }
+                // 중복 체크는 INSERT IGNORE가 자동 처리
 
                 // 스냅샷 db 저장
                 toUpsert.add(new BillingSnapshot(
@@ -76,27 +75,54 @@ public class BillingResultConsumer {
             // 배치 사이즈 최적화
             int batchSize = 1000;
             
-            // ① Phase 1: 스냅샷만 저장 (Message 처리 X)
+            // ① Phase 1: 스냅샷 저장 (INSERT IGNORE)
             for (int i = 0; i < toUpsert.size(); i += batchSize) {
                 int end = Math.min(i + batchSize, toUpsert.size());
                 jdbcRepository.batchUpsertByUserMonth(toUpsert.subList(i, end));
             }
             
-            // ② Phase 2: 전체 스냅샷 10000건 완료 시 Message 일괄 처리
-            Long totalCount = bsr.countAll();
-            if (totalCount == 10000L) {
-                log.info("스냅샷 데이터 다 넣음! count={}", totalCount);
+            // ② Phase 2: 스냅샷 완료 후 Message 일괄 처리
+            Long snapshotCount = bsr.countAll();
+            if (snapshotCount >= 9999L) {  // 테스트용 - 나중에 조건 변경 가능
+                log.info("스냅샷 데이터 다 넣음! count={}", snapshotCount);
                 log.info("Message 처리 시작 시각 : {}", LocalDateTime.now());
                 
-                // DB에서 페이징으로 스냅샷 조회 후 Message 처리 (Chunk 방식)
+                // DB에서 모든 스냅샷 조회 후 병렬 처리
                 int messageBatchSize = 1000;
+                int parallelCount = 4;  // 4스레드 병렬 처리
+
+                // 모든 청크를 먼저 수집
+                java.util.List<java.util.List<BillingSnapshot>> chunks = new java.util.ArrayList<>();
                 int pageNum = 0;
                 Page<BillingSnapshot> page;
                 do {
                     page = bsr.findAll(PageRequest.of(pageNum++, messageBatchSize));
-                    messageProcessor.processBatch(page.getContent());
+                    if (!page.getContent().isEmpty()) {
+                        chunks.add(new java.util.ArrayList<>(page.getContent()));
+                    }
                 } while (page.hasNext());
                 
+                // ExecutorService로 병렬 처리
+                java.util.concurrent.ExecutorService executor =
+                    java.util.concurrent.Executors.newFixedThreadPool(parallelCount);
+
+                java.util.List<java.util.concurrent.Future<?>> futures = new java.util.ArrayList<>();
+                for (java.util.List<BillingSnapshot> chunk : chunks) {
+                    futures.add(executor.submit(() -> {
+                        messageProcessor.processBatch(chunk);
+                    }));
+                }
+
+                // 모든 작업 완료 대기
+                for (java.util.concurrent.Future<?> future : futures) {
+                    try {
+                        future.get();
+                    } catch (Exception e) {
+                        log.error("청크 처리 실패", e);
+                    }
+                }
+
+                executor.shutdown();
                 log.info("Message 처리 완료 시각 : {}", LocalDateTime.now());
             }
             
