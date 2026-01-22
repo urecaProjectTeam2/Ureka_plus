@@ -6,7 +6,10 @@ spring:
 
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:13306/billing_batch
+    # ?rewriteBatchedStatements=true&allowMultiQueries=true 옵션 설명
+    # (기존) 1000건 저장 시: DB와 1000번 대화
+    # (변경) 1000건 저장 시: DB와 1번 대화
+    url: jdbc:mysql://localhost:13306/billing_batch?rewriteBatchedStatements=true&allowMultiQueries=true
     username: ${DB_USER} #로컬로 테스트 시, 직접 값 입력하기
     password: ${DB_PASSWORD} #로컬로 테스트 시, 직접 값 입력하기
     hikari:
@@ -21,23 +24,18 @@ spring:
 
   kafka:
     bootstrap-servers: localhost:9092
-#    properties:
-#      security.protocol: SASL_PLAINTEXT
-#      sasl.mechanism: PLAIN
-#      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="${KAFKA_USERNAME}" password="${KAFKA_PASSWORD}";
     producer:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
-      # [추가] 500만 건 전송 시 발생할 수 있는 타임아웃 방지 && 네트워크 부하가 높을 때 전송 요청이 만료되지 않도록 시간을 넉넉히 잡습니다.
+
       retries: 5
+      batch-size: 65536         # 64KB (spring.kafka.producer.batch-size)
+      compression-type: lz4     # 압축 (spring.kafka.producer.compression-type)
+      acks: all                 # 안정성 (spring.kafka.producer.acks)
+
       properties:
-        linger.ms: 20       #20ms 동안 메시지를 모아서 한 번에 전송 (Throughput 향상)
-        batch.size: 65536   #배치 크기를 64KB로 상향 (네트워크 요청 횟수 감소)
-        compression.type: lz4 #lz4 압축으로 네트워크 대역폭 절약
-        # 500만 건의 빌링 데이터는 유실 시 정산 금액 차이가 발생하므로 리더뿐만 아니라 복제본 저장까지 확인하는 'all' 설정
-        acks: all
-        # [추가] 한 번에 카프카로 보낼 수 있는 최대 요청 크기 (기본 1MB -> 5MB로 확장)
-        max.request.size: 5242880
+        linger.ms: 20           # 20ms 대기 ( Throughput 향상 핵심)
+        max.request.size: 5242880 # 5MB로 확장
 
     consumer:
       group-id: billing-group

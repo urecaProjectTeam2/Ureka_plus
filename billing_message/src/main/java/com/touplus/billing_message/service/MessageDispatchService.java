@@ -43,27 +43,7 @@ public class MessageDispatchService {
         this.messageDispatchTaskExecutor = messageTaskExecutor;
     }
 
-    /*
-     * 미수 : 이것저것 주석 처리하고 파란색 주석 없는 건 다 내가 추가한 거 -> 배치로 빨리 돌리려고
-     * public void dispatchDueMessages() {
-     * List<Long> messageIds =
-     * messageClaimService.claimNextMessages(LocalDateTime.now());
-     * if (messageIds.isEmpty()) {
-     * log.debug("발송 대상 메시지 없음");
-     * return;
-     * }
-     * 
-     * log.info("메시지 {}건 발송 시작", messageIds.size());
-     * for (Long messageId : messageIds) {
-     * messageDispatchTaskExecutor.execute(() ->
-     * processWithExceptionHandling(messageId));
-     * }
-     * }
-     */
-
-    /**
-     * 예외 처리를 포함한 메시지 처리
-     */
+    // 예외 처리를 포함한 메시지 처리
     private void processWithExceptionHandling(Long messageId) {
         try {
             messageProcessService.processMessage(messageId);
@@ -78,33 +58,6 @@ public class MessageDispatchService {
         }
     }
 
-    /**
-     * 스케줄 무시하고 WAITED 상태의 메시지 발송 (테스트용)
-     * 한 번의 배치만 처리 (최대 40건)
-     * 
-     * @return 발송 시작한 메시지 수
-     */
-    /*
-     * public int dispatchAllWaited() {
-     * List<Long> messageIds =
-     * messageClaimService.claimNextMessagesIgnoreSchedule();
-     * if (messageIds.isEmpty()) {
-     * log.info("발송 대상 메시지 없음");
-     * return 0;
-     * }
-     * 
-     * log.info("메시지 {}건 발송 시작 (스케줄 무시)", messageIds.size());
-     * for (Long messageId : messageIds) {
-     * messageDispatchTaskExecutor.execute(() ->
-     * processWithExceptionHandling(messageId));
-     * }
-     * 
-     * log.info("총 발송 시작: {}건", messageIds.size());
-     * return messageIds.size();
-     * }
-     */
-
-    // 미수 : 배치 때문에 추가된 코드
     @Transactional
     public List<Long> prepareDispatch(LocalDateTime now) {
 
@@ -153,9 +106,7 @@ public class MessageDispatchService {
         }
     }
 
-    /**
-     * JDBC 버전 - 발송 처리 후 결과 반환
-     */
+    // JDBC 발송 처리 후 결과 반환
     private ProcessResult processAndReturnResultJdbc(Long messageId) {
         try {
             return messageProcessService.processMessageAndReturnResultJdbc(messageId);
@@ -165,9 +116,7 @@ public class MessageDispatchService {
         }
     }
 
-    /**
-     * 발송 결과 DTO
-     */
+    // 발송 DTO
     public record ProcessResult(Long messageId, boolean success) {
     }
 
@@ -183,24 +132,4 @@ public class MessageDispatchService {
         log.info("메시지 {}건 dispatch 시작", messageIds.size());
         dispatchPreparedMessages(messageIds);
     }
-
-    /*
-     * public int dispatchAllWaited() {
-     * List<Long> messageIds =
-     * messageClaimService.claimNextMessages(LocalDateTime.now());
-     * 
-     * if (messageIds.isEmpty()) {
-     * log.info("발송 대상 메시지 없음");
-     * return 0;
-     * }
-     * 
-     * log.info("메시지 {}건 발송 시작 - WAITED만", messageIds.size());
-     * for (Long messageId : messageIds) {
-     * messageDispatchTaskExecutor.execute(() ->
-     * processWithExceptionHandling(messageId));
-     * }
-     * 
-     * return messageIds.size();
-     * }
-     */
 }

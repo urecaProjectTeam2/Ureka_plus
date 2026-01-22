@@ -21,13 +21,18 @@ public class MessageJdbcRepository {
 
     private final JdbcTemplate jdbcTemplate;
 
-    public void batchInsert(List<Message> messages) {
+    /**
+     * Batch Insert (INSERT IGNORE)
+     * @return 성공적으로 INSERT된 건수 (중복은 0, 성공은 1)
+     */
+    public int batchInsert(List<Message> messages) {
         String sql = """
             INSERT IGNORE INTO message
             (billing_id, user_id, status, scheduled_at, retry_count, ban_end_time)
             VALUES (?, ?, ?, ?, ?, ?)
         """;
 
+<<<<<<< HEAD
         jdbcTemplate.batchUpdate(
                 sql,
                 messages,
@@ -43,6 +48,32 @@ public class MessageJdbcRepository {
                     ps.setTime(6, m.getBanEndTime() != null ? Time.valueOf(m.getBanEndTime()) : null);
                 }
         );
+=======
+        int[][] results = jdbcTemplate.batchUpdate(
+            sql,
+            messages,
+            messages.size(),
+            (ps, m) -> {
+                ps.setLong(1, m.getBillingId());
+                ps.setLong(2, m.getUserId());
+                ps.setString(3, m.getStatus().name());
+                // LocalDateTime -> Timestamp 변환 필요
+                ps.setTimestamp(4, m.getScheduledAt() != null ? Timestamp.valueOf(m.getScheduledAt()) : null);
+                ps.setInt(5, m.getRetryCount());
+                // LocalTime -> Time 변환
+                ps.setTime(6, m.getBanEndTime() != null ? Time.valueOf(m.getBanEndTime()) : null);
+            }
+        );
+        
+        // affectedRows 합계 반환 (INSERT IGNORE: 성공=1, 중복=0)
+        int successCount = 0;
+        for (int[] batch : results) {
+            for (int affected : batch) {
+                if (affected > 0) successCount++;
+            }
+        }
+        return successCount;
+>>>>>>> c01ac7d6668deb472d9b3781185934e35f9b93bd
     }
 
     /**

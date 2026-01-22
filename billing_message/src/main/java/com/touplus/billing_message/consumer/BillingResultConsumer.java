@@ -32,8 +32,8 @@ public class BillingResultConsumer {
 
 
     @KafkaListener(
-        topics = "billing-result",
-        groupId = "billing-message-group",
+        topics = "billing-result-topic-2512",
+        groupId = "billing-message-group1",
         containerFactory = "kafkaListenerContainerFactory" // offset 수동 저장
     )
     public void consume(
@@ -83,21 +83,46 @@ public class BillingResultConsumer {
             
             // ② Phase 2: 스냅샷 완료 후 Message 일괄 처리
             Long snapshotCount = bsr.countAll();
-            if (snapshotCount >= 10000L) {  // 테스트용 - 나중에 조건 변경 가능
+            if (snapshotCount >= 9999L) {  // 테스트용 - 나중에 조건 변경 가능
                 log.info("스냅샷 데이터 다 넣음! count={}", snapshotCount);
                 log.info("Message 처리 시작 시각 : {}", LocalDateTime.now());
                 
-                // DB에서 페이징으로 스냅샷 조회 후 Message 처리 (Chunk 방식)
+                // DB에서 모든 스냅샷 조회 후 병렬 처리
                 int messageBatchSize = 1000;
+                int parallelCount = 4;  // 4스레드 병렬 처리
+                
+                // 모든 청크를 먼저 수집
+                java.util.List<java.util.List<BillingSnapshot>> chunks = new java.util.ArrayList<>();
                 int pageNum = 0;
                 Page<BillingSnapshot> page;
-                
                 do {
                     page = bsr.findAll(PageRequest.of(pageNum++, messageBatchSize));
-                    // 청크 처리 (Processor 내부에서 누락 감지 및 재시도)
-                    messageProcessor.processBatch(page.getContent());
+                    if (!page.getContent().isEmpty()) {
+                        chunks.add(new java.util.ArrayList<>(page.getContent()));
+                    }
                 } while (page.hasNext());
                 
+                // ExecutorService로 병렬 처리
+                java.util.concurrent.ExecutorService executor = 
+                    java.util.concurrent.Executors.newFixedThreadPool(parallelCount);
+                
+                java.util.List<java.util.concurrent.Future<?>> futures = new java.util.ArrayList<>();
+                for (java.util.List<BillingSnapshot> chunk : chunks) {
+                    futures.add(executor.submit(() -> {
+                        messageProcessor.processBatch(chunk);
+                    }));
+                }
+                
+                // 모든 작업 완료 대기
+                for (java.util.concurrent.Future<?> future : futures) {
+                    try {
+                        future.get();
+                    } catch (Exception e) {
+                        log.error("청크 처리 실패", e);
+                    }
+                }
+                
+                executor.shutdown();
                 log.info("Message 처리 완료 시각 : {}", LocalDateTime.now());
             }
             
