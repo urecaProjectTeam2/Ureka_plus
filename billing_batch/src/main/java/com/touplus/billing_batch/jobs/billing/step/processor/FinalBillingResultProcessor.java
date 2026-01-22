@@ -97,7 +97,7 @@ public class FinalBillingResultProcessor
 
         return BillingResult.builder()
                 .userId(work.getRawData().getUserId())
-                .settlementMonth(LocalDate.parse(targetMonth).plusMonths(1)) // 정산월은 배치를 돌리는 해당월.
+                .settlementMonth(LocalDate.parse(targetMonth)) // 정산월은 배치를 돌리는 해당월.
                 .totalPrice((int)finalPrice)
                 .settlementDetails(detailsJson)
                 .sendStatus(SendStatus.READY)

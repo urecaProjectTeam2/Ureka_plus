@@ -3,6 +3,7 @@ package com.touplus.billing_batch.jobs.message.step.writer;
 import com.touplus.billing_batch.domain.dto.BillingResultDto;
 import lombok.RequiredArgsConstructor;
 
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.item.Chunk;
 import org.springframework.batch.item.ItemWriter;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -29,6 +30,7 @@ import java.util.concurrent.CompletableFuture;
             *       --> 1000개의 chunk 단위 = 빠른 트랜잭션 가능
             * */
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class MessageItemWriter implements ItemWriter<BillingResultDto> {
@@ -40,42 +42,34 @@ public class MessageItemWriter implements ItemWriter<BillingResultDto> {
 
     @Override
     public void write(Chunk<? extends BillingResultDto> chunk) throws Exception {
-        List<Long> successIds = Collections.synchronizedList(new ArrayList<>());
-        List<BillingResultDto> failedItems = Collections.synchronizedList(new ArrayList<>());
-        List<CompletableFuture<?>> futures = new ArrayList<>();
+        List<Long> successIds = new ArrayList<>();
+        List<Long> failedIds = new ArrayList<>();
 
         for (BillingResultDto dto : chunk) {
-            // 1. 비동기 + 재시도 로직 통합
-            CompletableFuture<Void> future = CompletableFuture.runAsync(() -> {
+            try {
+                // kafka 전송 및 응답 확인 + 재시도 로직
                 retryTemplate.execute(context -> {
-                    try {
-                        // Kafka 전송 후 응답 대기 (.get())
-                        kafkaTemplate.send(TOPIC, String.valueOf(dto.getUserId()), dto).get();
-                        successIds.add(dto.getId());
-                        return null;
-                    } catch (Exception e) {
-                        // 설정된 최대 재시도 횟수 도달 시 실패 목록에 추가
-                        if (context.getRetryCount() >= 2) {
-                            failedItems.add(dto);
-                        }
-                        throw new RuntimeException(e); // 재시도 트리거
-                    }
+                    // Kafka 전송 후 응답 대기 (.get())
+                    kafkaTemplate.send(TOPIC, String.valueOf(dto.getUserId()), dto).get();
+                    return null;
                 });
-            });
-            futures.add(future);
+                // 성공 리스트에 저장
+                successIds.add(dto.getId());
+            } catch (Exception e) {
+                log.error("최종 발송 실패 - ID: {}", dto.getId());
+                // 설정된 최대 재시도 횟수 도달 시 실패 목록에 추가
+                failedIds.add(dto.getId());
+            }
         }
 
-        //  2. 모든 비동기 작업이 끝날 때까지 대기
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-
-        //  3. 성공 데이터 DB 일괄 업데이트
+        // 성공 데이터 DB 일괄 업데이트
         if (!successIds.isEmpty()) {
             updateSendStatus(successIds, "SUCCESS");
         }
 
-        //  4. 실패 데이터가 하나라도 있으면 예외를 던져 SkipListener 호출
-        if (!failedItems.isEmpty()) {
-            throw new RuntimeException("Kafka 최종 전송 실패 건 존재: " + failedItems.size() + "건");
+        // 실패 데이터 DB 일괄 업데이트
+        if (!failedIds.isEmpty()) {
+            updateSendStatus(failedIds, "FAIL");
         }
     }
 
