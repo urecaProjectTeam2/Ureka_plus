@@ -1,6 +1,5 @@
 package com.touplus.billing_message.domain.respository;
 
-import com.touplus.billing_message.domain.entity.MessageSendLog;
 import com.touplus.billing_message.domain.entity.MessageType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.JdbcTemplate;

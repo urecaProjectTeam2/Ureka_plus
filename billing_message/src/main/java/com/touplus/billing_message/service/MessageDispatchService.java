@@ -25,7 +25,6 @@ public class MessageDispatchService {
     private final MessageProcessService messageProcessService;
     private final TaskExecutor messageDispatchTaskExecutor;
     private final MessageSnapshotService messageSnapshotService;
-    private final MessageRepository messageRepository;
     private final MessageJdbcRepository messageJdbcRepository;
 
     public MessageDispatchService(
@@ -38,24 +37,8 @@ public class MessageDispatchService {
         this.messageClaimService = messageClaimService;
         this.messageProcessService = messageProcessService;
         this.messageSnapshotService = messageSnapshotService;
-        this.messageRepository = messageRepository;
         this.messageJdbcRepository = messageJdbcRepository;
         this.messageDispatchTaskExecutor = messageTaskExecutor;
-    }
-
-    // 예외 처리를 포함한 메시지 처리
-    private void processWithExceptionHandling(Long messageId) {
-        try {
-            messageProcessService.processMessage(messageId);
-        } catch (Exception e) {
-            log.error("메시지 처리 중 예기치 않은 오류 messageId={}", messageId, e);
-            // 예외 발생 시 메시지를 WAITED 상태로 되돌려 재처리 가능하게 함
-            try {
-                messageProcessService.handleSendFailure(messageId, 0, null);
-            } catch (Exception recoveryEx) {
-                log.error("메시지 복구 실패 messageId={}", messageId, recoveryEx);
-            }
-        }
     }
 
     @Transactional
