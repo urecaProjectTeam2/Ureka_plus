@@ -1,5 +1,6 @@
 package com.touplus.billing_message.domain.respository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -35,5 +36,32 @@ public class BillingSnapshotJdbcRepository {
                 ps.setString(5, s.getSettlementDetails());
             }
         );
+    }
+
+    /**
+     * 전체 스냅샷 조회 (JDBC - JPA 페이징 오버헤드 제거)
+     */
+    public List<BillingSnapshot> findAll() {
+        String sql = """
+            SELECT billing_id, settlement_month, user_id, total_price, settlement_details
+            FROM billing_snapshot
+        """;
+
+        return jdbcTemplate.query(sql, (rs, rowNum) -> new BillingSnapshot(
+                rs.getLong("billing_id"),
+                rs.getObject("settlement_month", LocalDate.class),
+                rs.getLong("user_id"),
+                rs.getInt("total_price"),
+                rs.getString("settlement_details")
+        ));
+    }
+
+    /**
+     * 전체 카운트 (JDBC)
+     */
+    public long count() {
+        String sql = "SELECT COUNT(*) FROM billing_snapshot";
+        Long count = jdbcTemplate.queryForObject(sql, Long.class);
+        return count != null ? count : 0L;
     }
 }
