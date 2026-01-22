@@ -8,7 +8,6 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
 import java.sql.Time;
-import java.sql.Time;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.Collections;
@@ -74,7 +73,7 @@ public class MessageJdbcRepository {
                 .map(id -> "?")
                 .collect(Collectors.joining(","));
 
-        String sql = "SELECT message_id, billing_id, user_id, status, scheduled_at, retry_count " +
+        String sql = "SELECT message_id, billing_id, user_id, status, scheduled_at, retry_count, ban_end_time " +
                 "FROM message WHERE message_id IN (" + placeholders + ")";
 
         return jdbcTemplate.query(sql, messageIds.toArray(), (rs, rowNum) -> new MessageDto(
@@ -85,14 +84,17 @@ public class MessageJdbcRepository {
                 rs.getTimestamp("scheduled_at") != null
                         ? rs.getTimestamp("scheduled_at").toLocalDateTime()
                         : null,
-                rs.getInt("retry_count")));
+                rs.getInt("retry_count"),
+                rs.getTime("ban_end_time") != null
+                        ? rs.getTime("ban_end_time").toLocalTime()
+                        : null));
     }
 
     /**
      * 메시지 단건 조회 (JDBC)
      */
     public MessageDto findById(Long messageId) {
-        String sql = "SELECT message_id, billing_id, user_id, status, scheduled_at, retry_count " +
+        String sql = "SELECT message_id, billing_id, user_id, status, scheduled_at, retry_count, ban_end_time " +
                 "FROM message WHERE message_id = ?";
 
         List<MessageDto> results = jdbcTemplate.query(sql, new Object[] { messageId }, (rs, rowNum) -> new MessageDto(
@@ -103,7 +105,10 @@ public class MessageJdbcRepository {
                 rs.getTimestamp("scheduled_at") != null
                         ? rs.getTimestamp("scheduled_at").toLocalDateTime()
                         : null,
-                rs.getInt("retry_count")));
+                rs.getInt("retry_count"),
+                rs.getTime("ban_end_time") != null
+                        ? rs.getTime("ban_end_time").toLocalTime()
+                        : null));
 
         return results.isEmpty() ? null : results.get(0);
     }
@@ -133,6 +138,7 @@ public class MessageJdbcRepository {
             Long userId,
             MessageStatus status,
             LocalDateTime scheduledAt,
-            Integer retryCount) {
+            Integer retryCount,
+            java.time.LocalTime banEndTime) {
     }
 }

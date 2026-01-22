@@ -320,12 +320,12 @@ public class MessageProcessService {
             return new MessageDispatchService.ProcessResult(messageId, false);
         }
 
-        // ban 시간대 체크
-        UserBanInfo banInfo = userBanRepository.findBanInfo(message.getUserId()).orElse(null);
-
+        // ban 시간대 체크 (Message에서 직접 가져옴)
+        LocalTime banEndTime = message.getBanEndTime();
         LocalDateTime now = LocalDateTime.now();
-        if (messagePolicy.isInBanWindow(now, banInfo)) {
-            LocalDateTime nextAllowed = messagePolicy.nextAllowedTime(now, banInfo);
+
+        if (messagePolicy.isInBanWindow(now, banEndTime)) {
+            LocalDateTime nextAllowed = messagePolicy.nextAllowedTime(now, banEndTime);
             messageRepository.defer(messageId, nextAllowed);
             return new MessageDispatchService.ProcessResult(messageId, false);
         }
@@ -338,7 +338,7 @@ public class MessageProcessService {
             log.error("메시지 발송 예외 messageId={}", messageId, e);
             LocalDateTime retryAt = messagePolicy.adjustForBan(
                     messagePolicy.nextRetryAt(now, message.getRetryCount()),
-                    banInfo);
+                    banEndTime);
             messageRepository.markFailed(messageId, retryAt);
             return new MessageDispatchService.ProcessResult(messageId, false);
         }
@@ -361,7 +361,7 @@ public class MessageProcessService {
         // 실패 시 개별 처리 (재시도 스케줄링 필요)
         LocalDateTime retryAt = messagePolicy.adjustForBan(
                 messagePolicy.nextRetryAt(now, message.getRetryCount()),
-                banInfo);
+                banEndTime);
         messageRepository.markFailed(messageId, retryAt);
         return new MessageDispatchService.ProcessResult(messageId, false);
     }
@@ -415,12 +415,12 @@ public class MessageProcessService {
                 snapshotDto.settlementDetails(),
                 snapshotDto.messageContent());
 
-        // ban 시간대 체크
-        UserBanInfo banInfo = userBanRepository.findBanInfo(message.userId()).orElse(null);
-
+        // ban 시간대 체크 (MessageDto에서 직접 가져옴)
+        LocalTime banEndTime = message.banEndTime();
         LocalDateTime now = LocalDateTime.now();
-        if (messagePolicy.isInBanWindow(now, banInfo)) {
-            LocalDateTime nextAllowed = messagePolicy.nextAllowedTime(now, banInfo);
+
+        if (messagePolicy.isInBanWindow(now, banEndTime)) {
+            LocalDateTime nextAllowed = messagePolicy.nextAllowedTime(now, banEndTime);
             messageJdbcRepository.defer(messageId, nextAllowed);
             return new MessageDispatchService.ProcessResult(messageId, false);
         }
@@ -433,7 +433,7 @@ public class MessageProcessService {
             log.error("메시지 발송 예외 messageId={}", messageId, e);
             LocalDateTime retryAt = messagePolicy.adjustForBan(
                     messagePolicy.nextRetryAt(now, message.retryCount()),
-                    banInfo);
+                    banEndTime);
             messageJdbcRepository.markFailed(messageId, retryAt);
             return new MessageDispatchService.ProcessResult(messageId, false);
         }
@@ -456,7 +456,7 @@ public class MessageProcessService {
         // 실패 시 JDBC로 업데이트
         LocalDateTime retryAt = messagePolicy.adjustForBan(
                 messagePolicy.nextRetryAt(now, message.retryCount()),
-                banInfo);
+                banEndTime);
         messageJdbcRepository.markFailed(messageId, retryAt);
         return new MessageDispatchService.ProcessResult(messageId, false);
     }
