@@ -15,7 +15,6 @@ public interface MessageSnapshotRepository extends JpaRepository<MessageSnapshot
 
     Optional<MessageSnapshot> findByUserIdAndSettlementMonth(Long userId, LocalDate settlementMonth);
     
-    // 미수 : 아래 내용 추가
     @Query("""
     	    SELECT ms.messageId
     	    FROM MessageSnapshot ms

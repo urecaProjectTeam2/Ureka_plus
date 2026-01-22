@@ -32,7 +32,7 @@ public class BillingResultConsumer {
 
     @KafkaListener(
     		topics = "billing-result-topic-2512T2", 
-    		groupId = "billing-message-groupM", 
+    		groupId = "billing-message-groupM16", 
     		containerFactory = "kafkaListenerContainerFactory")
     public void consume(
             List<BillingResultDto> messages,

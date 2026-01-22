@@ -98,7 +98,7 @@ public interface MessageRepository extends JpaRepository<Message, Long> {
     /**
      * WAITED 상태 메시지 선점 (FOR UPDATE SKIP LOCKED)
      */
-    @Query(value = """
+   @Query(value = """
                 SELECT *
                 FROM message
                 WHERE status = 'WAITED'

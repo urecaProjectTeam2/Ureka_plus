@@ -33,20 +33,15 @@ public class MessageSnapshotService {
                         return 0;
                 }
 
-                // id들 수집 -> 근데 gpt 코드라 좀 더 쉽고 간편한 코드가 있지 않을까?하는 생각이 듦
-                List<Long> messageIds = messages.stream()
-                                .map(Message::getMessageId)
-                                .toList();
+                List<Long> messageIds = new ArrayList<>(messages.size());
+                Set<Long> billingIds = new HashSet<>();
+                Set<Long> userIds = new HashSet<>();
 
-                List<Long> billingIds = messages.stream()
-                                .map(Message::getBillingId)
-                                .distinct()
-                                .toList();
-
-                List<Long> userIds = messages.stream()
-                                .map(Message::getUserId)
-                                .distinct()
-                                .toList();
+                for (Message m : messages) {
+                    messageIds.add(m.getMessageId());
+                    billingIds.add(m.getBillingId());
+                    userIds.add(m.getUserId());
+                }
 
                 // 여기도 위랑 동일하게 생각 중
                 Map<Long, BillingSnapshot> billingMap = billingSnapshotRepository.findAllById(billingIds)
@@ -69,7 +64,7 @@ public class MessageSnapshotService {
                 Set<Long> existingMessageIds = messageSnapshotRepository.findExistingMessageIds(messageIds);
 
                 // 스냅샷 생성
-                List<MessageSnapshot> snapshots = new ArrayList<>();
+                List<MessageSnapshot> snapshots = new ArrayList<>(messages.size());
 
                 for (Message message : messages) {
 
@@ -124,19 +119,22 @@ public class MessageSnapshotService {
 
         // 템플릿 적용
         private String buildMessageContent(
-                        String template,
-                        User user,
-                        BillingSnapshot billing) {
-                return template
-                                .replace("{userName}", user.getName())
-                                .replace("{userEmail}", user.getEmail())
-                                .replace("{userPhone}", user.getPhone())
-                                .replace("{settlementMonth}",
-                                                billing.getSettlementMonth().format(MONTH_FORMATTER))
-                                .replace("{totalPrice}",
-                                                PRICE_FORMATTER.format(billing.getTotalPrice()))
-                                .replace("{settlementDetails}",
-                                                billing.getSettlementDetails());
+                String template,
+                User user,
+                BillingSnapshot billing) {
+
+            String result = template;
+            result = result.replace("{userName}", user.getName());
+            result = result.replace("{userEmail}", user.getEmail());
+            result = result.replace("{userPhone}", user.getPhone());
+            result = result.replace("{settlementMonth}",
+                    billing.getSettlementMonth().format(MONTH_FORMATTER));
+            result = result.replace("{totalPrice}",
+                    PRICE_FORMATTER.format(billing.getTotalPrice()));
+            result = result.replace("{settlementDetails}",
+                    billing.getSettlementDetails());
+
+            return result;
         }
 
 }

@@ -23,7 +23,6 @@ public class BillingKafkaScheduler {
 
     private static final String TOPIC = "billing-result";
 
-//    @Scheduled(fixedDelay = 1000) // 예시를 위한 1초
     @Transactional
     public void sendBillingResult() {
         List<BillingResult> targets = billingResultRepository.findBySendStatusForUpdate(SendStatus.READY);
