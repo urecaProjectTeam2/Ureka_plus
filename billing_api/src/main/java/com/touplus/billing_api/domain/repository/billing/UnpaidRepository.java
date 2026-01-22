@@ -8,5 +8,5 @@ import java.util.List;
 
 public interface UnpaidRepository {
 
-    List<Unpaid> findByPaidFalseAndUnpaidMonthBefore(LocalDate month);
+    List<Unpaid> findUnpaidUsers();
 }
