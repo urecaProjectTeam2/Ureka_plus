@@ -99,7 +99,7 @@ public class BillingUserRepositoryImpl implements BillingUserRepository{
                   :forceFullScan = true
                   OR NOT EXISTS (
                       SELECT 1
-                      FROM tmp_billing_result r
+                      FROM billing_result r
                       WHERE r.user_id = b.user_id
                         AND r.settlement_month BETWEEN :startDate AND :endDate
                   )

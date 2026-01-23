@@ -18,6 +18,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -59,6 +60,11 @@ public class FinalBillingResultProcessor
 
             if (u.getUnpaidMonth() == null) {
                 throw BillingException.dataNotFound(work.getRawData().getUserId(), "미납 월이 비어있습니다.");
+            }
+
+            YearMonth targetYM = YearMonth.from(LocalDate.parse(targetMonth));
+            if(YearMonth.from(u.getUnpaidMonth()).isAfter(targetYM)){
+                throw BillingException.dataNotFound(work.getRawData().getUserId(), "미납 월이 정산 기준 월 이후입니다.");
             }
 
             int unpaidPrice = u.getUnpaidPrice();
