@@ -32,26 +32,24 @@ public class MessageJobConfig {
      */
 
 
-
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
-    //  1. 필드 주입 제거 (순환 고리 끊기)
-    // private final MessageItemWriter messageItemWriter;
     private final MessageSkipListener messageSkipListener;
     private final MessageStepLogger messageStepLogger;
     private final TopicCreateTasklet topicCreateTasklet;
     private final int chunkSize = 1000;
 
     @Bean
-    public Job messageJob(@Qualifier("createTopicStep")Step createTopicStep, @Qualifier("messageJobStep")Step messageStepInstance) { // 파라미터명 변경
+    public Job messageJob(@Qualifier("createTopicStep") Step createTopicStep,
+                          @Qualifier("messageJobStep") Step messageStepInstance) {
         return new JobBuilder("messageJob", jobRepository)
-                .start(createTopicStep)      // 1. 토픽을 먼저 생성
-                .next(messageStepInstance)   // 2. 이후 메시지 발송 실행
+                .start(createTopicStep)      // 1. 토픽 생성 (TopicCreateTasklet 실행)
+                .next(messageStepInstance)   // 2. 메시지 발송 실행
                 .build();
     }
 
     // kafka topic 설정 담당 메소드
-    @Bean(name="createTopicStep")
+    @Bean(name = "createTopicStep")
     public Step createTopicStep() {
         return new StepBuilder("createTopicStep", jobRepository)
                 .tasklet(topicCreateTasklet, transactionManager)
@@ -60,7 +58,7 @@ public class MessageJobConfig {
 
     // 메서드 이름을 messageStep에서 messageJobStep으로 변경 (중복 방지)
     @Bean(name = "messageJobStep")
-    public Step messageJobStep(JdbcPagingItemReader<BillingResultDto> messageReader, // 타입 변경
+    public Step messageJobStep(JdbcPagingItemReader<BillingResultDto> messageReader,
                                MessageItemWriter messageItemWriter) {
         return new StepBuilder("messageJobStep", jobRepository)
                 .<BillingResultDto, BillingResultDto>chunk(chunkSize, transactionManager)
@@ -71,7 +69,7 @@ public class MessageJobConfig {
                 .skipLimit(1000)
                 .listener(messageStepLogger)
                 .listener(messageSkipListener)
-                .taskExecutor(messageTaskExecutor()) //= =스레드 세이프 하게 돌아가도록
+                .taskExecutor(messageTaskExecutor()) // 멀티스레드 적용
                 .build();
     }
 
@@ -86,13 +84,16 @@ public class MessageJobConfig {
     @Bean(name = "messageTaskExecutor")
     public TaskExecutor messageTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(20);   // 서버 사양에 따라서 수정 ( 20~30)
+        executor.setCorePoolSize(20);
         executor.setMaxPoolSize(30);
-        executor.setQueueCapacity(2000);
-        executor.setThreadNamePrefix("Batch-Thread-");
+
+        // [사용자 버전 채택] 비동기 Kafka 발송 작업이 밀릴 경우를 대비해 큐 용량을 넉넉히 설정 (10,000)
+        executor.setQueueCapacity(10000);
+
+        // [사용자 버전 채택] 스레드 이름 접두사 설정
+        executor.setThreadNamePrefix("Msg-Thread-");
+
         executor.initialize();
         return executor;
     }
 }
-
-

@@ -26,6 +26,8 @@ public class TopicCreateTasklet implements Tasklet {
 
     @Override
     public RepeatStatus execute(StepContribution contribution, ChunkContext chunkContext) {
+        // [수정] 복잡한 substring 로직을 제거하고 settlementMonth를 그대로 사용합니다.
+        // 예: settlementMonth가 "2025-12-01"이면 토픽명은 "billing-result-topic-2025-12-01"이 됩니다.
         String TOPIC = BASE_TOPIC + settlementMonth;
 //        String TOPIC = BASE_TOPIC + settlementMonth +"T2";
 
@@ -34,11 +36,13 @@ public class TopicCreateTasklet implements Tasklet {
                 .replicas(1)
                 .config(
                         TopicConfig.RETENTION_MS_CONFIG,
-                        String.valueOf(3 * 24 * 60 * 60 * 1000L)
+                        String.valueOf(3 * 24 * 60 * 60 * 1000L) // 3일간 보관
                 )
                 .build();
 
+        // 토픽이 없으면 생성, 있으면 설정을 유지/수정합니다.
         kafkaAdmin.createOrModifyTopics(newTopic);
+
         return RepeatStatus.FINISHED;
     }
 }
