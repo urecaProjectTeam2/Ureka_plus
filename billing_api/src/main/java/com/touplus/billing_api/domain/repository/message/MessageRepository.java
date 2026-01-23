@@ -1,9 +1,9 @@
 package com.touplus.billing_api.domain.repository.message;
 
+import java.util.List;
+
 import com.touplus.billing_api.domain.message.entity.Message;
 import com.touplus.billing_api.domain.message.enums.MessageStatus;
-
-import java.util.List;
 
 public interface MessageRepository {
 
@@ -24,4 +24,5 @@ public interface MessageRepository {
 
     // 6. retry count 증가
     void increaseRetryCount(Long messageId);
+        
 }
