@@ -138,6 +138,7 @@ public class BillingItemReader implements ItemStreamReader<BillingUserBillingInf
         }catch (BillingFatalException e){
             throw e;
         }catch (Exception e){
+            log.error("Reader 에러 상세 원인: ", e);
             throw new BillingFatalException("Reader 실행 중 예상치 못한 오류 발생", "ERR_READER_UNKNOWN", 0L);
         }
     }
@@ -166,7 +167,8 @@ public class BillingItemReader implements ItemStreamReader<BillingUserBillingInf
                 .collect(Collectors.groupingBy(UserSubscribeProductDto::getUserId));
 
         if(uspMap.isEmpty()){
-            throw BillingFatalException.dataNotFound(String.format("데이터 정합성 오류: 대상 유저 %d명에 대한 구독 상품 정보가 존재하지 않습니다.", users.size()));
+            log.warn(">> [WARN] 대상 유저 {}명에 대한 구독 상품 정보가 없습니다. (skip)", users.size());
+//            throw BillingFatalException.dataNotFound(String.format("데이터 정합성 오류: 대상 유저 %d명에 대한 구독 상품 정보가 존재하지 않습니다.", users.size()));
         }
 
         Map<Long, List<UnpaidDto>> unpaidMap = unpaidRepository.findByUserIdIn(userIds).stream()

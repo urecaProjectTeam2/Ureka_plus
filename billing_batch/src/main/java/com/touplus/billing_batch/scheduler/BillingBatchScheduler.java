@@ -29,7 +29,7 @@ public class BillingBatchScheduler {
     // 예시 : @Scheduled(cron = "0 40 21 22 * ?")
     //                 22일 21시 40분 00초
 
-//    @Scheduled(cron = "0 19 22 22 * ?")
+    @Scheduled(cron = "10 40 14 23 * ?")
     public void runMonthlyBilling() {
         runBillingJob(false);
     }

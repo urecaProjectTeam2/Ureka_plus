@@ -27,7 +27,7 @@ public class BillingItemWriterConfig {
          * 변경 포인트(JPA --> JDBC)
          * 1. JPA 대신 JDBC 직접 사용: 영속성 컨텍스트 관리 비용 제거
          * 2. Bulk Insert: 쿼리 한 번에 1,000건씩 묶어서 전송 (rewriteBatchedStatements=true 설정과 결합 시 폭발적 성능)
-         * 3. 테이블명: tmp_billing_result
+         * 3. 테이블명: billing_result
          */
         return new JdbcBatchItemWriterBuilder<BillingResult>()
                 .dataSource(dataSource)

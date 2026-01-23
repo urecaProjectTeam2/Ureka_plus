@@ -40,7 +40,7 @@ class BillingIntegrationTest {
         jobLauncherTestUtils.setJob(billingJob);
 
         jdbcTemplate.execute("DELETE FROM batch_billing_error_log");
-        jdbcTemplate.execute("DELETE FROM tmp_billing_result");
+        jdbcTemplate.execute("DELETE FROM billing_result");
     }
 
     @Test
@@ -56,14 +56,14 @@ class BillingIntegrationTest {
         // 2. Job 상태 확인
         assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
 
-        // [수정] 실제 데이터가 쌓이는 tmp_billing_result 테이블을 조회합니다.
+        // [수정] 실제 데이터가 쌓이는 billing_result 테이블을 조회합니다.
         Integer successCount = jdbcTemplate.queryForObject(
-                "SELECT count(*) FROM tmp_billing_result WHERE settlement_month = '2026-01-01'",
+                "SELECT count(*) FROM billing_result WHERE settlement_month = '2026-01-01'",
                 Integer.class
         );
 
         // 로깅을 추가해서 실제로 몇 건이 들어왔는지 눈으로 확인하면 더 좋습니다.
-        System.out.println(">>> 성공 데이터 건수(tmp_billing_result): " + successCount);
+        System.out.println(">>> 성공 데이터 건수(billing_result): " + successCount);
 
         assertThat(successCount).isGreaterThan(0);
 

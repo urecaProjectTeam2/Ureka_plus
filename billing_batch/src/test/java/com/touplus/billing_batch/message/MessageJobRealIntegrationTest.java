@@ -44,8 +44,7 @@ public class MessageJobRealIntegrationTest {
         jobRepositoryTestUtils.removeJobExecutions();
 
 
-        // [수정] 우리가 사용하는 실제 결과 테이블은 tmp_billing_result 입니다.
-        jdbcTemplate.execute("DELETE FROM tmp_billing_result");
+        jdbcTemplate.execute("DELETE FROM billing_result");
 
         // READY 상태의 테스트 데이터 5건 삽입
         // Job 파라미터와 일치시키기 위해 settlement_month를 고정하거나 현재 월로 설정
@@ -53,7 +52,7 @@ public class MessageJobRealIntegrationTest {
 
         for (int i = 1; i <= 5; i++) {
             jdbcTemplate.update(
-                    "INSERT INTO tmp_billing_result (settlement_month, user_id, total_price, settlement_details, send_status, batch_execution_id, processed_at) " +
+                    "INSERT INTO billing_result (settlement_month, user_id, total_price, settlement_details, send_status, batch_execution_id, processed_at) " +
                             "VALUES (?, ?, ?, ?, ?, ?, NOW())",
                     currentMonth, (long) i, 10000 * i, "{\"test\":\"data\"}", "READY", 1L
             );
@@ -61,7 +60,7 @@ public class MessageJobRealIntegrationTest {
     }
 
 //    @Test
-//    @DisplayName("5건 --> Kafka 전송 Job 실행 및 tmp_billing_result 상태 업데이트 검증")
+//    @DisplayName("5건 --> Kafka 전송 Job 실행 및 billing_result 상태 업데이트 검증")
 //    void realKafkaIntegrationTest() throws Exception {
 //        // 1. Given
 //        jobLauncherTestUtils.setJob(messageJob);
@@ -82,10 +81,7 @@ public class MessageJobRealIntegrationTest {
 //        // 3. Then
 //        assertThat(jobExecution.getStatus()).isEqualTo(BatchStatus.COMPLETED);
 //
-//        // [수정] tmp_billing_result 테이블에서 상태 확인
-//        List<Map<String, Object>> results = jdbcTemplate.queryForList(
-//                "SELECT user_id, send_status FROM tmp_billing_result"
-//        );
+
 //
 //        System.out.println("### Kafka 전송 후 DB 업데이트 결과 ###");
 //        results.forEach(row -> System.out.println("User: " + row.get("user_id") + ", Status: " + row.get("send_status")));
@@ -105,7 +101,7 @@ public class MessageJobRealIntegrationTest {
     void bulkKafkaIntegrationTest() throws Exception {
         // 1. Given: 테스트 시작 전 현재 DB에 쌓여있는 READY 상태 데이터 건수 확인
         Integer initialReadyCount = jdbcTemplate.queryForObject(
-                "SELECT count(*) FROM tmp_billing_result WHERE send_status = 'READY'", Integer.class);
+                "SELECT count(*) FROM billing_result WHERE send_status = 'READY'", Integer.class);
 
         System.out.println(">>> [시작] 전송 대기(READY) 데이터 건수: " + initialReadyCount);
 
@@ -128,13 +124,13 @@ public class MessageJobRealIntegrationTest {
 
         // 최종 상태 집계 조회
         Integer totalCount = jdbcTemplate.queryForObject(
-                "SELECT count(*) FROM tmp_billing_result", Integer.class);
+                "SELECT count(*) FROM billing_result", Integer.class);
 
         Integer finalSuccessCount = jdbcTemplate.queryForObject(
-                "SELECT count(*) FROM tmp_billing_result WHERE send_status = 'SUCCESS'", Integer.class);
+                "SELECT count(*) FROM billing_result WHERE send_status = 'SUCCESS'", Integer.class);
 
         Integer finalReadyCount = jdbcTemplate.queryForObject(
-                "SELECT count(*) FROM tmp_billing_result WHERE send_status = 'READY'", Integer.class);
+                "SELECT count(*) FROM billing_result WHERE send_status = 'READY'", Integer.class);
 
         System.out.println("==============================================");
         System.out.println("### 최종 배치 처리 결과 요약 ###");

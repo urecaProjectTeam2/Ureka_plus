@@ -42,11 +42,11 @@ public class MessageJobRealIntegrationTest_tenThousand {
 //    @BeforeEach
 //    public void setup() {
 //        jobRepositoryTestUtils.removeJobExecutions();
-//        jdbcTemplate.execute("DELETE FROM tmp_billing_result");
+//        jdbcTemplate.execute("DELETE FROM billing_result");
 //
 //        // 1. Given: 10,000건의 READY 데이터 생성 (대량 데이터 테스트 핵심)
 //        System.out.println(">>> 테스트용 대량 데이터(10,000건)를 생성 중입니다...");
-//        String sql = "INSERT INTO tmp_billing_result (settlement_month, user_id, total_price, settlement_details, send_status, batch_execution_id, processed_at) VALUES (?, ?, ?, ?, ?, ?, NOW())";
+//        String sql = "INSERT INTO billing_result (settlement_month, user_id, total_price, settlement_details, send_status, batch_execution_id, processed_at) VALUES (?, ?, ?, ?, ?, ?, NOW())";
 //
 //        // Batch Update를 사용해 빠르게 10,000건 삽입
 //        jdbcTemplate.batchUpdate(sql, new org.springframework.jdbc.core.BatchPreparedStatementSetter() {
