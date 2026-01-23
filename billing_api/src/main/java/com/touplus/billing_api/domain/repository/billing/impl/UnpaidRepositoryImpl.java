@@ -116,4 +116,48 @@ public class UnpaidRepositoryImpl implements UnpaidRepository {
 
         return namedJdbcTemplate.query(sql.toString(), params, UNPAID_ROW_MAPPER);
     }
+
+    @Override
+    public long countUnpaidUsers() {
+        String sql = """
+        SELECT COUNT(*)
+        FROM billing_batch.unpaid
+        WHERE is_paid = false
+    """;
+
+        return namedJdbcTemplate.queryForObject(sql, Map.of(), Long.class);
+    }
+
+    @Override
+    public long countUnpaidUsersByKeyword(String keyword) {
+
+        StringBuilder sql = new StringBuilder("""
+        SELECT COUNT(*)
+        FROM billing_batch.unpaid u
+        JOIN billing_message.users usr ON u.user_id = usr.user_id
+        WHERE u.is_paid = false
+    """);
+
+        Map<String, Object> params = new java.util.HashMap<>();
+
+        if (keyword != null && !keyword.isBlank()) {
+            String[] keywords = keyword.trim().split("\\s+");
+
+            for (int i = 0; i < keywords.length; i++) {
+                sql.append(" AND (")
+                        .append("usr.name LIKE :key").append(i)
+                        .append(" OR usr.email LIKE :key").append(i)
+                        .append(" OR usr.phone LIKE :key").append(i)
+                        .append(" OR DATE_FORMAT(u.unpaid_month, '%Y-%m') LIKE :key").append(i)
+                        .append(") ");
+                params.put("key" + i, "%" + keywords[i] + "%");
+            }
+        }
+
+        return namedJdbcTemplate.queryForObject(
+                sql.toString(),
+                params,
+                Long.class
+        );
+    }
 }

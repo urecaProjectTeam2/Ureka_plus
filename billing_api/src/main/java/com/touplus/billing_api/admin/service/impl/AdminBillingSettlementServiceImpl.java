@@ -1,6 +1,7 @@
 package com.touplus.billing_api.admin.service.impl;
 
 import com.touplus.billing_api.admin.dto.AdminUserSettlementResponse;
+import com.touplus.billing_api.admin.dto.PageResponse;
 import com.touplus.billing_api.admin.service.AdminBillingSettlementService;
 import com.touplus.billing_api.domain.billing.entity.BillingResult;
 import com.touplus.billing_api.domain.billing.service.SettlementDetailsMapper;
@@ -24,50 +25,77 @@ public class AdminBillingSettlementServiceImpl implements AdminBillingSettlement
     private final UserContactService userContactService;
     private final SettlementDetailsMapper settlementDetailsMapper;
 
-    public List<AdminUserSettlementResponse> getMonthlySettlementResults(
-            LocalDate settlementMonth
+    public PageResponse<AdminUserSettlementResponse> getMonthlySettlementResults(
+            LocalDate settlementMonth,
+            int page,
+            int size
     ) {
-        // 1. 이번 달 정산 결과 조회
-        List<BillingResult> results =
-                billingResultRepository.findBySettlementMonth(settlementMonth);
+        int offset = page * size;
 
-        if (results.isEmpty()) {
-            return List.of();
+        // 1. 전체 유저 페이징 조회
+        List<User> users = userRepository.findAllPaged(offset, size);
+        long totalUsers = userRepository.countAll();
+
+        if (users.isEmpty()) {
+            return PageResponse.<AdminUserSettlementResponse>builder()
+                    .contents(List.of())
+                    .page(page)
+                    .size(size)
+                    .totalElements(totalUsers)
+                    .totalPages((int) Math.ceil((double) totalUsers / size))
+                    .build();
         }
 
         // 2. userId 추출
-        List<Long> userIds = results.stream()
-                .map(BillingResult::getUserId)
-                .distinct()
+        List<Long> userIds = users.stream()
+                .map(User::getUserId)
                 .toList();
 
-        // 3. 사용자 정보 조회
-        Map<Long, User> userMap =
-                userRepository.findByIds(userIds).stream()
+        // 3. 이번 달 정산 결과 조회
+        Map<Long, BillingResult> resultMap =
+                billingResultRepository
+                        .findByUserIdsAndMonth(userIds, settlementMonth)
+                        .stream()
                         .collect(Collectors.toMap(
-                                User::getUserId,
-                                u -> u
+                                BillingResult::getUserId,
+                                r -> r
                         ));
 
-        // 4. DTO 조립
-        return results.stream()
-                .map(result -> {
-                    User user = userMap.get(result.getUserId());
+        // 4. DTO 조립 (정산 없으면 null)
+        List<AdminUserSettlementResponse> contents =
+                users.stream()
+                        .map(user -> {
+                            BillingResult result = resultMap.get(user.getUserId());
 
-                    return AdminUserSettlementResponse.builder()
-                            .billingResultId(result.getId())
-                            .settlementMonth(result.getSettlementMonth())
-                            .user(
-                                    userContactService.decryptAndMask(user)
-                            )
-                            .totalPrice(result.getTotalPrice())
-                            .details(
-                                    settlementDetailsMapper.fromJson(
-                                            result.getSettlementDetails()
+                            return AdminUserSettlementResponse.builder()
+                                    .billingResultId(
+                                            result != null ? result.getId() : null
                                     )
-                            )
-                            .build();
-                })
-                .toList();
+                                    .settlementMonth(settlementMonth)
+                                    .user(
+                                            userContactService.decryptAndMask(user)
+                                    )
+                                    .totalPrice(
+                                            result != null ? result.getTotalPrice() : null
+                                    )
+                                    .details(
+                                            result != null
+                                                    ? settlementDetailsMapper.fromJson(
+                                                    result.getSettlementDetails()
+                                            )
+                                                    : null
+                                    )
+                                    .build();
+                        })
+                        .toList();
+
+        return PageResponse.<AdminUserSettlementResponse>builder()
+                .contents(contents)
+                .page(page)
+                .size(size)
+                .totalElements(totalUsers)
+                .totalPages((int) Math.ceil((double) totalUsers / size))
+                .build();
     }
+
 }

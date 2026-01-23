@@ -12,4 +12,8 @@ public interface UnpaidRepository {
     List<Unpaid> findUnpaidUsersByMonth(int page, int size, String month);
 
     List<Unpaid> searchUnpaidUsersByKeyword(int page, int size, String keyword);
+
+    long countUnpaidUsers();
+
+    long countUnpaidUsersByKeyword(String keyword);
 }
