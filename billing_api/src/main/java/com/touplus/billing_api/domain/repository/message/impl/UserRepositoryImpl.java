@@ -69,4 +69,33 @@ public class UserRepositoryImpl implements UserRepository {
                 USER_ROW_MAPPER
         );
     }
+
+    @Override
+    public List<User> findAllPaged(int offset, int limit) {
+        String sql = """
+            SELECT *
+            FROM billing_message.users
+            ORDER BY user_id
+            LIMIT :limit OFFSET :offset
+        """;
+
+        return jdbcTemplate.query(
+                sql,
+                Map.of(
+                        "limit", limit,
+                        "offset", offset
+                ),
+                USER_ROW_MAPPER
+        );
+    }
+
+    @Override
+    public long countAll() {
+        String sql = """
+            SELECT COUNT(*)
+            FROM billing_message.users
+        """;
+
+        return jdbcTemplate.queryForObject(sql, Map.of(), Long.class);
+    }
 }

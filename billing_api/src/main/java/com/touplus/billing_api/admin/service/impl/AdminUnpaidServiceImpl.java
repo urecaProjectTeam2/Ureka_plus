@@ -24,9 +24,9 @@ public class AdminUnpaidServiceImpl implements AdminUnpaidService {
     private final UserContactService userContactService;
 
     @Override
-    public List<UnpaidUserResponse> getUnpaidUsers() {
+    public List<UnpaidUserResponse> getUnpaidUsers(int page, int size) {
 
-        List<Unpaid> unpaids = unpaidRepository.findUnpaidUsers();
+        List<Unpaid> unpaids = unpaidRepository.findUnpaidUsers(page, size);
         if (unpaids.isEmpty()) {
             return List.of();
         }
@@ -52,4 +52,67 @@ public class AdminUnpaidServiceImpl implements AdminUnpaidService {
                 })
                 .toList();
     }
+
+    @Override
+    public List<UnpaidUserResponse> getUnpaidUsersByMonth(int page, int size, String month) {
+        // 1. 특정 월 미납 조회
+        List<Unpaid> unpaids = unpaidRepository.findUnpaidUsersByMonth(page, size, month);
+        if (unpaids.isEmpty()) {
+            return List.of();
+        }
+
+        // 2. 사용자 ID만 추출
+        List<Long> userIds = unpaids.stream()
+                .map(Unpaid::getUserId)
+                .distinct()
+                .toList();
+
+        // 3. 사용자 정보 조회
+        Map<Long, User> userMap = userRepository.findByIds(userIds).stream()
+                .collect(Collectors.toMap(User::getUserId, Function.identity()));
+
+        // 4. DTO로 변환
+        return unpaids.stream()
+                .map(unpaid -> {
+                    User user = userMap.get(unpaid.getUserId());
+                    return new UnpaidUserResponse(
+                            unpaid.getId(),
+                            unpaid.getUnpaidPrice(),
+                            unpaid.getUnpaidMonth(),
+                            userContactService.decryptAndMask(user)
+                    );
+                })
+                .toList();
+    }
+
+    @Override
+    public List<UnpaidUserResponse> searchUnpaidUsersByKeyword(int page, int size, String keyword) {
+        // 1. DB에서 검색
+        List<Unpaid> unpaids = unpaidRepository.searchUnpaidUsersByKeyword(page, size, keyword);
+        if (unpaids.isEmpty()) return List.of();
+
+        // 2. 사용자 ID 추출
+        List<Long> userIds = unpaids.stream()
+                .map(Unpaid::getUserId)
+                .distinct()
+                .toList();
+
+        // 3. 사용자 정보 조회
+        Map<Long, User> userMap = userRepository.findByIds(userIds).stream()
+                .collect(Collectors.toMap(User::getUserId, Function.identity()));
+
+        // 4. DTO 변환
+        return unpaids.stream()
+                .map(unpaid -> {
+                    User user = userMap.get(unpaid.getUserId());
+                    return new UnpaidUserResponse(
+                            unpaid.getId(),
+                            unpaid.getUnpaidPrice(),
+                            unpaid.getUnpaidMonth(),
+                            userContactService.decryptAndMask(user)
+                    );
+                })
+                .toList();
+    }
+
 }

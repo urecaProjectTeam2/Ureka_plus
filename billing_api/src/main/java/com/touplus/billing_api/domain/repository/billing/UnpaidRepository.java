@@ -8,5 +8,8 @@ import java.util.List;
 
 public interface UnpaidRepository {
 
-    List<Unpaid> findUnpaidUsers();
+    List<Unpaid> findUnpaidUsers(int page, int size);
+    List<Unpaid> findUnpaidUsersByMonth(int page, int size, String month);
+
+    List<Unpaid> searchUnpaidUsersByKeyword(int page, int size, String keyword);
 }

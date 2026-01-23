@@ -16,4 +16,7 @@ public interface UserRepository {
      * user_id 목록으로 유저 조회 (대량 처리 대비)
      */
     List<User> findByIds(List<Long> userIds);
+
+    List<User> findAllPaged(int offset, int limit);
+    long countAll();
 }

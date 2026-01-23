@@ -4,6 +4,7 @@ import com.touplus.billing_api.domain.billing.entity.BillingResult;
 import com.touplus.billing_api.domain.billing.enums.SendStatus;
 import com.touplus.billing_api.domain.repository.billing.BillingResultRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -37,4 +38,25 @@ public class BillingResultRepositoryImpl implements BillingResultRepository {
                 )
                 .build();
     }
+
+    @Override
+    public List<BillingResult> findByUserIdsAndMonth(List<Long> userIds, LocalDate settlementMonth) {
+        if (userIds == null || userIds.isEmpty() || settlementMonth == null) {
+            return List.of();
+        }
+
+        String sql = """
+            SELECT *
+            FROM billing_batch.billing_result
+            WHERE user_id IN (:userIds)
+              AND settlement_month = :settlementMonth
+        """;
+
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("userIds", userIds)
+                .addValue("settlementMonth", settlementMonth);
+
+        return namedJdbcTemplate.query(sql, params, this::mapRow);
+    }
+
 }
