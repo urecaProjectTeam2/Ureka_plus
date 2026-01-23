@@ -24,7 +24,7 @@ public class AdminBillingSettlementServiceImpl implements AdminBillingSettlement
     private final UserContactService userContactService;
     private final SettlementDetailsMapper settlementDetailsMapper;
 
-    public List<AdminUserSettlementResponse> getMonthlySettlementResults(
+   /* public List<AdminUserSettlementResponse> getMonthlySettlementResults(
             LocalDate settlementMonth
     ) {
         // 1. 이번 달 정산 결과 조회
@@ -69,5 +69,5 @@ public class AdminBillingSettlementServiceImpl implements AdminBillingSettlement
                             .build();
                 })
                 .toList();
-    }
+    }*/
 }
