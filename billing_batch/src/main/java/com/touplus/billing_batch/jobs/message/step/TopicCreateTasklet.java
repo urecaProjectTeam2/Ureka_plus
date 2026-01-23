@@ -31,7 +31,7 @@ public class TopicCreateTasklet implements Tasklet {
         String TOPIC = BASE_TOPIC + settlementMonth;
 
         NewTopic newTopic = TopicBuilder.name(TOPIC)
-                .partitions(3)
+                .partitions(10) // 3 --> 10개로 늘려 테스트
                 .replicas(1)
                 .config(
                         TopicConfig.RETENTION_MS_CONFIG,

@@ -7,6 +7,8 @@ import org.springframework.batch.item.database.JdbcPagingItemReader;
 import org.springframework.batch.item.database.Order;
 import org.springframework.batch.item.database.builder.JdbcPagingItemReaderBuilder;
 import org.springframework.batch.item.database.support.MySqlPagingQueryProvider;
+import org.springframework.batch.item.support.SynchronizedItemStreamReader;
+import org.springframework.batch.item.support.builder.SynchronizedItemStreamReaderBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -17,19 +19,20 @@ import java.util.Map;
 @Configuration
 public class MessageItemReaderConfig {
 
-    private final int chunkSize = 1000;
+    private final int chunkSize = 2500; // 1000 --> 2500개로 상향
 
     @Bean
     @StepScope
-    public JdbcPagingItemReader<BillingResultDto> messageReader(DataSource dataSource) {
-        return new JdbcPagingItemReaderBuilder<BillingResultDto>()
-                .name("messageReader")
+    public SynchronizedItemStreamReader<BillingResultDto> messageReader(DataSource dataSource) throws Exception {
+        // 1. 실제 DB 페이징 읽기를 담당하는 리더 (내부에서만 사용됨)
+        JdbcPagingItemReader<BillingResultDto> delegate = new JdbcPagingItemReaderBuilder<BillingResultDto>()
+                .name("messageReaderDelegate")
                 .dataSource(dataSource)
                 .queryProvider(queryProvider())
                 .pageSize(chunkSize)
                 // BeanPropertyRowMapper 대신 아래와 같이 직접 매핑합니다.
                 .rowMapper((rs, rowNum) -> BillingResultDto.builder()
-                        .id(rs.getLong("billing_result_id")) // DB 컬럼명을 직접 지정
+                        .id(rs.getLong("billing_result_id"))
                         .settlementMonth(rs.getDate("settlement_month").toLocalDate())
                         .userId(rs.getLong("user_id"))
                         .totalPrice(rs.getInt("total_price"))
@@ -39,7 +42,12 @@ public class MessageItemReaderConfig {
                         .processedAt(rs.getTimestamp("processed_at") != null ?
                                 rs.getTimestamp("processed_at").toLocalDateTime() : null)
                         .build())
-                .saveState(false)
+                .saveState(false) // 멀티스레드 환경이므로 상태 저장 안함
+                .build();
+        delegate.afterPropertiesSet();
+        // 2. 여러 스레드가 동시에 읽어도 안전하도록 동기화 래퍼로 감싸서 반환
+        return new SynchronizedItemStreamReaderBuilder<BillingResultDto>()
+                .delegate(delegate)
                 .build();
     }
 

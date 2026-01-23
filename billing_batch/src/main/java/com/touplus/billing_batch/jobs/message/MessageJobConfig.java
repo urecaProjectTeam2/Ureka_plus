@@ -11,6 +11,7 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
+import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.database.JdbcPagingItemReader;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
@@ -37,7 +38,7 @@ public class MessageJobConfig {
     private final MessageSkipListener messageSkipListener;
     private final MessageStepLogger messageStepLogger;
     private final TopicCreateTasklet topicCreateTasklet;
-    private final int chunkSize = 1000;
+    private final int chunkSize = 2500;     // 1000 --> 2500개로 상향(ItemReader 와 맞춤)
 
     @Bean
     public Job messageJob(@Qualifier("createTopicStep") Step createTopicStep,
@@ -58,7 +59,7 @@ public class MessageJobConfig {
 
     // 메서드 이름을 messageStep에서 messageJobStep으로 변경 (중복 방지)
     @Bean(name = "messageJobStep")
-    public Step messageJobStep(JdbcPagingItemReader<BillingResultDto> messageReader,
+    public Step messageJobStep(ItemReader<BillingResultDto> messageReader,
                                MessageItemWriter messageItemWriter) {
         return new StepBuilder("messageJobStep", jobRepository)
                 .<BillingResultDto, BillingResultDto>chunk(chunkSize, transactionManager)
@@ -84,8 +85,8 @@ public class MessageJobConfig {
     @Bean(name = "messageTaskExecutor")
     public TaskExecutor messageTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
-        executor.setCorePoolSize(20);
-        executor.setMaxPoolSize(30);
+        executor.setCorePoolSize(10);
+        executor.setMaxPoolSize(20);
 
         // [사용자 버전 채택] 비동기 Kafka 발송 작업이 밀릴 경우를 대비해 큐 용량을 넉넉히 설정 (10,000)
         executor.setQueueCapacity(10000);
