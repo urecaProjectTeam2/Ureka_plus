@@ -1,6 +1,6 @@
 package com.touplus.billing_batch.domain.enums;
 
-public enum UsageType {
+public enum UseType {
     DATA,
     SMS,
     LMS,

@@ -1,7 +1,7 @@
 package com.touplus.billing_batch.domain.dto;
 
 import com.touplus.billing_batch.domain.entity.UserUsage;
-import com.touplus.billing_batch.domain.enums.UsageType;
+import com.touplus.billing_batch.domain.enums.UseType;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -16,7 +16,7 @@ public class UserUsageDto {
     private Long userUsageId;
     private Long userId;
     private LocalDate useMonth;
-    private UsageType useType;
+    private UseType useType;
     private Integer useAmount;
 
     // Entity -> DTO

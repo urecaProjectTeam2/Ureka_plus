@@ -1,6 +1,6 @@
 package com.touplus.billing_batch.domain.entity;
 
-import com.touplus.billing_batch.domain.enums.UsageType;
+import com.touplus.billing_batch.domain.enums.UseType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Id;
 import lombok.*;
@@ -24,7 +24,7 @@ public class UserUsage {
     private LocalDate useMonth;
 
     @Column(name = "use_type", nullable = false)
-    private UsageType useType;
+    private UseType useType;
 
     @Column(name = "use_amount")
     private Integer useAmount;
