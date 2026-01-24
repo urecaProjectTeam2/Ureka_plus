@@ -11,12 +11,14 @@ import lombok.*;
 public class BillingUserDto {
 
     private Long userId;
+    private Long groupId;
 
     // Entity -> DTO 변환
     public static BillingUserDto fromEntity(BillingUser entity) {
         if (entity == null) return null;
         return BillingUserDto.builder()
                 .userId(entity.getUserId())
+                .groupId(entity.getGroupId())
                 .build();
     }
 
@@ -24,6 +26,7 @@ public class BillingUserDto {
     public BillingUser toEntity() {
         return BillingUser.builder()
                 .userId(this.userId)
+                .groupId(this.groupId)
                 .build();
     }
 }
