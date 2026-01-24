@@ -4,7 +4,7 @@ import com.touplus.billing_batch.common.BillingException;
 import com.touplus.billing_batch.common.BillingFatalException;
 import com.touplus.billing_batch.domain.entity.BillingErrorLog;
 import com.touplus.billing_batch.domain.enums.ErrorType;
-import com.touplus.billing_batch.domain.repository.BillingErrorLogRepository;
+import com.touplus.billing_batch.domain.repository.service.BillingErrorLogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobExecution;

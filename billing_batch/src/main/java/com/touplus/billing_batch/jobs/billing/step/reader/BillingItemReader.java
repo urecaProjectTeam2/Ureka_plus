@@ -4,9 +4,12 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.touplus.billing_batch.common.BillingException;
 import com.touplus.billing_batch.common.BillingFatalException;
 import com.touplus.billing_batch.domain.dto.*;
+import com.touplus.billing_batch.domain.repository.service.AdditionalChargeRepository;
+import com.touplus.billing_batch.domain.repository.service.BillingUserRepository;
+import com.touplus.billing_batch.domain.repository.service.UserSubscribeDiscountRepository;
+import com.touplus.billing_batch.domain.repository.service.UserSubscribeProductRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import lombok.extern.slf4j.Slf4j;
@@ -17,12 +20,10 @@ import org.springframework.batch.item.ItemStreamException;
 import org.springframework.batch.item.ItemStreamReader;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.dao.DataAccessException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
 import com.touplus.billing_batch.domain.entity.*;
-import com.touplus.billing_batch.domain.repository.*;
 
 @Slf4j
 @Component

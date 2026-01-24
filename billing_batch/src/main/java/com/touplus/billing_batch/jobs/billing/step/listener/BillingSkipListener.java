@@ -1,25 +1,13 @@
 package com.touplus.billing_batch.jobs.billing.step.listener;
 
-import com.touplus.billing_batch.common.BillingException;
-import com.touplus.billing_batch.common.BillingFatalException;
-import com.touplus.billing_batch.domain.dto.BillingCalculationResult;
 import com.touplus.billing_batch.domain.dto.BillingUserBillingInfoDto;
-import com.touplus.billing_batch.domain.entity.BillingErrorLog;
 import com.touplus.billing_batch.domain.entity.BillingResult;
-import com.touplus.billing_batch.domain.entity.BillingUser;
-import com.touplus.billing_batch.domain.enums.ErrorType;
-import com.touplus.billing_batch.domain.repository.BillingErrorLogRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.*;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDate;
-import java.time.YearMonth;
 
 @Slf4j
 @StepScope

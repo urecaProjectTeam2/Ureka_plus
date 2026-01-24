@@ -2,7 +2,8 @@ package com.touplus.billing_batch.batch.exception;
 
 import com.touplus.billing_batch.common.BillingFatalException;
 import com.touplus.billing_batch.domain.entity.BillingUser;
-import com.touplus.billing_batch.domain.repository.*;
+import com.touplus.billing_batch.domain.repository.service.BillingUserRepository;
+import com.touplus.billing_batch.domain.repository.service.UserSubscribeProductRepository;
 import com.touplus.billing_batch.jobs.billing.step.reader.BillingItemReader;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;

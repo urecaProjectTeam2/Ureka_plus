@@ -6,7 +6,6 @@ import com.touplus.billing_batch.common.BillingFatalException;
 import com.touplus.billing_batch.domain.dto.BillingWorkDto;
 import com.touplus.billing_batch.domain.dto.SettlementDetailsDto;
 import com.touplus.billing_batch.domain.dto.SettlementDetailsDto.DetailItem;
-import com.touplus.billing_batch.domain.dto.UnpaidDto;
 import com.touplus.billing_batch.domain.entity.BillingResult;
 import com.touplus.billing_batch.domain.enums.SendStatus;
 import lombok.RequiredArgsConstructor;

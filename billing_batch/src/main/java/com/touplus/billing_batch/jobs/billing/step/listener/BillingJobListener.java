@@ -7,8 +7,8 @@ import com.touplus.billing_batch.common.BillingFatalException;
 import com.touplus.billing_batch.jobs.billing.BillingReferenceCache;
 import com.touplus.billing_batch.domain.dto.BillingDiscountDto;
 import com.touplus.billing_batch.domain.dto.BillingProductDto;
-import com.touplus.billing_batch.domain.repository.BillingDiscountRepository;
-import com.touplus.billing_batch.domain.repository.BillingProductRepository;
+import com.touplus.billing_batch.domain.repository.service.BillingDiscountRepository;
+import com.touplus.billing_batch.domain.repository.service.BillingProductRepository;
 
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.JobExecution;

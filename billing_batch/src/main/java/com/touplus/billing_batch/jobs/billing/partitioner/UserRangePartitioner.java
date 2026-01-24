@@ -1,7 +1,7 @@
 package com.touplus.billing_batch.jobs.billing.partitioner;
 
 import com.touplus.billing_batch.domain.dto.MinMaxIdDto;
-import com.touplus.billing_batch.domain.repository.BillingUserRepository;
+import com.touplus.billing_batch.domain.repository.service.BillingUserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.partition.support.Partitioner;
