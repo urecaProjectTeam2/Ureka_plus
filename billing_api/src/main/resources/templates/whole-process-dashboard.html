@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>관리자 대시보드</title>
+    <link rel="stylesheet" th:href="@{/css/whole-process-dashboard.css}">
+</head>
+<body>
+<div class="container">
+    <h1>정산 · 메시지 대시보드</h1>
+
+    <!-- 배치 프로세스 -->
+    <div class="card">
+        <div class="step-row">
+            <span class="step-name">Batch Job 진행 상태</span>
+            <span id="batchJob" class="status waited"></span>
+        </div>
+        <div class="step-row">
+            <span class="step-name">Kafka Sent 진행 상태</span>
+            <span id="batchKafkaSent" class="status waited"></span>
+        </div>
+    </div>
+	<!-- 메시지 프로세스 - 영어 처리 -->
+	<!-- <div class="card">
+	    <div class="step-row">
+	        <span class="step-name">Kafka Receive 진행 상태</span>
+	        <span id="messageKafkaReceive"
+	              class="status"
+	              th:text="${message.kafkaReceive}"
+	              th:classappend="${message.kafkaReceive.name().toLowerCase()}">
+	        </span>
+	    </div>
+	
+	    <div class="step-row">
+	        <span class="step-name">Create Message 진행 상태</span>
+	        <span id="messageCreateMessage"
+	              class="status"
+	              th:text="${message.createMessage}"
+	              th:classappend="${message.createMessage.name().toLowerCase()}">
+	        </span>
+	    </div>
+	
+	    <div class="step-row">
+	        <span class="step-name">Sent Message 진행 상태</span>
+	        <span id="messageSentMessage"
+	              class="status"
+	              th:text="${message.sentMessage}"
+	              th:classappend="${message.sentMessage.name().toLowerCase()}">
+	        </span>
+	    </div>
+	</div>-->
+	
+	<!--  한국어 처리 -->
+	<div class="card">
+	    <div class="step-row">
+	        <span class="step-name">Kafka Receive 진행 상태</span>
+	        <span id="messageKafkaReceive"
+	              class="status"
+	              th:text="${message.kafkaReceive.label}"
+	              th:classappend="${message.kafkaReceive.name().toLowerCase()}">
+	        </span>
+	    </div>
+	
+	    <div class="step-row">
+	        <span class="step-name">Create Message 진행 상태</span>
+	        <span id="messageCreateMessage"
+	              class="status"
+	              th:text="${message.createMessage.label}"
+	              th:classappend="${message.createMessage.name().toLowerCase()}">
+	        </span>
+	    </div>
+	
+	    <div class="step-row">
+	        <span class="step-name">Sent Message 진행 상태</span>
+	        <span id="messageSentMessage"
+	              class="status"
+	              th:text="${message.sentMessage.label}"
+	              th:classappend="${message.sentMessage.name().toLowerCase()}">
+	        </span>
+	    </div>
+	</div>
+
+	
+    
+</div>
+
+<!-- <script>
+const eventSource = new EventSource('/admin/process/stream');
+
+function updateStatus(id, status) {
+    const el = document.getElementById(id);
+    if (!el || !status) return;
+
+    el.textContent = status;
+
+    el.classList.remove('waited', 'pending', 'done', 'fail');
+
+    switch (status) {
+        case 'WAITED':  el.classList.add('waited'); break;
+        case 'PENDING': el.classList.add('pending'); break;
+        case 'DONE':    el.classList.add('done'); break;
+        case 'FAIL':    el.classList.add('fail'); break;
+    }
+}
+
+eventSource.onmessage = function(event) {
+    try {
+        const data = JSON.parse(event.data);
+
+        updateStatus('batchJob', data.batchJob);
+        updateStatus('batchKafkaSent', data.batchKafkaSent);
+
+        updateStatus('messageKafkaReceive', data.messageKafkaReceive);
+        updateStatus('messageCreateMessage', data.messageCreateMessage);
+        updateStatus('messageSentMessage', data.messageSentMessage);
+
+    } catch (e) {
+        console.error('SSE 업데이트 오류:', e);
+    }
+};
+
+eventSource.onerror = function(err) {
+    console.error('SSE 연결 오류:', err);
+};
+</script>
+-->
+
+<script>
+const STATUS_LABEL = {
+    WAITED: '대기',
+    PENDING: '진행 중',
+    DONE: '완료',
+    FAIL: '실패'
+};
+
+const eventSource = new EventSource('/admin/process/stream');
+
+function updateStatus(id, status) {
+    const el = document.getElementById(id);
+    if (!el || !status) return;
+
+    // 한글로 표시
+    el.textContent = STATUS_LABEL[status] ?? status;
+
+    el.classList.remove('waited', 'pending', 'done', 'fail');
+    el.classList.add(status.toLowerCase());
+}
+
+eventSource.onmessage = function(event) {
+    try {
+        const data = JSON.parse(event.data);
+
+        updateStatus('batchJob', data.batchJob);
+        updateStatus('batchKafkaSent', data.batchKafkaSent);
+
+        updateStatus('messageKafkaReceive', data.messageKafkaReceive);
+        updateStatus('messageCreateMessage', data.messageCreateMessage);
+        updateStatus('messageSentMessage', data.messageSentMessage);
+    } catch (e) {
+        console.error('SSE 업데이트 오류:', e);
+    }
+};
+</script>
+
+</body>
+</html>

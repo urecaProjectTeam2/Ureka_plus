@@ -101,66 +101,24 @@
 </div>
 
 <script>
-const eventSource = new EventSource('/admin/message/stream');
+function updateStatus(id, status) {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.textContent = status;
+    el.classList.remove('pending','done','fail');
+    el.classList.add(status.toLowerCase());
+}
 
+const eventSource = new EventSource('/admin/process/stream');
 eventSource.onmessage = function(event) {
-    try {
-        const data = JSON.parse(event.data);
-
-        // 정산월 / 총 발송
-        const settlementMonthEl = document.getElementById('settlementMonth');
-        if (settlementMonthEl) settlementMonthEl.innerText = data.settlementMonth || '';
-        const totalCountEl = document.getElementById('totalCount');
-        if (totalCountEl) totalCountEl.innerText = data.totalCount || 0;
-
-        // 이메일 WAITED
-        const waitCountEl = document.getElementById('waitCount');
-        if (waitCountEl) waitCountEl.innerText = data.waitCount || 0;
-        const waitRateEl = document.getElementById('waitRate');
-        if (waitRateEl) waitRateEl.innerText = (data.waitRate || 0).toFixed(2);
-        const waitBarEl = document.getElementById('waitBar');
-        if (waitBarEl) waitBarEl.style.width = (data.waitRate || 0) + '%';
-
-        // 이메일 SENT
-        const sentCountEl = document.getElementById('sentCount');
-        if (sentCountEl) sentCountEl.innerText = data.sentCount || 0;
-        const sentRateEl = document.getElementById('sentRate');
-        if (sentRateEl) sentRateEl.innerText = (data.sentRate || 0).toFixed(2);
-        const sentBarEl = document.getElementById('sentBar');
-        if (sentBarEl) sentBarEl.style.width = (data.sentRate || 0) + '%';
-
-        // 이메일 RETRY
-        const retryCountEl = document.getElementById('retryCount');
-        if (retryCountEl) retryCountEl.innerText = data.retryCount || 0;
-        const retryRateEl = document.getElementById('retryRate');
-        if (retryRateEl) retryRateEl.innerText = (data.retryRate || 0).toFixed(2);
-        const retryBarEl = document.getElementById('retryBar');
-        if (retryBarEl) retryBarEl.style.width = (data.retryRate || 0) + '%';
-
-		// SMS
-		const smsCountEl = document.getElementById('smsCount');
-		if (smsCountEl) smsCountEl.innerText = data.smsCount || 0;
-		const smsRateEl = document.getElementById('smsRate');
-		if (smsRateEl) smsRateEl.innerText = (data.smsRate || 0).toFixed(2);
-		const smsBarEl = document.getElementById('smsBar');
-		if (smsBarEl) smsBarEl.style.width = (data.smsRate || 0) + '%';
-
-        // FAIL
-        const failCountEl = document.getElementById('failCount');
-        if (failCountEl) failCountEl.innerText = data.failCount || 0;
-        const failRateEl = document.getElementById('failRate');
-        if (failRateEl) failRateEl.innerText = (data.failRate || 0).toFixed(2);
-        const failBarEl = document.getElementById('failBar');
-        if (failBarEl) failBarEl.style.width = (data.failRate || 0) + '%';
-
-    } catch (e) {
-        console.error("SSE 업데이트 오류:", e);
-    }
-};
-
-eventSource.onerror = function(err) {
-    console.error("SSE 연결 오류:", err);
+    const data = JSON.parse(event.data);
+    updateStatus('batchJob', data.batchJob);
+    updateStatus('batchKafkaSent', data.batchKafkaSent);
+    updateStatus('messageKafkaReceive', data.messageKafkaReceive);
+    updateStatus('messageCreateMessage', data.messageCreateMessage);
+    updateStatus('messageSentMessage', data.messageSentMessage);
 };
 </script>
+
 </body>
 </html>
