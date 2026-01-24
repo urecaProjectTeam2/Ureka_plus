@@ -6,6 +6,7 @@ import com.touplus.billing_message.sender.MessageSender;
 import com.touplus.billing_message.sender.SendResult;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.concurrent.CompletableFuture;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -305,5 +306,200 @@ public class MessageProcessService {
                 banEndTime);
         messageJdbcRepository.markFailed(messageId, retryAt);
         return new MessageDispatchService.ProcessResult(messageId, false);
+    }
+
+    /**
+     * 비동기 발송 처리 (ScheduledExecutorService 기반)
+     * - DB 조회 및 검증은 동기로 수행
+     * - 실제 발송은 비동기로 처리 (논블로킹)
+     * - 스레드 점유 없이 1초 딜레이 처리
+     */
+    public CompletableFuture<MessageDispatchService.ProcessResult> processMessageAsync(Long messageId) {
+        // JDBC로 메시지 조회 (동기)
+        MessageJdbcRepository.MessageDto message = messageJdbcRepository.findById(messageId);
+        if (message == null) {
+            log.warn("메시지 없음 messageId={}", messageId);
+            return CompletableFuture.completedFuture(
+                    new MessageDispatchService.ProcessResult(messageId, false));
+        }
+
+        // SENT는 스킵
+        if (message.status() == MessageStatus.SENT) {
+            return CompletableFuture.completedFuture(
+                    new MessageDispatchService.ProcessResult(messageId, true));
+        }
+
+        // CREATED만 처리
+        if (message.status() != MessageStatus.CREATED) {
+            return CompletableFuture.completedFuture(
+                    new MessageDispatchService.ProcessResult(messageId, false));
+        }
+
+        // 발송 타입 결정
+        MessageType messageType = message.retryCount() >= 3 ? MessageType.SMS : MessageType.EMAIL;
+
+        // JDBC로 snapshot 조회
+        MessageSnapshotJdbcRepository.MessageSnapshotDto snapshotDto = messageSnapshotJdbcRepository
+                .findById(messageId);
+
+        if (snapshotDto == null) {
+            log.error("Snapshot 없음 messageId={}", messageId);
+            LocalDateTime retryAt = messagePolicy.nextRetryAt(LocalDateTime.now(), message.retryCount());
+            messageJdbcRepository.markFailed(messageId, retryAt);
+            return CompletableFuture.completedFuture(
+                    new MessageDispatchService.ProcessResult(messageId, false));
+        }
+
+        // DTO를 Entity로 변환 (발송에 필요)
+        MessageSnapshot snapshot = new MessageSnapshot(
+                snapshotDto.messageId(),
+                snapshotDto.billingId(),
+                snapshotDto.settlementMonth(),
+                snapshotDto.userId(),
+                snapshotDto.userName(),
+                snapshotDto.userEmail(),
+                snapshotDto.userPhone(),
+                snapshotDto.totalPrice(),
+                snapshotDto.settlementDetails(),
+                snapshotDto.messageContent());
+
+        // ban 시간대 체크
+        LocalTime banEndTime = message.banEndTime();
+        LocalDateTime now = LocalDateTime.now();
+
+        if (messagePolicy.isInBanWindow(now, banEndTime)) {
+            LocalDateTime nextAllowed = messagePolicy.nextAllowedTime(now, banEndTime);
+            messageJdbcRepository.defer(messageId, nextAllowed);
+            return CompletableFuture.completedFuture(
+                    new MessageDispatchService.ProcessResult(messageId, false));
+        }
+
+        // 비동기 발송 (논블로킹!)
+        final int retryCount = message.retryCount();
+        return messageSender.sendAsync(messageType, snapshot)
+                .thenApply(result -> {
+                    // 로그 버퍼에 추가
+                    sendLogBufferService.addLog(
+                            messageId,
+                            retryCount,
+                            messageType,
+                            result.code(),
+                            result.message(),
+                            LocalDateTime.now());
+
+                    if (result.success()) {
+                        log.debug("메시지 발송 성공 (Async) messageId={} type={}", messageId, messageType);
+                        return new MessageDispatchService.ProcessResult(messageId, true);
+                    }
+
+                    // 실패 시 재시도 예약
+                    LocalDateTime retryAt = messagePolicy.adjustForBan(
+                            messagePolicy.nextRetryAt(LocalDateTime.now(), retryCount),
+                            banEndTime);
+                    messageJdbcRepository.markFailed(messageId, retryAt);
+                    return new MessageDispatchService.ProcessResult(messageId, false);
+                })
+                .exceptionally(e -> {
+                    log.error("비동기 발송 예외 messageId={}", messageId, e);
+                    LocalDateTime retryAt = messagePolicy.adjustForBan(
+                            messagePolicy.nextRetryAt(LocalDateTime.now(), retryCount),
+                            banEndTime);
+                    messageJdbcRepository.markFailed(messageId, retryAt);
+                    return new MessageDispatchService.ProcessResult(messageId, false);
+                });
+    }
+
+    /**
+     * Bulk Fetch 방식 비동기 발송 처리 (N+1 문제 해결)
+     * - 이미 조회된 Message와 Snapshot 데이터를 받아서 처리
+     * - DB 조회 없이 바로 발송 처리
+     */
+    public CompletableFuture<MessageDispatchService.ProcessResult> processMessageWithDataAsync(
+            MessageJdbcRepository.MessageDto message,
+            MessageSnapshotJdbcRepository.MessageSnapshotDto snapshotDto) {
+
+        Long messageId = message.messageId();
+
+        // SENT는 스킵
+        if (message.status() == MessageStatus.SENT) {
+            return CompletableFuture.completedFuture(
+                    new MessageDispatchService.ProcessResult(messageId, true));
+        }
+
+        // CREATED만 처리
+        if (message.status() != MessageStatus.CREATED) {
+            return CompletableFuture.completedFuture(
+                    new MessageDispatchService.ProcessResult(messageId, false));
+        }
+
+        // Snapshot 없음 체크
+        if (snapshotDto == null) {
+            log.error("Snapshot 없음 messageId={}", messageId);
+            LocalDateTime retryAt = messagePolicy.nextRetryAt(LocalDateTime.now(), message.retryCount());
+            messageJdbcRepository.markFailed(messageId, retryAt);
+            return CompletableFuture.completedFuture(
+                    new MessageDispatchService.ProcessResult(messageId, false));
+        }
+
+        // 발송 타입 결정
+        MessageType messageType = message.retryCount() >= 3 ? MessageType.SMS : MessageType.EMAIL;
+
+        // DTO를 Entity로 변환 (발송에 필요)
+        MessageSnapshot snapshot = new MessageSnapshot(
+                snapshotDto.messageId(),
+                snapshotDto.billingId(),
+                snapshotDto.settlementMonth(),
+                snapshotDto.userId(),
+                snapshotDto.userName(),
+                snapshotDto.userEmail(),
+                snapshotDto.userPhone(),
+                snapshotDto.totalPrice(),
+                snapshotDto.settlementDetails(),
+                snapshotDto.messageContent());
+
+        // ban 시간대 체크
+        LocalTime banEndTime = message.banEndTime();
+        LocalDateTime now = LocalDateTime.now();
+
+        if (messagePolicy.isInBanWindow(now, banEndTime)) {
+            LocalDateTime nextAllowed = messagePolicy.nextAllowedTime(now, banEndTime);
+            messageJdbcRepository.defer(messageId, nextAllowed);
+            return CompletableFuture.completedFuture(
+                    new MessageDispatchService.ProcessResult(messageId, false));
+        }
+
+        // 비동기 발송 (논블로킹!)
+        final int retryCount = message.retryCount();
+        return messageSender.sendAsync(messageType, snapshot)
+                .thenApply(result -> {
+                    // 로그 버퍼에 추가
+                    sendLogBufferService.addLog(
+                            messageId,
+                            retryCount,
+                            messageType,
+                            result.code(),
+                            result.message(),
+                            LocalDateTime.now());
+
+                    if (result.success()) {
+                        log.debug("메시지 발송 성공 (Bulk) messageId={} type={}", messageId, messageType);
+                        return new MessageDispatchService.ProcessResult(messageId, true);
+                    }
+
+                    // 실패 시 재시도 예약
+                    LocalDateTime retryAt = messagePolicy.adjustForBan(
+                            messagePolicy.nextRetryAt(LocalDateTime.now(), retryCount),
+                            banEndTime);
+                    messageJdbcRepository.markFailed(messageId, retryAt);
+                    return new MessageDispatchService.ProcessResult(messageId, false);
+                })
+                .exceptionally(e -> {
+                    log.error("비동기 발송 예외 messageId={}", messageId, e);
+                    LocalDateTime retryAt = messagePolicy.adjustForBan(
+                            messagePolicy.nextRetryAt(LocalDateTime.now(), retryCount),
+                            banEndTime);
+                    messageJdbcRepository.markFailed(messageId, retryAt);
+                    return new MessageDispatchService.ProcessResult(messageId, false);
+                });
     }
 }

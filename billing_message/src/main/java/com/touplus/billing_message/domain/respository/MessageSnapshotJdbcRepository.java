@@ -5,13 +5,46 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor
 public class MessageSnapshotJdbcRepository {
 
     private final JdbcTemplate jdbcTemplate;
+
+    /**
+     * 메시지 스냅샷 Bulk 조회 (JDBC) - N+1 문제 해결용
+     */
+    public List<MessageSnapshotDto> findByIds(List<Long> messageIds) {
+        if (messageIds.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        String placeholders = messageIds.stream()
+                .map(id -> "?")
+                .collect(Collectors.joining(","));
+
+        String sql = """
+                SELECT message_id, billing_id, settlement_month, user_id, user_name,
+                       user_email, user_phone, total_price, settlement_details, message_content
+                FROM message_snapshot WHERE message_id IN (%s)
+                """.formatted(placeholders);
+
+        return jdbcTemplate.query(sql, messageIds.toArray(), (rs, rowNum) -> new MessageSnapshotDto(
+                rs.getLong("message_id"),
+                rs.getLong("billing_id"),
+                rs.getObject("settlement_month", LocalDate.class),
+                rs.getLong("user_id"),
+                rs.getString("user_name"),
+                rs.getString("user_email"),
+                rs.getString("user_phone"),
+                rs.getInt("total_price"),
+                rs.getString("settlement_details"),
+                rs.getString("message_content")));
+    }
 
     /**
      * 메시지 스냅샷 단건 조회 (JDBC)
