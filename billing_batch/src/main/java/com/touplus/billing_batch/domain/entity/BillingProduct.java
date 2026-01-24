@@ -1,6 +1,8 @@
 package com.touplus.billing_batch.domain.entity;
 
+import com.touplus.billing_batch.domain.enums.Network_type;
 import com.touplus.billing_batch.domain.enums.ProductType;
+import com.touplus.billing_batch.domain.enums.SendStatus;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -23,4 +25,11 @@ public class BillingProduct {
 
     @Column(name = "price")
     private Integer price;
+
+    @Column(name = "send_status")
+    @Builder.Default
+    private SendStatus sendStatus = SendStatus.READY;
+
+    @Column(name = "network_type", nullable = false)
+    private Network_type networkType;
 }
