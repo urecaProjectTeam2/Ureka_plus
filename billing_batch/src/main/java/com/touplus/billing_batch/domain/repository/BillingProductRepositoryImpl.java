@@ -1,6 +1,7 @@
 package com.touplus.billing_batch.domain.repository;
 
 import com.touplus.billing_batch.domain.entity.BillingProduct;
+import com.touplus.billing_batch.domain.enums.Network_type;
 import com.touplus.billing_batch.domain.enums.ProductType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -24,12 +25,11 @@ public class BillingProductRepositoryImpl implements BillingProductRepository {
                 .productName(rs.getString("product_name"))
                 .productType(ProductType.valueOf(rs.getString("product_type")))
                 .price(rs.getInt("price"))
+                .networkType(Network_type.valueOf(rs.getString("network_type")))
                 .build();
     }
 
-    /**
-     * JPA: findAll()
-     */
+
     @Override
     public List<BillingProduct> findAll() {
         String sql = """
@@ -40,9 +40,6 @@ public class BillingProductRepositoryImpl implements BillingProductRepository {
         return namedJdbcTemplate.query(sql, this::mapRow);
     }
 
-    /**
-     * JPA: findById()
-     */
     @Override
     public BillingProduct findById(Long id) {
         String sql = """

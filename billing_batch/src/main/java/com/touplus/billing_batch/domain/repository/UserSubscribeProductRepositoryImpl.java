@@ -40,10 +40,6 @@ public class UserSubscribeProductRepositoryImpl
                 .build();
     }
 
-    /**
-     * JPA:
-     * findActiveByUserId(Long userId)
-     */
     @Override
     public List<UserSubscribeProduct> findActiveByUserId(Long userId) {
 
@@ -65,10 +61,6 @@ public class UserSubscribeProductRepositoryImpl
         return namedJdbcTemplate.query(sql, params, this::mapRow);
     }
 
-    /**
-     * JPA:
-     * findByUserIdIn(List<Long> userIds)
-     */
     @Override
     public List<UserSubscribeProduct> findByUserIdIn(List<Long> userIds, LocalDate startDate, LocalDate endDate) {
 

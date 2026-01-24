@@ -24,6 +24,13 @@ public class BillingUserRepositoryImpl implements BillingUserRepository{
     /* ===============================
      * 공통 RowMapper
      * =============================== */
+    private BillingUser mapUserIdOnly(ResultSet rs, int rowNum) throws SQLException {
+        return BillingUser.builder()
+                .userId(rs.getLong("user_id"))
+                .groupId(rs.getLong("group_id"))
+                .build();
+    }
+
     private BillingUser mapRow(ResultSet rs, int rowNum) throws SQLException {
         return BillingUser.builder()
                 .userId(rs.getLong("user_id"))
@@ -53,7 +60,7 @@ public class BillingUserRepositoryImpl implements BillingUserRepository{
                 .addValue("limit", pageable.getPageSize())
                 .addValue("offset", pageable.getOffset());
 
-        return namedJdbcTemplate.query(sql, params, this::mapRow);
+        return namedJdbcTemplate.query(sql, params, this::mapUserIdOnly);
     }
 
     @Override
@@ -117,6 +124,6 @@ public class BillingUserRepositoryImpl implements BillingUserRepository{
                 .addValue("endDate", endDate)
                 .addValue("limit", pageable.getPageSize());
 
-        return namedJdbcTemplate.query(sql, params, this::mapRow);
+        return namedJdbcTemplate.query(sql, params, this::mapUserIdOnly);
     }
 }
