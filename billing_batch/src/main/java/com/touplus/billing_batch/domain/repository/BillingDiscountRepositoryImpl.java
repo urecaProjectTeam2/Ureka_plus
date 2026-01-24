@@ -1,7 +1,6 @@
 package com.touplus.billing_batch.domain.repository;
 
 import com.touplus.billing_batch.domain.entity.BillingDiscount;
-import com.touplus.billing_batch.domain.enums.CalcOrderType;
 import com.touplus.billing_batch.domain.enums.DiscountType;
 import lombok.RequiredArgsConstructor;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
@@ -26,7 +25,6 @@ public class BillingDiscountRepositoryImpl implements BillingDiscountRepository 
                 .isCash(DiscountType.valueOf(rs.getString("is_cash")))
                 .cash(rs.getObject("cash", Integer.class))
                 .percent(rs.getObject("percent", Double.class))
-                .calOrder(CalcOrderType.from(rs.getString("cal_order")))
                 .build();
     }
 

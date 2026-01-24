@@ -1,12 +1,12 @@
 package com.touplus.billing_batch.domain.enums;
 
-public enum CalcOrderType {
+public enum CalOrderType {
     SINGLE,
     MULTI,
     ALL;
 
-    public static CalcOrderType from(String value) {
+    public static CalOrderType from(String value) {
         if (value == null) return null;
-        return CalcOrderType.valueOf(value);
+        return CalOrderType.valueOf(value);
     }
 }
