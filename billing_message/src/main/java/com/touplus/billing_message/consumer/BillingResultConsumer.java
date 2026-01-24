@@ -30,7 +30,7 @@ public class BillingResultConsumer {
     private final UserRepository userRepository;
     private final MessageProcessor messageProcessor;
 
-    @KafkaListener(topics = "billing-result-topic-2512", groupId = "billing-message-group-hyun10", containerFactory = "kafkaListenerContainerFactory")
+    @KafkaListener(topics = "billing-result-topic-2512", groupId = "billing-message-group-hyun16", containerFactory = "kafkaListenerContainerFactory")
     public void consume(
             List<BillingResultDto> messages,
             Acknowledgment ack) {

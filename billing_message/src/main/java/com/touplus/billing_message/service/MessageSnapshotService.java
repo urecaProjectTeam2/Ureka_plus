@@ -24,7 +24,90 @@ public class MessageSnapshotService {
         private static final DateTimeFormatter MONTH_FORMATTER = DateTimeFormatter.ofPattern("yyyy년 MM월");
         private static final NumberFormat PRICE_FORMATTER = NumberFormat.getNumberInstance(Locale.KOREA);
 
-        // 메시지 스냅샷을 배치로 생성
+        /**
+         * 메시지 스냅샷을 배치로 생성하고 생성된 스냅샷 리스트 반환
+         * (DB 재조회 없이 바로 발송에 사용 가능)
+         */
+        @Transactional
+        public List<MessageSnapshot> createSnapshotsBatchAndReturn(List<Message> messages, MessageType messageType) {
+
+                if (messages.isEmpty()) {
+                        return List.of();
+                }
+
+                List<Long> messageIds = new ArrayList<>(messages.size());
+                Set<Long> billingIds = new HashSet<>();
+                Set<Long> userIds = new HashSet<>();
+
+                for (Message m : messages) {
+                    messageIds.add(m.getMessageId());
+                    billingIds.add(m.getBillingId());
+                    userIds.add(m.getUserId());
+                }
+
+                Map<Long, BillingSnapshot> billingMap = billingSnapshotRepository.findAllById(billingIds)
+                                .stream()
+                                .collect(Collectors.toMap(
+                                                BillingSnapshot::getBillingId,
+                                                b -> b));
+
+                Map<Long, User> userMap = userRepository.findAllById(userIds)
+                                .stream()
+                                .collect(Collectors.toMap(
+                                                User::getUserId,
+                                                u -> u));
+
+                MessageTemplate template = messageTemplateRepository.findByMessageType(messageType)
+                                .orElseThrow(() -> new IllegalStateException(
+                                                "MessageTemplate not found: " + messageType));
+
+                Set<Long> existingMessageIds = messageSnapshotRepository.findExistingMessageIds(messageIds);
+
+                List<MessageSnapshot> snapshots = new ArrayList<>(messages.size());
+
+                for (Message message : messages) {
+
+                        Long messageId = message.getMessageId();
+                        if (existingMessageIds.contains(messageId)) {
+                                continue;
+                        }
+
+                        BillingSnapshot billing = billingMap.get(message.getBillingId());
+                        User user = userMap.get(message.getUserId());
+
+                        if (billing == null || user == null) {
+                                log.warn("Snapshot skip - billing or user missing. messageId={}", messageId);
+                                continue;
+                        }
+
+                        String content = buildMessageContent(
+                                        template.getTemplateContent(),
+                                        user,
+                                        billing);
+
+                        snapshots.add(new MessageSnapshot(
+                                        messageId,
+                                        billing.getBillingId(),
+                                        billing.getSettlementMonth(),
+                                        user.getUserId(),
+                                        user.getName(),
+                                        user.getEmail(),
+                                        user.getPhone(),
+                                        billing.getTotalPrice(),
+                                        billing.getSettlementDetails(),
+                                        content));
+                }
+
+                if (snapshots.isEmpty()) {
+                        return List.of();
+                }
+
+                messageSnapshotRepository.saveAll(snapshots);
+                log.info("MessageSnapshot batch created: {}", snapshots.size());
+                return snapshots;
+        }
+
+        // 메시지 스냅샷을 배치로 생성 (기존 메서드 - 하위 호환용)
         @Transactional
         public int createSnapshotsBatch(List<Message> messages, MessageType messageType) {
 

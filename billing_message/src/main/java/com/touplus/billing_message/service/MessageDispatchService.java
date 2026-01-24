@@ -2,21 +2,24 @@ package com.touplus.billing_message.service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
-import java.util.concurrent.ThreadLocalRandom;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.dao.DeadlockLoserDataAccessException;
 
+import com.touplus.billing_message.domain.entity.MessageSnapshot;
+
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
 
 import com.touplus.billing_message.domain.entity.Message;
+import com.touplus.billing_message.domain.entity.MessageStatus;
 import com.touplus.billing_message.domain.entity.MessageType;
 import com.touplus.billing_message.domain.respository.MessageRepository;
 import com.touplus.billing_message.domain.respository.MessageJdbcRepository;
@@ -52,7 +55,58 @@ public class MessageDispatchService {
         this.messageDispatchTaskExecutor = messageTaskExecutor;
     }
 
+    /**
+     * 메시지 준비 + 데이터 반환 (DB 재조회 제거)
+     * - claim한 Message 엔티티를 DTO로 변환
+     * - 생성한 Snapshot 엔티티를 DTO로 변환
+     * - 이미 존재하는 Snapshot도 조회하여 포함 (retry 메시지 처리용)
+     * - dispatchPreparedBatch()에서 바로 사용 가능
+     */
     @Transactional
+    public PreparedBatch prepareDispatchWithData(LocalDateTime now) {
+
+        List<Message> messages = messageClaimService.claimNextMessagesAsEntities(now);
+
+        if (messages.isEmpty()) {
+            return new PreparedBatch(Map.of(), Map.of());
+        }
+
+        // Message 엔티티 → DTO 변환
+        // 주의: markCreatedByIds()로 DB는 CREATED지만 엔티티 객체는 WAITED
+        //       따라서 status를 CREATED로 강제 설정
+        Map<Long, MessageJdbcRepository.MessageDto> messageMap = new HashMap<>();
+        List<Long> messageIds = new ArrayList<>();
+        for (Message m : messages) {
+            messageIds.add(m.getMessageId());
+            messageMap.put(m.getMessageId(), new MessageJdbcRepository.MessageDto(
+                    m.getMessageId(),
+                    m.getBillingId(),
+                    m.getUserId(),
+                    MessageStatus.CREATED,  // DB와 동기화 (엔티티는 WAITED지만 DB는 CREATED)
+                    m.getScheduledAt(),
+                    m.getRetryCount(),
+                    m.getBanEndTime()
+            ));
+        }
+
+        // Snapshot 생성 (신규만)
+        messageSnapshotService.createSnapshotsBatchAndReturn(messages, MessageType.EMAIL);
+
+        // 모든 Snapshot 조회 (신규 + 기존 retry 메시지용)
+        Map<Long, MessageSnapshotJdbcRepository.MessageSnapshotDto> snapshotMap =
+                messageSnapshotJdbcRepository.findByIds(messageIds)
+                        .stream()
+                        .collect(Collectors.toMap(
+                                MessageSnapshotJdbcRepository.MessageSnapshotDto::messageId,
+                                Function.identity()
+                        ));
+
+        log.debug("PreparedBatch 생성: Message {}건, Snapshot {}건", messageMap.size(), snapshotMap.size());
+        return new PreparedBatch(messageMap, snapshotMap);
+    }
+
+    @Transactional
+    @Deprecated // prepareDispatchWithData() 사용 권장
     public List<Long> prepareDispatch(LocalDateTime now) {
 
         List<Message> messages = messageClaimService.claimNextMessagesAsEntities(now);
@@ -68,6 +122,59 @@ public class MessageDispatchService {
                 .toList();
     }
 
+    /**
+     * 준비된 배치 데이터로 발송 처리 (DB 재조회 없음!)
+     */
+    public void dispatchPreparedBatch(PreparedBatch batch) {
+        if (batch.isEmpty()) {
+            return;
+        }
+
+        Map<Long, MessageJdbcRepository.MessageDto> messageMap = batch.messageMap();
+        Map<Long, MessageSnapshotJdbcRepository.MessageSnapshotDto> snapshotMap = batch.snapshotMap();
+        List<Long> messageIds = batch.getMessageIds();
+
+        // 비동기 발송 (DB 조회 없이 메모리에서 처리)
+        List<CompletableFuture<ProcessResult>> futures = messageIds.stream()
+                .map(id -> CompletableFuture.supplyAsync(() -> {
+                    MessageJdbcRepository.MessageDto message = messageMap.get(id);
+                    MessageSnapshotJdbcRepository.MessageSnapshotDto snapshot = snapshotMap.get(id);
+
+                    if (message == null) {
+                        log.warn("메시지 없음 messageId={}", id);
+                        return CompletableFuture.completedFuture(new ProcessResult(id, false));
+                    }
+
+                    return messageProcessService.processMessageWithDataAsync(message, snapshot);
+                }, messageDispatchTaskExecutor)
+                        .thenCompose(future -> future))
+                .toList();
+
+        // 모든 발송 완료 대기
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
+
+        // 결과 수집
+        List<Long> sentIds = new ArrayList<>();
+
+        for (CompletableFuture<ProcessResult> future : futures) {
+            try {
+                ProcessResult result = future.get();
+                if (result != null && result.success()) {
+                    sentIds.add(result.messageId());
+                }
+            } catch (Exception e) {
+                log.error("결과 수집 실패", e);
+            }
+        }
+
+        // Bulk UPDATE (JDBC)
+        if (!sentIds.isEmpty()) {
+            messageJdbcRepository.bulkMarkSent(sentIds);
+            log.info("Bulk SENT 처리 (JDBC): {}건", sentIds.size());
+        }
+    }
+
+    @Deprecated // dispatchPreparedBatch() 사용 권장
     public void dispatchPreparedMessages(List<Long> messageIds) {
         // ========================================
         // Bulk Fetch: N+1 문제 해결
@@ -138,53 +245,57 @@ public class MessageDispatchService {
         }
     }
 
-    // 발송 DTO
+    // 발송 결과 DTO
     public record ProcessResult(Long messageId, boolean success) {
     }
 
+    /**
+     * 준비된 배치 데이터 (DB 재조회 없이 바로 발송 가능)
+     */
+    public record PreparedBatch(
+            Map<Long, MessageJdbcRepository.MessageDto> messageMap,
+            Map<Long, MessageSnapshotJdbcRepository.MessageSnapshotDto> snapshotMap
+    ) {
+        public boolean isEmpty() {
+            return messageMap.isEmpty();
+        }
+
+        public List<Long> getMessageIds() {
+            return new ArrayList<>(messageMap.keySet());
+        }
+    }
+
     private static final int MAX_RETRY_COUNT = 3;
-    private static final int RETRY_BASE_DELAY_MS = 50;
-    private static final int RETRY_RANDOM_DELAY_MS = 100;
 
     public void dispatchDueMessages() {
-        List<Long> messageIds = prepareDispatchWithRetry(LocalDateTime.now());
+        PreparedBatch batch = prepareDispatchWithRetry(LocalDateTime.now());
 
-        if (messageIds.isEmpty()) {
+        if (batch.isEmpty()) {
             log.debug("발송 대상 메시지 없음");
             return;
         }
 
-        log.info("메시지 {}건 dispatch 시작", messageIds.size());
-        dispatchPreparedMessages(messageIds);
+        log.info("메시지 {}건 dispatch 시작 (DB 재조회 없음)", batch.messageMap().size());
+        dispatchPreparedBatch(batch);
     }
 
     /**
-     * Deadlock 발생 시 재시도하는 prepareDispatch 래퍼
+     * Deadlock 발생 시 재시도하는 prepareDispatchWithData 래퍼
      * - MySQL Deadlock(1213) 발생 시 최대 3회 재시도
-     * - 재시도 간 랜덤 지연으로 충돌 확률 감소
      */
-    private List<Long> prepareDispatchWithRetry(LocalDateTime now) {
+    private PreparedBatch prepareDispatchWithRetry(LocalDateTime now) {
         for (int attempt = 1; attempt <= MAX_RETRY_COUNT; attempt++) {
             try {
-                return prepareDispatch(now);
+                return prepareDispatchWithData(now);
             } catch (DeadlockLoserDataAccessException | CannotAcquireLockException e) {
                 log.warn("Deadlock 발생, 재시도 {}/{}: {}", attempt, MAX_RETRY_COUNT, e.getMessage());
 
                 if (attempt == MAX_RETRY_COUNT) {
                     log.error("Deadlock 재시도 한도 초과, 이번 배치 스킵");
-                    return List.of();
-                }
-
-                // 랜덤 지연으로 충돌 확률 감소
-                try {
-                    Thread.sleep(RETRY_BASE_DELAY_MS + ThreadLocalRandom.current().nextInt(RETRY_RANDOM_DELAY_MS));
-                } catch (InterruptedException ie) {
-                    Thread.currentThread().interrupt();
-                    log.warn("재시도 대기 중 인터럽트 발생");
-                    return List.of();
+                    return new PreparedBatch(Map.of(), Map.of());
                 }
             }
         }
-        return List.of();
+        return new PreparedBatch(Map.of(), Map.of());
     }
 }

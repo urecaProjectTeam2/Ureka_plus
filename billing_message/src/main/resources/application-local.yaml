@@ -6,7 +6,7 @@ spring:
   task:
     scheduling:
       pool:
-        size: 10  # 스케줄러 스레드 풀 (기본값 1 → 10)
+        size: 3  # 스케줄러 스레드 풀 (기본값 1 → 10)
   jpa:
     properties:
       hibernate:
@@ -59,7 +59,7 @@ message:
     pool-size: 120             # 발송 워커 풀 (딜레이 풀과 맞춤)
     delay-pool-size: 60       # 딜레이 스케줄러 (1초 지연 처리용)
     queue-size: 1000
-    batch-size: 800
+    batch-size: 400
     poll-delay-ms: 300        # 더 빠른 폴링
 
 # 암호화 키 (환경변수에서 읽음)
