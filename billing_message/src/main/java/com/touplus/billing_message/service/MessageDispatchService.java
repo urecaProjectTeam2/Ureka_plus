@@ -1,142 +1,92 @@
 package com.touplus.billing_message.service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 
-import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.core.task.TaskExecutor;
 import org.springframework.stereotype.Service;
 
 import com.touplus.billing_message.domain.entity.Message;
 import com.touplus.billing_message.domain.entity.MessageType;
-import com.touplus.billing_message.domain.respository.MessageRepository;
-import com.touplus.billing_message.domain.respository.MessageJdbcRepository;
+import com.touplus.billing_message.queue.DelayedMessageQueue;
 
 import org.springframework.transaction.annotation.Transactional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * 메시지 디스패치 서비스 (Reader 역할)
+ * DB에서 메시지 조회 → 스냅샷 생성 → DelayQueue에 투입
+ */
 @Service
+@RequiredArgsConstructor
 @Slf4j
 public class MessageDispatchService {
 
     private final MessageClaimService messageClaimService;
-    private final MessageProcessService messageProcessService;
-    private final TaskExecutor messageDispatchTaskExecutor;
     private final MessageSnapshotService messageSnapshotService;
-    private final MessageJdbcRepository messageJdbcRepository;
+    private final DelayedMessageQueue delayedMessageQueue;
 
-    public MessageDispatchService(
-            MessageClaimService messageClaimService,
-            MessageProcessService messageProcessService,
-            MessageSnapshotService messageSnapshotService,
-            MessageRepository messageRepository,
-            MessageJdbcRepository messageJdbcRepository,
-            @Qualifier("messageDispatchTaskExecutor") TaskExecutor messageTaskExecutor) {
-        this.messageClaimService = messageClaimService;
-        this.messageProcessService = messageProcessService;
-        this.messageSnapshotService = messageSnapshotService;
-        this.messageJdbcRepository = messageJdbcRepository;
-        this.messageDispatchTaskExecutor = messageTaskExecutor;
-    }
-
+    /**
+     * 메시지 조회/스냅샷 생성 후 DelayQueue에 투입
+     * @return 투입된 메시지 수
+     */
     @Transactional
-    public List<Long> prepareDispatch(LocalDateTime now) {
-
+    public int prepareAndEnqueue(LocalDateTime now) {
+        // 1. Claim: WAITED → CREATED
         List<Message> messages = messageClaimService.claimNextMessagesAsEntities(now);
 
         if (messages.isEmpty()) {
-            return List.of();
+            return 0;
         }
 
+        // 2. 스냅샷 생성
         messageSnapshotService.createSnapshotsBatch(messages, MessageType.EMAIL);
 
-        return messages.stream()
-                .map(Message::getMessageId)
-                .toList();
-    }
-
-    public void dispatchPreparedMessages(List<Long> messageIds) {
-        // CompletableFuture로 모든 발송 완료 대기 후 Bulk UPDATE (JDBC 버전)
-        List<CompletableFuture<ProcessResult>> futures = messageIds.stream()
-                .map(id -> CompletableFuture.supplyAsync(
-                        () -> processAndReturnResultJdbc(id),
-                        messageDispatchTaskExecutor))
-                .toList();
-
-        // 모든 발송 완료 대기
-        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0])).join();
-
-        // 결과 수집
-        List<Long> sentIds = new ArrayList<>();
-
-        for (CompletableFuture<ProcessResult> future : futures) {
-            try {
-                ProcessResult result = future.get();
-                if (result != null && result.success()) {
-                    sentIds.add(result.messageId());
-                }
-            } catch (Exception e) {
-                log.error("결과 수집 실패", e);
-            }
+        // 3. DelayQueue에 투입 (1초 후 발송 가능)
+        for (Message message : messages) {
+            delayedMessageQueue.offer(message.getMessageId());
         }
 
-        // Bulk UPDATE (JDBC)
-        if (!sentIds.isEmpty()) {
-            messageJdbcRepository.bulkMarkSent(sentIds);
-            log.info("Bulk SENT 처리 (JDBC): {}건", sentIds.size());
-        }
-    }
-
-    // JDBC 발송 처리 후 결과 반환
-    private ProcessResult processAndReturnResultJdbc(Long messageId) {
-        try {
-            return messageProcessService.processMessageAndReturnResultJdbc(messageId);
-        } catch (Exception e) {
-            log.error("메시지 처리 실패 (JDBC) messageId={}", messageId, e);
-            return new ProcessResult(messageId, false);
-        }
-    }
-
-    // 발송 DTO
-    public record ProcessResult(Long messageId, boolean success) {
-    }
-
-    public void dispatchDueMessages() {
-
-        List<Long> messageIds = prepareDispatch(LocalDateTime.now());
-
-        if (messageIds.isEmpty()) {
-            log.debug("발송 대상 메시지 없음");
-            return;
-        }
-
-        log.info("메시지 {}건 dispatch 시작", messageIds.size());
-        dispatchPreparedMessages(messageIds);
+        log.info("DelayQueue 투입: {}건", messages.size());
+        return messages.size();
     }
 
     /**
-     * 모든 WAITED 상태 메시지를 조회하여 처리
-     * Processor에서 직접 호출하거나 백업 폴링에서 사용
-     * @return 처리된 메시지 건수
+     * 발송 대상 메시지를 조회하여 DelayQueue에 투입 (스케줄러에서 호출)
+     */
+    public void dispatchDueMessages() {
+        int enqueued = prepareAndEnqueue(LocalDateTime.now());
+
+        if (enqueued == 0) {
+            log.debug("발송 대상 메시지 없음");
+        }
+    }
+
+    /**
+     * 모든 WAITED 상태 메시지를 조회하여 DelayQueue에 투입
+     * @return 투입된 메시지 총 건수
      */
     public int dispatchAllWaitedMessages() {
-        int totalProcessed = 0;
-        
+        int totalEnqueued = 0;
+
         while (true) {
-            List<Long> messageIds = prepareDispatch(LocalDateTime.now());
-            
-            if (messageIds.isEmpty()) {
+            int enqueued = prepareAndEnqueue(LocalDateTime.now());
+
+            if (enqueued == 0) {
                 break;
             }
-            
-            dispatchPreparedMessages(messageIds);
-            totalProcessed += messageIds.size();
-            
-            log.info("배치 처리 완료: {}건, 누적: {}건", messageIds.size(), totalProcessed);
+
+            totalEnqueued += enqueued;
+            log.info("배치 투입 완료: {}건, 누적: {}건", enqueued, totalEnqueued);
         }
-        
-        return totalProcessed;
+
+        return totalEnqueued;
+    }
+
+    /**
+     * 현재 DelayQueue 크기 (모니터링용)
+     */
+    public int getQueueSize() {
+        return delayedMessageQueue.size();
     }
 }

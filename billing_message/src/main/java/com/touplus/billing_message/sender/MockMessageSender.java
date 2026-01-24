@@ -10,12 +10,6 @@ public class MockMessageSender implements MessageSender {
 
     @Override
     public SendResult send(MessageType type, MessageSnapshot snapshot) {
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return SendResult.fail("INTERRUPTED", "send interrupted");
-        }
 
         if (type == MessageType.SMS) {
             return SendResult.ok("OK", "sms sent");

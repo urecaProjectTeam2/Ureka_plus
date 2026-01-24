@@ -26,6 +26,11 @@ public class MessageProcessService {
 
     private final SendLogBufferService sendLogBufferService;
 
+    /**
+     * 발송 결과 DTO
+     */
+    public record ProcessResult(Long messageId, boolean success) {}
+
     // 스냅샷 이미 다 생성된 후의 발송 처리
     @Transactional
     public void processMessage(Long messageId) {
@@ -67,16 +72,15 @@ public class MessageProcessService {
             return;
         }
 
-        // ban 시간대 체크 (이제 Message에서 직접 가져옴)
-        LocalTime banEndTime = message.getBanEndTime();
+        // 발송 시간 체크 (scheduled_at이 현재 시간보다 미래면 아직 발송 시간 아님)
+        LocalDateTime scheduledAt = message.getScheduledAt();
         LocalDateTime now = LocalDateTime.now();
 
-        if (messagePolicy.isInBanWindow(now, banEndTime)) {
-            LocalDateTime nextAllowed = messagePolicy.nextAllowedTime(now, banEndTime);
-
-            messageRepository.defer(messageId, nextAllowed);
-            log.info("금지 시간대 → 연기 messageId={} until={}",
-                    messageId, nextAllowed);
+        if (scheduledAt != null && now.isBefore(scheduledAt)) {
+            // 아직 발송 시간 안 됨 → 연기
+            messageRepository.defer(messageId, scheduledAt);
+            log.info("발송 시간 미도래 → 연기 messageId={} until={}",
+                    messageId, scheduledAt);
             return;
         }
 
@@ -87,10 +91,7 @@ public class MessageProcessService {
         } catch (Exception e) {
             log.error("메시지 발송 예외 messageId={}", messageId, e);
 
-            LocalDateTime retryAt = messagePolicy.adjustForBan(
-                    messagePolicy.nextRetryAt(now, message.getRetryCount()),
-                    banEndTime);
-
+            LocalDateTime retryAt = messagePolicy.nextRetryAt(now, message.getRetryCount());
             messageRepository.markFailed(messageId, retryAt);
             return;
         }
@@ -112,10 +113,7 @@ public class MessageProcessService {
             return;
         }
 
-        LocalDateTime retryAt = messagePolicy.adjustForBan(
-                messagePolicy.nextRetryAt(now, message.getRetryCount()),
-                banEndTime);
-
+        LocalDateTime retryAt = messagePolicy.nextRetryAt(now, message.getRetryCount());
         messageRepository.markFailed(messageId, retryAt);
         log.info("메시지 발송 실패 → 재시도 예약 messageId={} retryAt={}",
                 messageId, retryAt);
@@ -136,21 +134,21 @@ public class MessageProcessService {
      * 발송 처리 후 결과 반환 (Bulk UPDATE용)
      * 개별 UPDATE 없이 결과만 반환
      */
-    public MessageDispatchService.ProcessResult processMessageAndReturnResult(Long messageId) {
+    public ProcessResult processMessageAndReturnResult(Long messageId) {
         Message message = messageRepository.findById(messageId).orElse(null);
         if (message == null) {
             log.warn("메시지 없음 messageId={}", messageId);
-            return new MessageDispatchService.ProcessResult(messageId, false);
+            return new ProcessResult(messageId, false);
         }
 
         // SENT는 스킵
         if (message.getStatus() == MessageStatus.SENT) {
-            return new MessageDispatchService.ProcessResult(messageId, true);
+            return new ProcessResult(messageId, true);
         }
 
         // CREATED만 처리
         if (message.getStatus() != MessageStatus.CREATED) {
-            return new MessageDispatchService.ProcessResult(messageId, false);
+            return new ProcessResult(messageId, false);
         }
 
         // 발송 타입 결정
@@ -163,17 +161,17 @@ public class MessageProcessService {
             log.error("Snapshot 없음 messageId={}", messageId);
             LocalDateTime retryAt = messagePolicy.nextRetryAt(LocalDateTime.now(), message.getRetryCount());
             messageRepository.markFailed(messageId, retryAt);
-            return new MessageDispatchService.ProcessResult(messageId, false);
+            return new ProcessResult(messageId, false);
         }
 
-        // ban 시간대 체크 (Message에서 직접 가져옴)
-        LocalTime banEndTime = message.getBanEndTime();
+        // 발송 시간 체크 (scheduled_at이 현재 시간보다 미래면 아직 발송 시간 아님)
+        LocalDateTime scheduledAt = message.getScheduledAt();
         LocalDateTime now = LocalDateTime.now();
 
-        if (messagePolicy.isInBanWindow(now, banEndTime)) {
-            LocalDateTime nextAllowed = messagePolicy.nextAllowedTime(now, banEndTime);
-            messageRepository.defer(messageId, nextAllowed);
-            return new MessageDispatchService.ProcessResult(messageId, false);
+        if (scheduledAt != null && now.isBefore(scheduledAt)) {
+            // 아직 발송 시간 안 됨 → 연기
+            messageRepository.defer(messageId, scheduledAt);
+            return new ProcessResult(messageId, false);
         }
 
         // 발송
@@ -182,11 +180,9 @@ public class MessageProcessService {
             result = messageSender.send(messageType, snapshot);
         } catch (Exception e) {
             log.error("메시지 발송 예외 messageId={}", messageId, e);
-            LocalDateTime retryAt = messagePolicy.adjustForBan(
-                    messagePolicy.nextRetryAt(now, message.getRetryCount()),
-                    banEndTime);
+            LocalDateTime retryAt = messagePolicy.nextRetryAt(now, message.getRetryCount());
             messageRepository.markFailed(messageId, retryAt);
-            return new MessageDispatchService.ProcessResult(messageId, false);
+            return new ProcessResult(messageId, false);
         }
 
         // 로그 버퍼에 추가 (DB 호출 없음)
@@ -201,37 +197,35 @@ public class MessageProcessService {
         // 결과 반환 (UPDATE는 Bulk로 처리됨)
         if (result.success()) {
             log.debug("메시지 발송 성공 messageId={} type={}", messageId, messageType);
-            return new MessageDispatchService.ProcessResult(messageId, true);
+            return new ProcessResult(messageId, true);
         }
 
         // 실패 시 개별 처리 (재시도 스케줄링 필요)
-        LocalDateTime retryAt = messagePolicy.adjustForBan(
-                messagePolicy.nextRetryAt(now, message.getRetryCount()),
-                banEndTime);
+        LocalDateTime retryAt = messagePolicy.nextRetryAt(now, message.getRetryCount());
         messageRepository.markFailed(messageId, retryAt);
-        return new MessageDispatchService.ProcessResult(messageId, false);
+        return new ProcessResult(messageId, false);
     }
 
     /**
      * JDBC 버전 - 발송 처리 후 결과 반환 (Bulk UPDATE용)
      * JPA Entity 대신 DTO 사용으로 오버헤드 감소
      */
-    public MessageDispatchService.ProcessResult processMessageAndReturnResultJdbc(Long messageId) {
+    public ProcessResult processMessageAndReturnResultJdbc(Long messageId) {
         // JDBC로 메시지 조회
         MessageJdbcRepository.MessageDto message = messageJdbcRepository.findById(messageId);
         if (message == null) {
             log.warn("메시지 없음 messageId={}", messageId);
-            return new MessageDispatchService.ProcessResult(messageId, false);
+            return new ProcessResult(messageId, false);
         }
 
         // SENT는 스킵
         if (message.status() == MessageStatus.SENT) {
-            return new MessageDispatchService.ProcessResult(messageId, true);
+            return new ProcessResult(messageId, true);
         }
 
         // CREATED만 처리
         if (message.status() != MessageStatus.CREATED) {
-            return new MessageDispatchService.ProcessResult(messageId, false);
+            return new ProcessResult(messageId, false);
         }
 
         // 발송 타입 결정
@@ -245,7 +239,7 @@ public class MessageProcessService {
             log.error("Snapshot 없음 messageId={}", messageId);
             LocalDateTime retryAt = messagePolicy.nextRetryAt(LocalDateTime.now(), message.retryCount());
             messageJdbcRepository.markFailed(messageId, retryAt);
-            return new MessageDispatchService.ProcessResult(messageId, false);
+            return new ProcessResult(messageId, false);
         }
 
         // DTO를 Entity로 변환 (발송에 필요)
@@ -261,14 +255,14 @@ public class MessageProcessService {
                 snapshotDto.settlementDetails(),
                 snapshotDto.messageContent());
 
-        // ban 시간대 체크 (MessageDto에서 직접 가져옴)
-        LocalTime banEndTime = message.banEndTime();
+        // 발송 시간 체크 (scheduled_at이 현재 시간보다 미래면 아직 발송 시간 아님)
+        LocalDateTime scheduledAt = message.scheduledAt();
         LocalDateTime now = LocalDateTime.now();
 
-        if (messagePolicy.isInBanWindow(now, banEndTime)) {
-            LocalDateTime nextAllowed = messagePolicy.nextAllowedTime(now, banEndTime);
-            messageJdbcRepository.defer(messageId, nextAllowed);
-            return new MessageDispatchService.ProcessResult(messageId, false);
+        if (scheduledAt != null && now.isBefore(scheduledAt)) {
+            // 아직 발송 시간 안 됨 → 연기
+            messageJdbcRepository.defer(messageId, scheduledAt);
+            return new ProcessResult(messageId, false);
         }
 
         // 발송
@@ -277,11 +271,9 @@ public class MessageProcessService {
             result = messageSender.send(messageType, snapshot);
         } catch (Exception e) {
             log.error("메시지 발송 예외 messageId={}", messageId, e);
-            LocalDateTime retryAt = messagePolicy.adjustForBan(
-                    messagePolicy.nextRetryAt(now, message.retryCount()),
-                    banEndTime);
+            LocalDateTime retryAt = messagePolicy.nextRetryAt(now, message.retryCount());
             messageJdbcRepository.markFailed(messageId, retryAt);
-            return new MessageDispatchService.ProcessResult(messageId, false);
+            return new ProcessResult(messageId, false);
         }
 
         // 로그 버퍼에 추가 (DB 호출 없음, 즉시 반환)
@@ -296,14 +288,12 @@ public class MessageProcessService {
         // 결과 반환 (UPDATE는 Bulk로 처리됨)
         if (result.success()) {
             log.debug("메시지 발송 성공 (JDBC) messageId={} type={}", messageId, messageType);
-            return new MessageDispatchService.ProcessResult(messageId, true);
+            return new ProcessResult(messageId, true);
         }
 
         // 실패 시 JDBC로 업데이트
-        LocalDateTime retryAt = messagePolicy.adjustForBan(
-                messagePolicy.nextRetryAt(now, message.retryCount()),
-                banEndTime);
+        LocalDateTime retryAt = messagePolicy.nextRetryAt(now, message.retryCount());
         messageJdbcRepository.markFailed(messageId, retryAt);
-        return new MessageDispatchService.ProcessResult(messageId, false);
+        return new ProcessResult(messageId, false);
     }
 }

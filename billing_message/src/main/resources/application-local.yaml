@@ -60,3 +60,4 @@ message:
     queue-size: 1500
     batch-size: 500           # pool-size와 동일
     poll-delay-ms: 300        # 더 빠른 폴링
+    worker-count: 50          # DelayQueue 워커 스레드 수
