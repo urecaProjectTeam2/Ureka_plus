@@ -17,6 +17,7 @@ public class BillingDiscountDto {
     private DiscountType isCash;
     private Integer cash;
     private Double percent;
+    private Integer value;
 
     // Entity -> DTO
     public static BillingDiscountDto fromEntity(BillingDiscount entity) {
@@ -26,6 +27,7 @@ public class BillingDiscountDto {
                 .isCash(entity.getIsCash())
                 .cash(entity.getCash())
                 .percent(entity.getPercent())
+                .value(entity.getValue())
                 .build();
     }
 
@@ -37,6 +39,7 @@ public class BillingDiscountDto {
                 .isCash(this.isCash)
                 .cash(this.cash)
                 .percent(this.percent)
+                .value(this.value)
                 .build();
     }
 }

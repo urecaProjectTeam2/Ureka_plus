@@ -26,6 +26,7 @@ public class BillingDiscountRepositoryImpl implements BillingDiscountRepository 
                 .isCash(DiscountType.valueOf(rs.getString("is_cash")))
                 .cash(rs.getObject("cash", Integer.class))
                 .percent(rs.getObject("percent", Double.class))
+                .value(rs.getInt("value"))
                 .build();
     }
 

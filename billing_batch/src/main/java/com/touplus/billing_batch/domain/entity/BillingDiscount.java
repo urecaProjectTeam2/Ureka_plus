@@ -27,4 +27,7 @@ public class BillingDiscount {
 
     @Column(name = "percent")
     private Double percent;
+
+    @Column(name = "value")
+    private Integer value;
 }
