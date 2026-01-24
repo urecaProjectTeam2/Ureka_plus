@@ -18,7 +18,7 @@ public class GroupDiscountRepositoryImpl implements GroupDiscountRepository{
     /* ===============================
      * 공통 RowMapper
      * =============================== */
-    private GroupDiscount mapRow(ResultSet rs) throws SQLException {
+    private GroupDiscount mapRow(ResultSet rs, int rowNum) throws SQLException {
         return GroupDiscount.builder()
                 .groupId(rs.getLong("group_id"))
                 .numOfMember(rs.getInt("num_of_member"))
@@ -27,8 +27,6 @@ public class GroupDiscountRepositoryImpl implements GroupDiscountRepository{
 
     @Override
     public Optional<GroupDiscount> findByGroupId(Long groupId) {
-        MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("groupId", groupId);
 
         String sql ="""
             SELECT
@@ -38,10 +36,11 @@ public class GroupDiscountRepositoryImpl implements GroupDiscountRepository{
             WHERE group_id = :groupId
         """;
 
-        return namedJdbcTemplate.query(
-                sql,
-                params,
-                rs -> rs.next() ? Optional.of(mapRow(rs)) : Optional.empty()
-        );
+        MapSqlParameterSource params = new MapSqlParameterSource()
+                .addValue("groupId", groupId);
+
+        return namedJdbcTemplate.query(sql, params, this::mapRow)
+                .stream()
+                .findFirst();
     }
 }
