@@ -4,7 +4,7 @@ import com.touplus.billing_batch.common.BillingException;
 import com.touplus.billing_batch.common.BillingFatalException;
 import com.touplus.billing_batch.domain.dto.*;
 import com.touplus.billing_batch.domain.enums.ProductType;
-import com.touplus.billing_batch.jobs.billing.BillingReferenceCache;
+import com.touplus.billing_batch.jobs.billing.cache.BillingReferenceCache;
 import com.touplus.billing_batch.jobs.billing.step.processor.AmountCalculationProcessor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

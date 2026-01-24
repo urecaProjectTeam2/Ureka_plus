@@ -1,5 +1,6 @@
 package com.touplus.billing_batch.domain.repository.serviceImpl;
 
+import com.touplus.billing_batch.domain.dto.ProductBaseUsageDto;
 import com.touplus.billing_batch.domain.entity.ProductBaseUsage;
 import com.touplus.billing_batch.domain.enums.UseType;
 import com.touplus.billing_batch.domain.repository.service.ProductBaseUsageRepository;
@@ -28,8 +29,12 @@ public class ProductBaseUsageRepositoryImpl implements ProductBaseUsageRepositor
     public List<ProductBaseUsage> findByProductId(Long productId) {
         return jdbcTemplate.query("SELECT * FROM product_base_usage WHERE product_id = ?", rowMapper, productId);
     }
+
     @Override
     public List<ProductBaseUsage> findAll() {
-        return jdbcTemplate.query("SELECT * FROM product_base_usage", rowMapper);
+        return jdbcTemplate.query(
+                "SELECT * FROM product_base_usage",
+                rowMapper
+        );
     }
 }

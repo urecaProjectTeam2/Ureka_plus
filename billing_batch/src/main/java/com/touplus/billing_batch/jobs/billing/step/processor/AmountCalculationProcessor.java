@@ -1,7 +1,7 @@
 package com.touplus.billing_batch.jobs.billing.step.processor;
 
 import com.touplus.billing_batch.common.BillingException;
-import com.touplus.billing_batch.jobs.billing.BillingReferenceCache;
+import com.touplus.billing_batch.jobs.billing.cache.BillingReferenceCache;
 import com.touplus.billing_batch.domain.dto.*;
 import com.touplus.billing_batch.common.BillingFatalException;
 import com.touplus.billing_batch.domain.dto.AdditionalChargeDto;

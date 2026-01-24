@@ -5,7 +5,7 @@ import com.touplus.billing_batch.domain.dto.BillingProductDto;
 import com.touplus.billing_batch.domain.dto.BillingUserBillingInfoDto;
 import com.touplus.billing_batch.domain.dto.UserSubscribeProductDto;
 import com.touplus.billing_batch.domain.enums.ProductType;
-import com.touplus.billing_batch.jobs.billing.BillingReferenceCache;
+import com.touplus.billing_batch.jobs.billing.cache.BillingReferenceCache;
 import com.touplus.billing_batch.jobs.billing.step.processor.AmountCalculationProcessor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

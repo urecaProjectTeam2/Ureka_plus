@@ -5,7 +5,7 @@ import com.touplus.billing_batch.common.BillingFatalException;
 import com.touplus.billing_batch.domain.dto.BillingWorkDto;
 import com.touplus.billing_batch.domain.dto.SettlementDetailsDto;
 import com.touplus.billing_batch.domain.dto.UserSubscribeDiscountDto;
-import com.touplus.billing_batch.jobs.billing.BillingReferenceCache;
+import com.touplus.billing_batch.jobs.billing.cache.BillingReferenceCache;
 import com.touplus.billing_batch.domain.dto.*;
 import com.touplus.billing_batch.domain.enums.DiscountType;
 import lombok.RequiredArgsConstructor;

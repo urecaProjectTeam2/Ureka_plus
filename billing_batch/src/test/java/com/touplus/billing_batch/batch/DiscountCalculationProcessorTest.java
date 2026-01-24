@@ -3,7 +3,7 @@ package com.touplus.billing_batch.batch;
 import com.touplus.billing_batch.domain.dto.*;
 import com.touplus.billing_batch.domain.enums.DiscountType;
 import com.touplus.billing_batch.domain.enums.ProductType;
-import com.touplus.billing_batch.jobs.billing.BillingReferenceCache;
+import com.touplus.billing_batch.jobs.billing.cache.BillingReferenceCache;
 import com.touplus.billing_batch.jobs.billing.step.processor.DiscountCalculationProcessor;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

@@ -27,6 +27,7 @@ public class RefundPolicyRepositoryImpl implements RefundPolicyRepository {
         List<RefundPolicy> results = jdbcTemplate.query( "SELECT * FROM refund_policy WHERE product_id = ?", rowMapper, productId);
         return results.stream().findFirst();
     }
+
     @Override
     public List<RefundPolicy> findAll() {
         return jdbcTemplate.query("SELECT * FROM refund_policy", rowMapper);

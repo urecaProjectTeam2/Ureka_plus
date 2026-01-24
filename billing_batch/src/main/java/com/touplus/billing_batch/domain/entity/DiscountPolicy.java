@@ -15,7 +15,7 @@ public class DiscountPolicy {
 
     @Id
     @Column(name = "discount_range_id", nullable = false)
-    private Long discountRangeId;
+    private Long discountPolicyId;
 
     @Column(name="cal_order", nullable = false)
     private CalOrderType calOrder;

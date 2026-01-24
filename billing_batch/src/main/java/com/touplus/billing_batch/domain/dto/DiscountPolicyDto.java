@@ -12,7 +12,7 @@ import lombok.*;
 @Builder
 public class DiscountPolicyDto {
 
-    private Long discountRangeId;
+    private Long discountPolicyId;
     private CalOrderType calOrder;
     private DiscountRangeType discountRange;
 
@@ -20,7 +20,7 @@ public class DiscountPolicyDto {
     public static DiscountPolicyDto fromEntity(DiscountPolicy entity) {
         if (entity == null) return null;
         return DiscountPolicyDto.builder()
-                .discountRangeId(entity.getDiscountRangeId())
+                .discountPolicyId(entity.getDiscountPolicyId())
                 .calOrder(entity.getCalOrder())
                 .discountRange(entity.getDiscountRange())
                 .build();
@@ -29,7 +29,7 @@ public class DiscountPolicyDto {
     // DTO -> Entity 변환
     public DiscountPolicy toEntity() {
         return DiscountPolicy.builder()
-                .discountRangeId(this.discountRangeId)
+                .discountPolicyId(this.discountPolicyId)
                 .calOrder(this.calOrder)
                 .discountRange(this.discountRange)
                 .build();
