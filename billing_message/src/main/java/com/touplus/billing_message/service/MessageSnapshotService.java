@@ -20,7 +20,6 @@ public class MessageSnapshotService {
         private final BillingSnapshotRepository billingSnapshotRepository;
         private final UserRepository userRepository;
         private final MessageTemplateRepository messageTemplateRepository;
-        private final MessageRepository messageRepository;
 
         private static final DateTimeFormatter MONTH_FORMATTER = DateTimeFormatter.ofPattern("yyyy년 MM월");
         private static final NumberFormat PRICE_FORMATTER = NumberFormat.getNumberInstance(Locale.KOREA);
@@ -106,12 +105,7 @@ public class MessageSnapshotService {
                 // 스냅샷 삽입
                 messageSnapshotRepository.saveAll(snapshots);
 
-                // 스냅샷 업데이트
-                List<Long> createdMessageIds = snapshots.stream()
-                                .map(MessageSnapshot::getMessageId)
-                                .toList();
-
-                messageRepository.markCreatedByIds(createdMessageIds);
+                // CREATED 상태 변경은 MessageClaimService에서 이미 수행됨 (중복 제거)
 
                 log.info("MessageSnapshot batch created: {}", snapshots.size());
                 return snapshots.size();
