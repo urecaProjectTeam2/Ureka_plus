@@ -1,5 +1,6 @@
 package com.touplus.billing_batch.domain.entity;
 
+import com.touplus.billing_batch.domain.enums.ContentType;
 import com.touplus.billing_batch.domain.enums.DiscountType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Id;
@@ -30,4 +31,7 @@ public class BillingDiscount {
 
     @Column(name = "value")
     private Integer value;
+
+    @Column(name = "content_type")
+    private ContentType contentType;
 }

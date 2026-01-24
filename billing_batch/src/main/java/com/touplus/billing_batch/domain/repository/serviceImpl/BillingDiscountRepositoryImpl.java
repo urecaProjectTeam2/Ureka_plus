@@ -1,6 +1,7 @@
 package com.touplus.billing_batch.domain.repository.serviceImpl;
 
 import com.touplus.billing_batch.domain.entity.BillingDiscount;
+import com.touplus.billing_batch.domain.enums.ContentType;
 import com.touplus.billing_batch.domain.enums.DiscountType;
 import com.touplus.billing_batch.domain.repository.service.BillingDiscountRepository;
 import lombok.RequiredArgsConstructor;
@@ -27,6 +28,7 @@ public class BillingDiscountRepositoryImpl implements BillingDiscountRepository 
                 .cash(rs.getObject("cash", Integer.class))
                 .percent(rs.getObject("percent", Double.class))
                 .value(rs.getInt("value"))
+                .contentType(ContentType.from(rs.getString("content_type")))
                 .build();
     }
 
