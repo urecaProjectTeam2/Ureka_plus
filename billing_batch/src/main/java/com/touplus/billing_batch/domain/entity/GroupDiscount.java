@@ -6,17 +6,17 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
-
+@Entity
 @Getter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class BillingUser {
+public class GroupDiscount {
 
     @Id
-    @Column(name = "user_id")
-    private Long userId;
-
-    @Column(name = "group_id")
+    @Column(name = "group_id", nullable = false)
     private Long groupId;
+
+    @Column(name = "num_of_member", nullable = false)
+    private Integer numOfMember;
 }

@@ -1,5 +1,6 @@
 package com.touplus.billing_batch.domain.entity;
 
+import com.touplus.billing_batch.domain.enums.CalcOrderType;
 import com.touplus.billing_batch.domain.enums.DiscountType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Id;
@@ -27,4 +28,7 @@ public class BillingDiscount {
 
     @Column(name = "percent")
     private Double percent;
+
+    @Column(name = "cal_order")
+    private CalcOrderType calOrder;
 }
