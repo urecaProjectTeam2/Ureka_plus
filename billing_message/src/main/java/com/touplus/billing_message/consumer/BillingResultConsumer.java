@@ -30,10 +30,7 @@ public class BillingResultConsumer {
     private final UserRepository userRepository;
     private final MessageProcessor messageProcessor;
 
-    @KafkaListener(
-    		topics = "billing-result-topic-2512T2", 
-    		groupId = "billing-message-group-J7", 
-    		containerFactory = "kafkaListenerContainerFactory")
+    @KafkaListener(topics = "billing-result-topic-2512", groupId = "billing-message-group-hyun10", containerFactory = "kafkaListenerContainerFactory")
     public void consume(
             List<BillingResultDto> messages,
             Acknowledgment ack) {
@@ -46,7 +43,8 @@ public class BillingResultConsumer {
 
             for (BillingResultDto message : messages) {
                 LocalDate settlementMonth = message.getSettlementMonth();
-                if (settlementMonth == null) continue;
+                if (settlementMonth == null)
+                    continue;
 
                 LocalDate processMonth = settlementMonth.plusMonths(1);
                 if (processMonth.getYear() != now.getYear()
