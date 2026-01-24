@@ -20,7 +20,7 @@ public class OverusePolicyRepositoryImpl implements OverusePolicyRepository {
     private final RowMapper<OverusePolicy> rowMapper = (rs, rowNum) -> OverusePolicy.builder()
             .overusePolicyId(rs.getLong("overuse_policy_id"))
             .useType(UseType.valueOf(rs.getString("use_type")))
-            .unitPrice(rs.getInt("unit_price"))
+            .unitPrice(rs.getDouble("unit_price"))
             .build();
 
     @Override

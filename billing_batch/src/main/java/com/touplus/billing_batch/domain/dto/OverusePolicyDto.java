@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 public class OverusePolicyDto {
     private Long overusePolicyId;
     private UseType useType;
-    private Integer unitPrice;
+    private Double unitPrice;
 
     /**
      * Entity -> DTO 변환

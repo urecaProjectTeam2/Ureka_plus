@@ -19,6 +19,6 @@ public class OverusePolicy {
     private UseType useType;
 
     @Column(name = "unit_price", nullable = false)
-    private Integer unitPrice;
+    private Double unitPrice;
 
 }
