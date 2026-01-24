@@ -19,7 +19,7 @@ public class ProductBaseUsage {
     private Long productId;
 
     @Column(name = "overuse_policy_id", nullable = false)
-    private Long overusePolicyId; // overuse_policy 테이블 참조
+    private Long overusePolicyId;
 
     @Column(name = "use_type", nullable = false)
     private UseType useType;

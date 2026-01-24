@@ -1,6 +1,7 @@
 package com.touplus.billing_batch.domain.dto;
 
 import com.touplus.billing_batch.domain.entity.BillingProduct;
+import com.touplus.billing_batch.domain.enums.Network_type;
 import com.touplus.billing_batch.domain.enums.ProductType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -16,6 +17,7 @@ public class BillingProductDto {
     private String productName;
     private ProductType productType;
     private Integer price;
+    private Network_type networkType;
 
     public static BillingProductDto fromEntity(BillingProduct entity) {
         return BillingProductDto.builder()
@@ -23,6 +25,7 @@ public class BillingProductDto {
                 .productName(entity.getProductName())
                 .productType(entity.getProductType())
                 .price(entity.getPrice())
+                .networkType(entity.getNetworkType())
                 .build();
     }
 
@@ -32,6 +35,7 @@ public class BillingProductDto {
                 .productName(this.productName)
                 .productType(this.productType)
                 .price(this.price)
+                .networkType(this.networkType)
                 .build();
     }
 }
