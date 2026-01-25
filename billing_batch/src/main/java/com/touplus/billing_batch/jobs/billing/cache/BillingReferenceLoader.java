@@ -36,6 +36,7 @@ public class BillingReferenceLoader {
                         .collect(Collectors.toMap(
                                 BillingProductDto::getProductId,
                                 p -> p
+
                         ));
 
         if (productMap.isEmpty()) {
@@ -83,7 +84,9 @@ public class BillingReferenceLoader {
                         .map(OverusePolicyDto::fromEntity)
                         .collect(Collectors.toMap(
                                 OverusePolicyDto::getUseType,
-                                d -> d
+                                d -> d,
+                                // overuse Policy 의 DATA 중복값 처리를 위해 일단 추가
+                                (existing, replacement) -> replacement
                         ));
 
         if (overusePolicyMap.isEmpty()) {

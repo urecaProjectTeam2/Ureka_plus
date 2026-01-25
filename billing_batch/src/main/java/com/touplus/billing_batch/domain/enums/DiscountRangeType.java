@@ -5,7 +5,7 @@ public enum DiscountRangeType {
     INTERNET,
     IPTV,
     DPS,
-    MOBLIE_INTERNET;
+    MOBILE_INTERNET;
 
     public static DiscountRangeType from(String value) {
         if (value == null) return null;

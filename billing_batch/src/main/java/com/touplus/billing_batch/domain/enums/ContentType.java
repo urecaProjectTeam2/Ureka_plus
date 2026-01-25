@@ -1,9 +1,9 @@
 package com.touplus.billing_batch.domain.enums;
 
 public enum ContentType {
-    GROUP,
-    YEAR,
-    OTHERS;
+    group,
+    year,
+    others;
 
     public static ContentType from(String value) {
         if (value == null) return null;

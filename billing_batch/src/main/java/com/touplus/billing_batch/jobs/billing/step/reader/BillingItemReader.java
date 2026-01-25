@@ -157,7 +157,7 @@ public class BillingItemReader implements ItemStreamReader<BillingUserBillingInf
                 .collect(Collectors.groupingBy(UserSubscribeDiscountDto::getUserId));
 
         // 유저 사용량
-        Map<Long, List<UserUsageDto>> UsageMap = userUsageRepository.findByUserIdIn(userIds, startDate, endDate)
+        Map<Long, List<UserUsageDto>> UsageMap = userUsageRepository.findByUserIdIn(userIds, startDate.plusMonths(1), endDate.plusMonths(1))
                 .stream()
                 .map(UserUsageDto::fromEntity)
                 .collect(Collectors.groupingBy(UserUsageDto::getUserId));

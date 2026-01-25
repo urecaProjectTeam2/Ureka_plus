@@ -193,7 +193,7 @@ public class DiscountCalculationProcessor implements ItemProcessor<BillingWorkDt
             String contentType = discount.getContentType().toString().toLowerCase(); // year group
             int configValue = discount.getValue() == null ? 0 : discount.getValue(); // 할인 value
 
-            if (discountPolicy.getDiscountRange() == DiscountRangeType.MOBLIE_INTERNET) {
+            if (discountPolicy.getDiscountRange() == DiscountRangeType.MOBILE_INTERNET) {
                 if ("year".equals(contentType)) {
                     if (joinedYear < configValue) { // 장기 할인 혜택 오류
                         throw BillingException.invalidDiscountCondition(userId, discount.getDiscountId());
