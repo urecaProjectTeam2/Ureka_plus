@@ -23,6 +23,20 @@ h1 {
     box-shadow: 0 3px 10px rgba(0,0,0,0.1);
 }
 
+.step-card {
+    display: inline-flex;               /* 아이콘 + 텍스트 가로 정렬 */
+    align-items: center;
+    gap: 6px;                           /* 아이콘과 글자 사이 간격 */
+    font-weight: 600;
+    font-size: 17px;
+    color: #374151;             
+    padding: 6px 12px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.08);
+    margin-bottom: 10px;
+}
+
+
 /* 총 발송 메시지 강조 */
 .total {
     font-size: 18px;

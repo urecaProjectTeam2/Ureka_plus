@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <title>정산 · 메시지 대시보드</title>
 	<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet"> 
-    <link rel="stylesheet" th:href="@{/css/whole-process-dashboard.css}">
 	<link rel="stylesheet" th:href="@{/css/common.css}">
+	<link rel="stylesheet" th:href="@{/css/whole-process-dashboard.css}">
 </head>
 <body>
 <div th:replace="layout/sidebar :: sidebar"></div>
@@ -14,17 +14,19 @@
     <h1>정산 · 메시지 대시보드</h1>
 
         <div class="month">
-           정산월: <small><span class="step-name" id="settlementMonth"></span></small>
-        </div>
-        <br>
-        <div class="step-row">
-            <span class="step-name">
-                총 데이터
-                <small>
-                    <span class="totalCount" id="totalCount1"></span>건
-                </small>
-            </span>
-        </div>
+		    <span class="step-card">
+		        <i class="bi bi-calendar-event"></i>
+		        정산월: <span id="settlementMonth"></span>
+		    </span>
+		</div>
+		
+		<div class="step-row">
+		    <span class="step-card">
+		        <i class="bi bi-bar-chart-line"></i>
+		        총 데이터: <span id="totalCount1"></span>건
+		    </span>
+		</div>
+		<br>
 
 	<!-- 배치 -->
     <div class="card">
@@ -63,29 +65,13 @@
 
   	<!-- Kafka Receive  -->
     <div class="card">
-        <!-- Kafka Receive -->
-        <div class="step-row">
-            <span class="step-name">
-                Kafka Receive 진행 상태
-                <small>
-                    ( <span id="kafkaReceiveCount"></span>
-                    / <span class="totalCount" id="totalCount4"></span> )
-                    · <span class="kafkaReceiveRate" id="kafkaReceiveRate"></span>%
-                </small>
-            </span>
-            <span id="messageKafkaReceive" class="status waited"></span>
-        </div>
-        <div class="bar-wrap">
-            <div id="bar-messageKafkaReceive" class="bar wait" style="width:0%"></div>
-        </div>
-
         <!-- Create Message -->
         <div class="step-row">
             <span class="step-name">
                 Create Message 진행 상태
                 <small>
                     ( <span id="createMessageCount"></span>
-                    / <span class="totalCount" id="totalCount5"></span> )
+                    / <span class="totalCount" id="totalCount4"></span> )
                     · <span class="createMessageRate" id="createMessageRate"></span>%
                 </small>
             </span>
@@ -101,7 +87,7 @@
                 Sent Message 진행 상태
                 <small>
                     ( <span id="sentMessageCount"></span>
-                    / <span class="totalCount" id="totalCount6"></span> )
+                    / <span class="totalCount" id="totalCount5"></span> )
                     · <span class="sentMessageRate" id="sentMessageRate"></span>%
                 </small>
             </span>
@@ -190,14 +176,12 @@ document.addEventListener('DOMContentLoaded', function() {
             // 상태 업데이트
             if (data.batchJob !== undefined) updateStatus('batchJob', data.batchJob);
             if (data.batchKafkaSent !== undefined) updateStatus('batchKafkaSent', data.batchKafkaSent);
-            if (data.messageKafkaReceive !== undefined) updateStatus('messageKafkaReceive', data.messageKafkaReceive);
             if (data.messageCreateMessage !== undefined) updateStatus('messageCreateMessage', data.messageCreateMessage);
             if (data.messageSentMessage !== undefined) updateStatus('messageSentMessage', data.messageSentMessage);
 
             // 진행률 바 업데이트
             if (data.batchRate !== undefined) updateBar('bar-batchJob', data.batchRate);
             if (data.kafkaSentRate !== undefined) updateBar('bar-batchKafkaSent', data.kafkaSentRate);
-            if (data.kafkaReceiveRate !== undefined) updateBar('bar-messageKafkaReceive', data.kafkaReceiveRate);
             if (data.createMessageRate !== undefined) updateBar('bar-messageCreateMessage', data.createMessageRate);
             if (data.sentMessageRate !== undefined) updateBar('bar-messageSentMessage', data.sentMessageRate);
 
@@ -210,13 +194,11 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.settlementMonth !== undefined) document.getElementById('settlementMonth').textContent = data.settlementMonth;
             if (data.batchCount !== undefined) document.getElementById('batchCount').textContent = data.batchCount;
             if (data.kafkaSentCount !== undefined) document.getElementById('kafkaSentCount').textContent = data.kafkaSentCount;
-            if (data.kafkaReceiveCount !== undefined) document.getElementById('kafkaReceiveCount').textContent = data.kafkaReceiveCount;
             if (data.createMessageCount !== undefined) document.getElementById('createMessageCount').textContent = data.createMessageCount;
             
 
             if (data.batchRate !== undefined) animateNumber('batchRate', data.batchRate, 2);
             if (data.kafkaSentRate !== undefined) animateNumber('kafkaSentRate', data.kafkaSentRate, 2);
-            if (data.kafkaReceiveRate !== undefined) animateNumber('kafkaReceiveRate', data.kafkaReceiveRate, 2);
             if (data.createMessageRate !== undefined) animateNumber('createMessageRate', data.createMessageRate, 2);
             if (data.sentMessageRate !== undefined) animateNumber('sentMessageRate', data.sentMessageRate, 2);
 
@@ -225,14 +207,8 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.totalCount !== undefined) document.getElementById('totalCount3').textContent = data.totalCount;
             if (data.totalCount !== undefined) document.getElementById('totalCount4').textContent = data.totalCount;
             if (data.totalCount !== undefined) document.getElementById('totalCount5').textContent = data.totalCount;
-            if (data.totalCount !== undefined) document.getElementById('totalCount6').textContent = data.totalCount;
 
             container.style.visibility = 'visible';
-
-            console.log("data.batchRat" + data.batchRate);
-            console.log("data.createMessageRate" + data.createMessageRate);
-            console.log("data.sentMessageRate" + data.sentMessageRate);
-            console.log("data.totalCount" + data.totalCount);
         } catch (e) {
             console.error('SSE 업데이트 오류:', e);
         }

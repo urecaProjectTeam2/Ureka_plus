@@ -18,7 +18,7 @@ public class BatchProcessRepositoryImpl implements BatchProcessRepository {
 
     @Override
     public ProcessType findLatestJobStatus() {
-        String sql = "SELECT job FROM billing_batch.batch_process ORDER BY settlement_month DESC LIMIT 1";
+        String sql = "SELECT job FROM billing_batch.batch_process ORDER BY settlement_month ASC LIMIT 1";
 
         return jdbcTemplate.queryForObject(
             sql,
@@ -31,7 +31,7 @@ public class BatchProcessRepositoryImpl implements BatchProcessRepository {
 
     @Override
     public ProcessType findLatestKafkaSentStatus() {
-        String sql = "SELECT kafka_sent FROM billing_batch.batch_process ORDER BY settlement_month DESC LIMIT 1"; 
+        String sql = "SELECT kafka_sent FROM billing_batch.batch_process ORDER BY settlement_month ASC LIMIT 1"; 
 
         return jdbcTemplate.queryForObject(
             sql,

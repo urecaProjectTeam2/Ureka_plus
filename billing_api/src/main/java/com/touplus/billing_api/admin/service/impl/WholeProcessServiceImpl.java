@@ -45,12 +45,6 @@ public class WholeProcessServiceImpl implements WholeProcessService {
     public MessageProcessEntity getMessageStatus() {
         MessageProcessEntity message = new MessageProcessEntity();
 
-        message.setKafkaReceive(
-            messageRepo.findLatestKafkaReceiveStatus() != null
-                ? messageRepo.findLatestKafkaReceiveStatus()
-                : ProcessType.WAITED
-        );
-
         message.setCreateMessage(
             messageRepo.findLatestCreateMessageStatus() != null
                 ? messageRepo.findLatestCreateMessageStatus()
@@ -76,13 +70,11 @@ public class WholeProcessServiceImpl implements WholeProcessService {
 
         long batch = batchRepo.countBatch(settlementMonth);
         long kafkaSent = batchRepo.countKafkaSent(settlementMonth);
-        long kafkaReceive = messageRepo.countKafkaReceive(settlementMonth);
         long createMessage = messageRepo.countCreateMessage(settlementMonth);
         long sentMessage = messageRepo.countSentMessage(settlementMonth);
 
         double batchRate = rate(batch, total);
         double kafkaSentRate = rate(kafkaSent, total);
-        double kafkaReceiveRate = rate(kafkaReceive, total);
         double createMessageRate = rate(createMessage, total);
         double sentMessageRate = rate(sentMessage, total);
 
@@ -90,12 +82,10 @@ public class WholeProcessServiceImpl implements WholeProcessService {
         System.out.println("total : " + total);
         System.out.println("batch : " + batch);
         System.out.println("kafkaSent : " + kafkaSent);
-        System.out.println("kafkaReceive : " + kafkaReceive);
         System.out.println("createMessage : " + createMessage);
         System.out.println("sentMessage : " + sentMessage);
         System.out.println("batchRate : " + batchRate);
         System.out.println("kafkaSentRate : " + kafkaSentRate);
-        System.out.println("kafkaReceiveRate : " + kafkaReceiveRate);
         System.out.println("createMessageRate : " + createMessageRate);
         System.out.println("sentMessageRate : " + sentMessageRate);
         
@@ -103,12 +93,10 @@ public class WholeProcessServiceImpl implements WholeProcessService {
                 .totalCount(total)
                 .batchCount(batch)
                 .kafkaSentCount(kafkaSent)
-                .kafkaReceiveCount(kafkaReceive)
                 .createMessageCount(createMessage)
                 .sentMessageCount(sentMessage)
                 .batchRate(batchRate)
                 .kafkaSentRate(kafkaSentRate)
-                .kafkaReceiveRate(kafkaReceiveRate)
                 .createMessageRate(createMessageRate)
                 .sentMessageRate(sentMessageRate)
                 .settlementMonth(

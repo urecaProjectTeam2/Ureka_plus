@@ -52,7 +52,6 @@ public class WholeProcessController {
                     Map<String, Object> data = Map.of(
                         "batchJob", batch.getJob(),
                         "batchKafkaSent", batch.getKafkaSent(),
-                        "messageKafkaReceive", message.getKafkaReceive(),
                         "messageCreateMessage", message.getCreateMessage(),
                         "messageSentMessage", message.getSentMessage()
                     );
