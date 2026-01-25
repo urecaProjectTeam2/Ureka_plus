@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>정산 · 메시지 대시보드</title>
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" th:href="@{/css/template-management.css}">
+	<link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+<div th:replace="layout/sidebar :: sidebar"></div>
+<div class="container">
+    <h1>템플릿 관리</h1>
+
+	<!-- 필터 -->
+	<form id="filterForm">
+	    <label>메시지 타입:</label>
+	    <select id="messageType" onchange="filterTemplates()">
+	        <option value="">전체</option>
+			<option th:each="type : ${messageTypes}"
+			        th:value="${type}"
+			        th:text="${type}"
+			        th:selected="${type.name() == selectedType}">
+			</option>
+	    </select>
+	</form>
+    <!-- 추가 버튼 -->
+    <button type="button" id="btnAddTemplate" class="btn btn-primary mt-2">
+        템플릿 추가
+    </button>
+
+<!-- 템플릿 목록 -->
+<table id="templateTable">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>템플릿 이름</th>
+            <th>메시지 타입</th>
+            <th>내용</th>
+            <th>액션</th>
+        </tr>
+    </thead>
+    <tbody>		    
+	    <tr th:each="template : ${templates}" th:id="'row-' + ${template.templateId}">
+	        <td th:text="${template.templateId}"></td>
+	        <td th:text="${template.templateName}"></td>
+	        <td th:text="${template.messageType}"></td>
+	        <td th:text="${template.templateContent}"
+	        	  th:title="${template.templateContent}">
+	        </td>
+	        <td>
+	            <span class="action-btn" th:onclick="'editTemplate(' + ${template.templateId} + ')'" style="color: blue;">수정</span>
+	            <span class="action-btn" th:onclick="'deleteTemplate(' + ${template.templateId} + ')'" style="color: red;">삭제</span>
+	        </td>
+	    </tr>
+	</tbody>
+</table>
+
+
+<!-- ================= 모달 ================= -->
+<div class="modal fade" id="templateModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="formTitle">새 템플릿 생성</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body">
+                <input type="hidden" id="templateId">
+
+                <div class="mb-2">
+                    <label>템플릿 이름</label>
+                    <input type="text" id="templateName" class="form-control">
+                </div>
+
+                <div class="mb-2">
+                    <label>메시지 타입</label>
+                    <select id="templateType" class="form-select">
+                        <option th:each="type : ${messageTypes}"
+                                th:value="${type}"
+                                th:text="${type}"></option>
+                    </select>
+                </div>
+
+                <div class="mb-2">
+                    <label>내용</label>
+                    <textarea id="templateContent" rows="5" class="form-control"></textarea>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="saveTemplate()">저장</button>
+                <button class="btn btn-secondary" data-bs-dismiss="modal">취소</button>
+            </div>
+
+        </div>
+    </div>
+</div>
+</div>
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+const modal = new bootstrap.Modal(document.getElementById('templateModal'));
+
+//추가 버튼
+$('#btnAddTemplate').click(function () {
+ resetForm();
+ modal.show();
+});
+
+// 필터링
+function filterTemplates() {
+    const type = $('#messageType').val();
+    let url = '/admin/process/templates/management';
+    if(type) url += '?messageType=' + type;
+    window.location.href = url;
+}
+
+//초기화
+function resetForm() {
+    $('#formTitle').text('새 템플릿 생성');
+    $('#templateId').val('');
+    $('#templateName').val('');
+    $('#templateType').val('');
+    $('#templateContent').val('');
+}
+
+// 생성/수정 저장
+function saveTemplate() {
+    const id = $('#templateId').val();
+    console.log("id:", id); // 확인용
+
+    const data = {
+        templateName: $('#templateName').val(),
+        messageType: $('#templateType').val(),
+        templateContent: $('#templateContent').val()
+    };
+
+    if(!data.templateName || !data.messageType || !data.templateContent){
+        alert('모든 필드를 입력해주세요.');
+        return;
+    }
+
+    if(id) {
+        // 수정 (PUT)
+        $.ajax({
+            url: '/admin/process/templates/' + id,
+            type: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function() { 
+                alert('수정 완료');
+                location.reload(); 
+            },
+            error: function(xhr) { 
+                alert('수정 실패: ' + xhr.responseText); 
+            }
+        });
+    } else {
+        // 생성 (POST)
+        $.ajax({
+            url: '/admin/process/templates',
+            type: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(data),
+            success: function() { 
+                alert('생성 완료');
+                location.reload(); 
+            },
+            error: function(xhr) { 
+                alert('생성 실패: ' + xhr.responseText); 
+            }
+        });
+    }
+}
+
+// 수정 폼 채우기
+function editTemplate(id) {
+    $.get('/admin/process/templates/' + id, function(data){
+        $('#formTitle').text('템플릿 수정');
+        $('#templateId').val(data.templateId || data.id);
+        $('#templateName').val(data.templateName);
+        $('#templateType').val(data.messageType);
+        $('#templateContent').val(data.templateContent);
+
+        modal.show(); 
+    });
+}
+
+
+// 삭제
+function deleteTemplate(id) {
+    if(confirm('정말 삭제하시겠습니까?')) {
+        $.ajax({
+            url: '/admin/process/templates/' + id,
+            type: 'DELETE',
+            success: function() { 
+                alert('삭제 완료');
+                location.reload(); 
+            },
+            error: function() { 
+                alert('삭제 실패'); 
+            }
+        });
+    }
+}
+</script>
+
+
+</body>
+</html>

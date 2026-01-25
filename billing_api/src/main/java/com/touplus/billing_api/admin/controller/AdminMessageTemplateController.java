@@ -1,30 +1,55 @@
 package com.touplus.billing_api.admin.controller;
 
-
 import com.touplus.billing_api.admin.dto.MessageTemplateRequest;
 import com.touplus.billing_api.admin.service.MessageTemplateService;
 import com.touplus.billing_api.domain.message.entity.MessageTemplate;
 import com.touplus.billing_api.domain.message.enums.MessageType;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
-@RestController
+@Controller
 @RequiredArgsConstructor
-@RequestMapping("/admin/message-templates")
+@RequestMapping("/admin/process")
 public class AdminMessageTemplateController {
 
     private final MessageTemplateService messageTemplateService;
 
+    // ===================== Thymeleaf 한 페이지 =====================
     /**
-     * 템플릿 생성
+     * 템플릿 CRUD 한 페이지
      */
-    @PostMapping
-    public Long createTemplate(
-            @RequestBody @Valid MessageTemplateRequest request
+    @GetMapping("/templates/management")
+    public String templateManagementPage(
+            @RequestParam(value = "messageType", required = false) String messageType,
+            Model model
     ) {
+        List<MessageTemplate> templates;
+
+        if (messageType == null || messageType.isBlank()) {
+            templates = messageTemplateService.getTemplates(); // 전체
+        } else {
+            templates = messageTemplateService.getTemplatesByType(
+                    MessageType.valueOf(messageType)
+            );
+        }
+
+        model.addAttribute("templates", templates);
+        model.addAttribute("messageTypes", MessageType.values());
+        model.addAttribute("selectedType", messageType); // 선택 유지용 (옵션)
+
+        return "template-management";
+    }
+
+
+    // ===================== REST API (Ajax용) =====================
+    @PostMapping("/templates")
+    @ResponseBody
+    public Long createTemplateApi(@RequestBody @Valid MessageTemplateRequest request) {
         return messageTemplateService.createTemplate(
                 request.getTemplateName(),
                 request.getMessageType(),
@@ -32,36 +57,10 @@ public class AdminMessageTemplateController {
         );
     }
 
-    /**
-     * 템플릿 단건 조회
-     */
-    @GetMapping("/{templateId}")
-    public MessageTemplate getTemplate(
-            @PathVariable Long templateId
-    ) {
-        return messageTemplateService.getTemplate(templateId);
-    }
-
-    /**
-     * 템플릿 전체 조회
-     */
-    @GetMapping
-    public List<MessageTemplate> getTemplates(
-            @RequestParam(value = "messageType", required = false)
-            MessageType messageType
-    ) {
-        if (messageType == null) {
-            return messageTemplateService.getTemplates();
-        }
-        return messageTemplateService.getTemplatesByType(messageType);
-    }
-
-    /**
-     * 템플릿 수정
-     */
-    @PutMapping("/{templateId}")
-    public void updateTemplate(
-            @PathVariable Long templateId,
+    @PutMapping("/templates/{templateId}")
+    @ResponseBody
+    public void updateTemplateApi(
+            @PathVariable("templateId") Long templateId,
             @RequestBody @Valid MessageTemplateRequest request
     ) {
         messageTemplateService.updateTemplate(
@@ -72,13 +71,15 @@ public class AdminMessageTemplateController {
         );
     }
 
-    /**
-     * 템플릿 삭제 (soft delete)
-     */
-    @DeleteMapping("/{templateId}")
-    public void deleteTemplate(
-            @PathVariable Long templateId
-    ) {
+    @DeleteMapping("/templates/{templateId}")
+    @ResponseBody
+    public void deleteTemplateApi(@PathVariable("templateId") Long templateId) {
         messageTemplateService.deleteTemplate(templateId);
+    }
+
+    @GetMapping("/templates/{templateId}")
+    @ResponseBody
+    public MessageTemplate getTemplateApi(@PathVariable("templateId") Long templateId) {
+        return messageTemplateService.getTemplate(templateId);
     }
 }

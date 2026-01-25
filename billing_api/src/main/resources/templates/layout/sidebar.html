@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<div class="sidebar" th:fragment="sidebar">
+    <h1>관리자 대시보드</h1>
+    <ul>
+        <li><a th:href="@{/admin/process/dashboard}">대시보드</a></li>
+        <li><a th:href="@{/admin/batch/dashboard}">배치 대시보드</a></li>
+        <li><a th:href="@{/admin/message/dashboard}">메시지 대시보드</a></li>
+
+        <li>
+            <a href="#">사용자 대시보드 ▾</a>
+            <ul class="dropdown">
+                <li><a th:href="@{/admin/process/dashboard}">사용자별 정산 결과</a></li>
+                <li><a th:href="@{/admin/process/dashboard}">TOP 10</a></li>
+            </ul>
+        </li>
+
+        <li>
+            <a th:href="@{/admin/process/templates/management}">템플릿 관리</a>
+        </li>
+    </ul>
+</div>
+
+</body>
+</html>

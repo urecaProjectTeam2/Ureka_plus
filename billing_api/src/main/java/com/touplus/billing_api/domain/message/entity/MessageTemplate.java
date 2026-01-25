@@ -1,12 +1,12 @@
 package com.touplus.billing_api.domain.message.entity;
 
-import com.touplus.billing_api.domain.message.enums.MessageType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
 import java.time.LocalDateTime;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.touplus.billing_api.domain.message.enums.MessageType;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -18,6 +18,7 @@ public class MessageTemplate {
 
     @Id
     @Column(name = "template_id")
+    @JsonProperty("id")  // JSON 직렬화 시 templateId → id로 변환
     private Long templateId;
 
     @Column(name = "template_name", nullable = false, length = 30)

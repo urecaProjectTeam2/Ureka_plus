@@ -1,0 +1,94 @@
+body {
+    background-color: #f9fafb; /* 전체 밝은 톤 */
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #333;
+    line-height: 1.6;
+    overflow-y: scroll;
+}
+
+.container {
+    max-width: 960px;  /* 필요에 따라 조정 */
+    margin: 50px auto;
+    padding-left: 280px; /* 사이드바 공간 확보 */
+    padding-right: 32px;
+}
+
+/* ================= 사이드바 ================= */
+
+.sidebar {
+	background-color: #ffffff; /* 밝은 톤 유지 */
+    position: fixed;        /* 🔥 핵심 */
+    top: 0;
+    left: 0;
+    width: 240px;           /* 사이드바 고정 폭 */
+    height: 100vh;          /* 화면 전체 높이 */
+    color: #fff;
+    padding: 20px 15px;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.05);
+    box-sizing: border-box;
+    overflow-y: auto;       /* 메뉴 많아지면 스크롤 */
+}
+
+.sidebar h2 {
+    text-align: center;
+    margin-bottom: 32px;
+    font-size: 20px;
+    color: #111827;
+}
+
+.sidebar ul {
+    list-style: none;
+    padding: 3px;
+    margin: 0;
+}
+
+.sidebar li {
+    position: relative;
+    padding: 0.5px;
+}
+
+.sidebar a {
+    display: block;
+    padding: 8px 16px;
+    color: #4b5563;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background 0.3s, color 0.3s;
+}
+
+.sidebar a:hover, .sidebar a.active {
+    background-color: #3b82f6;
+    color: #ffffff;
+}
+
+.sidebar .dropdown {
+    display: none;
+    background-color: #f3f4f6; /* 밝은 회색으로 하위 메뉴 구분 */
+    border-radius: 8px;
+    margin-top: 4px;
+    margin-bottom: 8px;
+}
+
+.sidebar .dropdown a {
+    padding-left: 40px;
+    font-size: 14px;
+    font-weight: 400;
+    color: #374151;
+}
+
+.sidebar li:hover .dropdown {
+    display: block;
+}
+
+/* ================= 모바일/스크롤용 ================= */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 200px;
+        padding: 16px 0;
+    }
+    .main {
+        margin-left: 200px;
+        padding: 24px 16px;
+    }
+}
+

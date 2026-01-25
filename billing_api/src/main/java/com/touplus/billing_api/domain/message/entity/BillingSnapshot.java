@@ -1,10 +1,11 @@
 package com.touplus.billing_api.domain.message.entity;
-import jakarta.persistence.Column;
-import lombok.AllArgsConstructor;
-import org.springframework.data.annotation.Id;
-import lombok.Getter;
 
 import java.time.LocalDate;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 /**
  * billing_snapshot 테이블 Row 매핑용 객체 (JDBC)

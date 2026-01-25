@@ -4,14 +4,13 @@
     <meta charset="UTF-8">
     <title>메시지 발송 현황 | 관리자</title>
     <link rel="stylesheet" th:href="@{/css/message-dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/common.css}">
 </head>
 
 <body>
+<div th:replace="layout/sidebar :: sidebar"></div>
 <div class="container">
     <h1>메시지 발송 현황</h1>
-    <div class="subtitle">
-        정산 배치 · 메시지 발송 시스템 관리자 페이지
-    </div>
 
     <div class="card">
         <!-- 정산월 -->
