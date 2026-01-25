@@ -63,6 +63,8 @@ public class BillingProductReportController {
                         .map(BillingProductStatResponse::getSubscribeCount)
                         .collect(Collectors.toList()));
 
+        model.addAttribute("currentPath", request.getRequestURI());
+        
         return "productDonut";
     }
 }

@@ -41,7 +41,8 @@ public class AdminMessageTemplateController {
         model.addAttribute("templates", templates);
         model.addAttribute("messageTypes", MessageType.values());
         model.addAttribute("selectedType", messageType); // 선택 유지용 (옵션)
-
+        model.addAttribute("currentPath", request.getRequestURI());
+        
         return "template-management";
     }
 

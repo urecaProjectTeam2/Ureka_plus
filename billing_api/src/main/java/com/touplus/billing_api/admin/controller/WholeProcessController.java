@@ -31,6 +31,8 @@ public class WholeProcessController {
         model.addAttribute("batch", wholeProcessService.getBatchStatus());
         model.addAttribute("message", wholeProcessService.getMessageStatus());
         model.addAttribute("whole", wholeProcessService.getWholeProcessStatus());
+        model.addAttribute("currentPath", request.getRequestURI());
+        
         return "whole-process-dashboard";
     }
 

@@ -27,6 +27,8 @@ public class MessageDashBoardController {
     @GetMapping("/dashboard")
     public String dashboard(org.springframework.ui.Model model, HttpServletRequest request) {
         model.addAttribute("summary", messageDashBoardService.getMessageStatusSummary());
+        model.addAttribute("currentPath", request.getRequestURI());
+        
         return "message-dashboard";
     }
 
