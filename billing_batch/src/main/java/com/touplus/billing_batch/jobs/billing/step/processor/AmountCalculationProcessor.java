@@ -35,7 +35,7 @@ public class AmountCalculationProcessor
                 .build();
 
         Map<Long, BillingProductDto> productMap = referenceCache.getProductMap();
-        Map<UseType, OverusePolicyDto> overusePolicyMap = referenceCache.getOverusePolicyMap();
+        Map<Long, OverusePolicyDto> overusePolicyMap = referenceCache.getOverusePolicyMap();
         Map<UsageKeyDto, ProductBaseUsageDto> productBaseUsageMap = referenceCache.getProductBaseUsageMap();
         Map<Long, RefundPolicyDto> refundPolicyMap = referenceCache.getRefundPolicyMap();
 
@@ -185,7 +185,7 @@ public class AmountCalculationProcessor
 
             if (baseUsageDto == null) continue; // 무제한이면 다음으로 넘어가기
 
-            OverusePolicyDto policy = overusePolicyMap.get(us.getUseType());
+            OverusePolicyDto policy = overusePolicyMap.get(baseUsageDto.getOverusePolicyId());
             if (policy == null) {
                 log.warn("사용유형 {}에 대한 초과 요금 정책이 없습니다.", us.getUseType());
                 continue;

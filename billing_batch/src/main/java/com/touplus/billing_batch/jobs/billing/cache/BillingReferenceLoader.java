@@ -79,14 +79,12 @@ public class BillingReferenceLoader {
             throw BillingFatalException.cacheNotFound("환불 정책 데이터가 존재하지 않습니다.");
         }
 
-        Map<UseType, OverusePolicyDto> overusePolicyMap =
+        Map<Long, OverusePolicyDto> overusePolicyMap =
                 overusePolicyRepository.findAll().stream()
                         .map(OverusePolicyDto::fromEntity)
                         .collect(Collectors.toMap(
-                                OverusePolicyDto::getUseType,
-                                d -> d,
-                                // overuse Policy 의 DATA 중복값 처리를 위해 일단 추가
-                                (existing, replacement) -> replacement
+                                OverusePolicyDto::getOverusePolicyId,
+                                d -> d
                         ));
 
         if (overusePolicyMap.isEmpty()) {

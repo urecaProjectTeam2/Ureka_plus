@@ -17,7 +17,7 @@ public class BillingReferenceCache {
     private volatile Map<Long, BillingDiscountDto> discountMap = new HashMap<>();
     private volatile Map<UsageKeyDto, ProductBaseUsageDto> productBaseUsageMap = new HashMap<>();
     private volatile Map<Long, RefundPolicyDto> refundPolicyMap = new HashMap<>();
-    private volatile Map<UseType, OverusePolicyDto> overusePolicyMap = new HashMap<>();
+    private volatile Map<Long, OverusePolicyDto> overusePolicyMap = new HashMap<>();
     private volatile Map<Long, DiscountPolicyDto> discountPolicyMap = new HashMap<>();
 
     public void updateProducts(Map<Long, BillingProductDto> newMap) {
@@ -36,7 +36,7 @@ public class BillingReferenceCache {
         this.refundPolicyMap = Collections.unmodifiableMap(newMap);
     }
 
-    public void updateOverusePolicyMaps(Map<UseType, OverusePolicyDto> newMap) {
+    public void updateOverusePolicyMaps(Map<Long, OverusePolicyDto> newMap) {
         this.overusePolicyMap = Collections.unmodifiableMap(newMap);
     }
 
@@ -56,7 +56,7 @@ public class BillingReferenceCache {
     public Map<Long, RefundPolicyDto> getRefundPolicyMap() {
         return refundPolicyMap;
     }
-    public Map<UseType, OverusePolicyDto> getOverusePolicyMap() {
+    public Map<Long, OverusePolicyDto> getOverusePolicyMap() {
         return overusePolicyMap;
     }
     public Map<Long, DiscountPolicyDto> getDiscountPolicyMap() {
