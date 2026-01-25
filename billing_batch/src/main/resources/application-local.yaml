@@ -50,4 +50,4 @@ spring:
 
 message:
   signal:
-    topic: billing-batch-done
+    topic: billing-batch-done  # 🔔신호 발행 토픽
