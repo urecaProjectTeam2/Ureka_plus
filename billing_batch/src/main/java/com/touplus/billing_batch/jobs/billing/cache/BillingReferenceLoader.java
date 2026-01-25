@@ -3,6 +3,7 @@ package com.touplus.billing_batch.jobs.billing.cache;
 import com.touplus.billing_batch.common.BillingFatalException;
 import com.touplus.billing_batch.domain.dto.*;
 import com.touplus.billing_batch.domain.entity.DiscountPolicy;
+import com.touplus.billing_batch.domain.enums.UseType;
 import com.touplus.billing_batch.domain.repository.service.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,11 +54,11 @@ public class BillingReferenceLoader {
             throw BillingFatalException.cacheNotFound("할인 마스터 데이터가 존재하지 않습니다.");
         }
 
-        Map<Long, ProductBaseUsageDto> productBaseUsageMap =
+        Map<UsageKeyDto, ProductBaseUsageDto> productBaseUsageMap =
                 productBaseUsageRepository.findAll().stream()
                         .map(ProductBaseUsageDto::fromEntity)
                         .collect(Collectors.toMap(
-                                ProductBaseUsageDto::getProductBaseUsageId,
+                                d -> new UsageKeyDto(d.getProductId(), d.getUseType()),
                                 d -> d
                         ));
 
@@ -69,7 +70,7 @@ public class BillingReferenceLoader {
                 refundPolicyRepository.findAll().stream()
                         .map(RefundPolicyDto::fromEntity)
                         .collect(Collectors.toMap(
-                                RefundPolicyDto::getRefundPolicyId,
+                                RefundPolicyDto::getProductId,
                                 d -> d
                         ));
 
@@ -77,11 +78,11 @@ public class BillingReferenceLoader {
             throw BillingFatalException.cacheNotFound("환불 정책 데이터가 존재하지 않습니다.");
         }
 
-        Map<Long, OverusePolicyDto> overusePolicyMap =
+        Map<UseType, OverusePolicyDto> overusePolicyMap =
                 overusePolicyRepository.findAll().stream()
                         .map(OverusePolicyDto::fromEntity)
                         .collect(Collectors.toMap(
-                                OverusePolicyDto::getOverusePolicyId,
+                                OverusePolicyDto::getUseType,
                                 d -> d
                         ));
 

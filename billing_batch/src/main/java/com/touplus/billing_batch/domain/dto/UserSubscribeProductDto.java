@@ -16,7 +16,7 @@ public class UserSubscribeProductDto {
 
     private Long userSubscribeProductId;
     private LocalDate createdMonth;
-    private LocalDateTime deletedAt;
+    private LocalDate deletedAt;
     private Long userId;
     private Long productId;
 

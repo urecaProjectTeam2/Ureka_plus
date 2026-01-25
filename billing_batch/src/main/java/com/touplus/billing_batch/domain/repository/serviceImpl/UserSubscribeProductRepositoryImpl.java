@@ -32,7 +32,7 @@ public class UserSubscribeProductRepositoryImpl
                         rs.getObject("created_month", LocalDate.class)
                 )
                 .deletedAt(
-                        rs.getObject("deleted_at", LocalDateTime.class)
+                        rs.getObject("deleted_at", LocalDate.class)
                 )
                 .userId(rs.getLong("user_id"))
                 .productId(rs.getLong("product_id"))

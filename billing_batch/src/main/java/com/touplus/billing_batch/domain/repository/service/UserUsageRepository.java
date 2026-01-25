@@ -6,8 +6,8 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface UserUsageRepository {
-    List<UserUsage> findByUserIdAndPeriod(
-            Long userId,
+    List<UserUsage> findByUserIdIn(
+            List<Long> userIds,
             LocalDate startDate,
             LocalDate endDate
     );

@@ -21,7 +21,7 @@ public class UserSubscribeProduct {
     private LocalDate createdMonth;
 
     @Column(name = "deleted_at")
-    private LocalDateTime deletedAt;
+    private LocalDate deletedAt;
 
     @Column(name = "user_id", nullable = false)
     private Long userId;

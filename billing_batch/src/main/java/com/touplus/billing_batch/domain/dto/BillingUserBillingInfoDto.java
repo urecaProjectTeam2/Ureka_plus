@@ -4,6 +4,7 @@ import lombok.*;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Setter
@@ -20,6 +21,8 @@ public class BillingUserBillingInfoDto {
     private List<AdditionalChargeDto> additionalCharges = new ArrayList<>();
     @Builder.Default
     private List<UserSubscribeDiscountDto> discounts = new ArrayList<>();
+    @Builder.Default
+    private List<UserUsageDto> usage = new ArrayList<>();
 
     private Integer numOfMember;
 }

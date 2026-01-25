@@ -29,34 +29,33 @@ public class UserUsageRepositoryImpl implements UserUsageRepository {
     }
 
     @Override
-    public List<UserUsage> findByUserIdAndPeriod(
-            Long userId,
+    public List<UserUsage> findByUserIdIn(
+            List<Long> userIds,
             LocalDate startDate,
             LocalDate endDate
     ) {
-        String sql = """
-            SELECT
-                user_usage_id,
-                user_id,
-                use_month,
-                use_type,
-                use_amount
-            FROM user_usage
-            WHERE user_id = :userId
-              AND use_month BETWEEN :startDate AND :endDate
-            ORDER BY use_type
-        """;
+        if (userIds == null || userIds.isEmpty()) {
+            return List.of(); // 빈 리스트 반환
+        }
 
+        String sql = """
+        SELECT
+            user_usage_id,
+            user_id,
+            use_month,
+            use_type,
+            use_amount
+        FROM user_usage
+        WHERE user_id IN (:userIds)
+          AND use_month BETWEEN :startDate AND :endDate
+        ORDER BY user_id, use_type
+    """;
 
         MapSqlParameterSource params = new MapSqlParameterSource()
-                .addValue("userId", userId)
+                .addValue("userIds", userIds)
                 .addValue("startDate", startDate)
                 .addValue("endDate", endDate);
 
-        return namedJdbcTemplate.query(
-                sql,
-                params,
-                this::mapRow
-        );
+        return namedJdbcTemplate.query(sql, params, this::mapRow);
     }
 }
