@@ -4,6 +4,8 @@ import com.touplus.billing_api.admin.dto.MessageTemplateRequest;
 import com.touplus.billing_api.admin.service.MessageTemplateService;
 import com.touplus.billing_api.domain.message.entity.MessageTemplate;
 import com.touplus.billing_api.domain.message.enums.MessageType;
+
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -19,14 +21,12 @@ public class AdminMessageTemplateController {
 
     private final MessageTemplateService messageTemplateService;
 
-    // ===================== Thymeleaf 한 페이지 =====================
-    /**
-     * 템플릿 CRUD 한 페이지
-     */
+    // 타임리프
     @GetMapping("/templates/management")
     public String templateManagementPage(
             @RequestParam(value = "messageType", required = false) String messageType,
-            Model model
+            Model model,
+            HttpServletRequest request
     ) {
         List<MessageTemplate> templates;
 
@@ -46,7 +46,7 @@ public class AdminMessageTemplateController {
     }
 
 
-    // ===================== REST API (Ajax용) =====================
+    // crud
     @PostMapping("/templates")
     @ResponseBody
     public Long createTemplateApi(@RequestBody @Valid MessageTemplateRequest request) {

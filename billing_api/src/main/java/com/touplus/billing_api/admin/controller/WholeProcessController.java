@@ -16,6 +16,7 @@ import com.touplus.billing_api.admin.entity.BatchProcessEntity;
 import com.touplus.billing_api.admin.entity.MessageProcessEntity;
 import com.touplus.billing_api.admin.service.WholeProcessService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @Controller
@@ -26,7 +27,7 @@ public class WholeProcessController {
     private final WholeProcessService wholeProcessService;
 
     @GetMapping("/dashboard")
-    public String dashboard(Model model) {
+    public String dashboard(Model model, HttpServletRequest request) {
         model.addAttribute("batch", wholeProcessService.getBatchStatus());
         model.addAttribute("message", wholeProcessService.getMessageStatus());
         model.addAttribute("whole", wholeProcessService.getWholeProcessStatus());

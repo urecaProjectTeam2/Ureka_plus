@@ -13,6 +13,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.touplus.billing_api.domain.message.dto.MessageStatusSummaryDto;
 import com.touplus.billing_api.domain.message.service.MessageDashBoardService;
 
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 
 @Controller
@@ -24,7 +25,7 @@ public class MessageDashBoardController {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @GetMapping("/dashboard")
-    public String dashboard(org.springframework.ui.Model model) {
+    public String dashboard(org.springframework.ui.Model model, HttpServletRequest request) {
         model.addAttribute("summary", messageDashBoardService.getMessageStatusSummary());
         return "message-dashboard";
     }

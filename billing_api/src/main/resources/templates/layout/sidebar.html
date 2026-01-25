@@ -3,7 +3,10 @@
 <body>
 
 <div class="sidebar" th:fragment="sidebar">
-    <h1>관리자 대시보드</h1>
+	<div class="sidebar-header">
+	    <span class="logo-icon">📊</span>
+	    <span class="logo-text">To U+</span>
+	</div>
     <ul>
         <li><a th:href="@{/admin/process/dashboard}">대시보드</a></li>
         <li><a th:href="@{/admin/batch/dashboard}">배치 대시보드</a></li>
@@ -13,7 +16,8 @@
             <a href="#">사용자 대시보드 ▾</a>
             <ul class="dropdown">
                 <li><a th:href="@{/admin/process/dashboard}">사용자별 정산 결과</a></li>
-                <li><a th:href="@{/admin/process/dashboard}">TOP 10</a></li>
+                <li><a th:href="@{/admin/users/products/bar}">구독 TOP 7</a></li>
+                <li><a th:href="@{/admin/users/products/donut}">전체 구독 분포</a></li>
             </ul>
         </li>
 

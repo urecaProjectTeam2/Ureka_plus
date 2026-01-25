@@ -72,7 +72,7 @@ public class WholeProcessServiceImpl implements WholeProcessService {
 
         LocalDate settlementMonth = getLastMonth();
 
-        long total = messageRepo.countTotal(settlementMonth);
+        long total = messageRepo.countTotal();
 
         long batch = batchRepo.countBatch(settlementMonth);
         long kafkaSent = batchRepo.countKafkaSent(settlementMonth);

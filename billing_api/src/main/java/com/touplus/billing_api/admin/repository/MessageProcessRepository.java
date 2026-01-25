@@ -17,6 +17,6 @@ public interface MessageProcessRepository {
 
     long countSentMessage(LocalDate settlementMonth);
 
-    long countTotal(LocalDate settlementMonth);
+    long countTotal();
 
 }

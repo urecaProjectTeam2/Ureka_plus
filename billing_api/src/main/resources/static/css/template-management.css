@@ -120,9 +120,27 @@ h1 {
 #btnAddTemplate {
     background-color: #6cb2eb;   /* 연한 블루 */
     border-color: #6cb2eb;
+    
 }
 
 #btnAddTemplate:hover {
     background-color: #5aa3e0;
     border-color: #5aa3e0;
 }
+
+.optionAndBtn{
+	display: flex !important;;
+    justify-content: space-between; /* 양 끝으로 */
+    align-items: center;            /* 세로 가운데 */
+    width: 100%;
+    
+}
+
+.btnAndOption{
+    display: flex;
+    align-items: center;
+}
+
+
+
+

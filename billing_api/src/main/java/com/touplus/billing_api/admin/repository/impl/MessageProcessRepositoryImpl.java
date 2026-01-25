@@ -102,12 +102,10 @@ public class MessageProcessRepositoryImpl implements MessageProcessRepository {
     }
 
     @Override
-    public long countTotal(LocalDate settlementMonth) {
+    public long countTotal() {
         String sql = """
-            SELECT COUNT(*)
-            FROM billing_message.billing_snapshot
-            WHERE settlement_month = ?
+           SELECT count(*) FROM billing_message.users;
         """;
-        return jdbcTemplate.queryForObject(sql, Long.class, settlementMonth);
+        return jdbcTemplate.queryForObject(sql, Long.class);
     }
 }

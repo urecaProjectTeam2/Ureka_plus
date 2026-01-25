@@ -1,0 +1,38 @@
+
+h1 {
+    text-align: center;
+    margin-bottom: 40px;
+    font-size: 30px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.card {
+    background-color: #ffffff;
+    padding: 24px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08); /* 그림자 부드럽게 */
+    height:480px;
+}
+
+.chart-box {
+    display: flex;
+    gap: 60px;
+    padding-left: 80px;
+    align-items: flex-start; 
+}
+
+.chart-wrapper {
+    position: relative;
+}
+
+.donut-wrapper {
+    width: 400px;
+    height: 400px;
+}
+
+canvas {
+    width: 100% !important;
+    height: 100% !important;
+}

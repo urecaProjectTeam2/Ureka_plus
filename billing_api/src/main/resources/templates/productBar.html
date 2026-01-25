@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>메시지 발송 현황 | 관리자</title>
+    <link rel="stylesheet" th:href="@{/css/productBar.css}">
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+
+<body>
+<div th:replace="layout/sidebar :: sidebar"></div>
+<div class="container">
+    <div class="chart-box">
+    	<div class ="card">
+        	<!-- 막대 그래프 -->	
+			<div class="chart-wrapper bar-wrapper">
+			    <h3>구독자 수 Top 7 상품</h3>
+			    <canvas id="barChart"></canvas>
+			</div>
+		</div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script th:inline="javascript">
+
+	const barLabels = [[${barLabels}]];
+	const barData = [[${barData}]];
+		
+	new Chart(document.getElementById('barChart'), {
+	    type: 'bar',
+	    data: {
+	        labels: barLabels,
+	        datasets: [{
+	            label: '구독자 수',
+	            data: barData
+	        }]
+	    },
+	    options: {
+	        maintainAspectRatio: false,
+	        plugins: {
+	            tooltip: {
+	                enabled: true,
+	                callbacks: {
+	                    label: function(context) {
+	                        return '구독자 수: ' + context.raw;
+	                    }
+	                }
+	            },
+	            legend: {
+	                display: false
+	            }
+	        }
+	    }
+	});
+	
+
+</script>
+
+
+</body>
+</html>

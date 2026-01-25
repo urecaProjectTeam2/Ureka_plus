@@ -12,23 +12,26 @@
 <div class="container">
     <h1>템플릿 관리</h1>
 
-	<!-- 필터 -->
-	<form id="filterForm">
-	    <label>메시지 타입:</label>
-	    <select id="messageType" onchange="filterTemplates()">
-	        <option value="">전체</option>
-			<option th:each="type : ${messageTypes}"
-			        th:value="${type}"
-			        th:text="${type}"
-			        th:selected="${type.name() == selectedType}">
-			</option>
-	    </select>
-	</form>
-    <!-- 추가 버튼 -->
-    <button type="button" id="btnAddTemplate" class="btn btn-primary mt-2">
-        템플릿 추가
-    </button>
-
+<div class="optionAndBtn">
+	<div class="btnAndOption">
+		<form id="filterForm">
+		    <label>메시지 타입:</label>
+		    <select id="messageType" onchange="filterTemplates()">
+		        <option value="">전체</option>
+				<option th:each="type : ${messageTypes}"
+				        th:value="${type}"
+				        th:text="${type}"
+				        th:selected="${type.name() == selectedType}">
+				</option>
+		    </select>
+		</form>
+	</div>
+   	<div class="btnAndOption">
+   	    <button type="button" id="btnAddTemplate" class="btn btn-primary mt-2">
+	        템플릿 추가
+	    </button>
+    </div>
+</div>
 <!-- 템플릿 목록 -->
 <table id="templateTable">
     <thead>

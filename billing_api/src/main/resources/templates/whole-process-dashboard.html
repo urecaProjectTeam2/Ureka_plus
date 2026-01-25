@@ -21,7 +21,7 @@
             <span class="step-name">
                 총 데이터
                 <small>
-                    <span class="totalCount">0</span>건
+                    <span class="totalCount" id="totalCount"></span>건
                 </small>
             </span>
         </div>
@@ -32,9 +32,9 @@
             <span class="step-name">
                 Batch Job 진행 상태
                 <small>
-                    ( <span id="batchCount">0</span>
-                    / <span class="totalCount">0</span> )
-                    · <span class="batchRate">0</span>%
+                    ( <span id="batchCount"></span>
+                    / <span class="totalCount" id="totalCount"></span> )
+                    · <span class="batchRate" id="batchRate"></span>%
                 </small>
             </span>
             <span id="batchJob" class="status waited"></span>
@@ -48,9 +48,9 @@
             <span class="step-name">
                 Kafka Sent 진행 상태
                 <small>
-                    ( <span id="kafkaSentCount">0</span>
-                    / <span class="totalCount">0</span> )
-                    · <span class="kafkaSentRate">0</span>%
+                    ( <span id="kafkaSentCount"></span>
+                    / <span class="totalCount" id="totalCount"></span> )
+                    · <span class="kafkaSentRate" id="kafkaSentRate"></span>%
                 </small>
             </span>
             <span id="batchKafkaSent" class="status waited"></span>
@@ -67,9 +67,9 @@
             <span class="step-name">
                 Kafka Receive 진행 상태
                 <small>
-                    ( <span id="kafkaReceiveCount">0</span>
-                    / <span class="totalCount">0</span> )
-                    · <span class="kafkaReceiveRate">0</span>%
+                    ( <span id="kafkaReceiveCount"></span>
+                    / <span class="totalCount" id="totalCount"></span> )
+                    · <span class="kafkaReceiveRate" id="kafkaReceiveRate"></span>%
                 </small>
             </span>
             <span id="messageKafkaReceive" class="status waited"></span>
@@ -83,9 +83,9 @@
             <span class="step-name">
                 Create Message 진행 상태
                 <small>
-                    ( <span id="createMessageCount">0</span>
-                    / <span class="totalCount">0</span> )
-                    · <span class="createMessageRate">0</span>%
+                    ( <span id="createMessageCount"></span>
+                    / <span class="totalCount" id="totalCount"></span> )
+                    · <span class="createMessageRate" id="createMessageRate"></span>%
                 </small>
             </span>
             <span id="messageCreateMessage" class="status waited"></span>
@@ -99,9 +99,9 @@
             <span class="step-name">
                 Sent Message 진행 상태
                 <small>
-                    ( <span id="sentMessageCount">0</span>
-                    / <span class="totalCount">0</span> )
-                    · <span class="sentMessageRate">0</span>%
+                    ( <span id="sentMessageCount"></span>
+                    / <span class="totalCount" id="totalCount"></span> )
+                    · <span class="sentMessageRate" id="sentMessageRate"></span>%
                 </small>
             </span>
             <span id="messageSentMessage" class="status waited"></span>
@@ -211,8 +211,22 @@ document.addEventListener('DOMContentLoaded', function() {
             if (data.kafkaSentCount !== undefined) document.getElementById('kafkaSentCount').textContent = data.kafkaSentCount;
             if (data.kafkaReceiveCount !== undefined) document.getElementById('kafkaReceiveCount').textContent = data.kafkaReceiveCount;
             if (data.createMessageCount !== undefined) document.getElementById('createMessageCount').textContent = data.createMessageCount;
+            
+
+            if (data.batchRate !== undefined) animateNumber('batchRate', data.batchRate, 2);
+            if (data.kafkaSentRate !== undefined) animateNumber('kafkaSentRate', data.kafkaSentRate, 2);
+            if (data.kafkaReceiveRate !== undefined) animateNumber('kafkaReceiveRate', data.kafkaReceiveRate, 2);
+            if (data.createMessageRate !== undefined) animateNumber('createMessageRate', data.createMessageRate, 2);
+            if (data.sentMessageRate !== undefined) animateNumber('sentMessageRate', data.sentMessageRate, 2);
+
+            if (data.totalCount !== undefined) document.getElementById('totalCount').textContent = data.totalCount;
 
             container.style.visibility = 'visible';
+
+            console.log("data.batchRat" + data.batchRate);
+            console.log("data.createMessageRate" + data.createMessageRate);
+            console.log("data.sentMessageRate" + data.sentMessageRate);
+            console.log("data.totalCount" + data.totalCount);
         } catch (e) {
             console.error('SSE 업데이트 오류:', e);
         }
