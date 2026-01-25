@@ -21,7 +21,7 @@ import lombok.extern.slf4j.Slf4j;
  * [비활성화] Redis ZSet 기반으로 전환됨
  * - MessageDispatchScheduler에서 Redis 폴링 + 직접 발송 처리
  */
-// @Component  // 비활성화
+// @Component // 비활성화
 @RequiredArgsConstructor
 @Slf4j
 public class MessageSendWorker {
@@ -66,8 +66,8 @@ public class MessageSendWorker {
                 Long messageId = delayed.getMessageId();
 
                 // 스냅샷 조회
-                MessageSnapshotJdbcRepository.MessageSnapshotDto snapshotDto = 
-                    messageSnapshotJdbcRepository.findById(messageId);
+                MessageSnapshotJdbcRepository.MessageSnapshotDto snapshotDto = messageSnapshotJdbcRepository
+                        .findById(messageId);
 
                 if (snapshotDto == null) {
                     log.warn("스냅샷 없음: messageId={}", messageId);
@@ -76,17 +76,16 @@ public class MessageSendWorker {
 
                 // DTO → Entity 변환
                 MessageSnapshot snapshot = new MessageSnapshot(
-                    snapshotDto.messageId(),
-                    snapshotDto.billingId(),
-                    snapshotDto.settlementMonth(),
-                    snapshotDto.userId(),
-                    snapshotDto.userName(),
-                    snapshotDto.userEmail(),
-                    snapshotDto.userPhone(),
-                    snapshotDto.totalPrice(),
-                    snapshotDto.settlementDetails(),
-                    snapshotDto.messageContent()
-                );
+                        snapshotDto.messageId(),
+                        snapshotDto.billingId(),
+                        snapshotDto.settlementMonth(),
+                        snapshotDto.userId(),
+                        snapshotDto.userName(),
+                        snapshotDto.userEmail(),
+                        snapshotDto.userPhone(),
+                        snapshotDto.totalPrice(),
+                        snapshotDto.settlementDetails(),
+                        snapshotDto.messageContent());
 
                 // 발송
                 MessageType type = MessageType.EMAIL;
@@ -112,11 +111,11 @@ public class MessageSendWorker {
     public void stop() {
         log.info("MessageSendWorker 종료 시작");
         running.set(false);
-        
+
         if (workerPool != null) {
             workerPool.shutdownNow();
         }
-        
+
         // 남은 결과 플러시
         sendResultBuffer.flush();
         log.info("MessageSendWorker 종료 완료");

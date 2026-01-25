@@ -29,7 +29,8 @@ public class MessageProcessService {
     /**
      * 발송 결과 DTO
      */
-    public record ProcessResult(Long messageId, boolean success) {}
+    public record ProcessResult(Long messageId, boolean success) {
+    }
 
     // 스냅샷 이미 다 생성된 후의 발송 처리
     @Transactional

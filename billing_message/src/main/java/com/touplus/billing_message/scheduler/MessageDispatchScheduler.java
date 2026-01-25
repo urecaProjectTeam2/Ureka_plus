@@ -8,7 +8,6 @@ import com.touplus.billing_message.sender.MessageSender;
 import com.touplus.billing_message.sender.SendResult;
 import com.touplus.billing_message.service.SendLogBufferService;
 import com.touplus.billing_message.service.WaitingQueueService;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,7 +31,6 @@ import java.util.stream.Collectors;
  * - 5개 스케줄러가 60ms 간격으로 시작하여 병렬 처리
  */
 @Component
-@RequiredArgsConstructor
 @Slf4j
 public class MessageDispatchScheduler {
 
@@ -40,8 +38,20 @@ public class MessageDispatchScheduler {
     private final MessageJdbcRepository messageJdbcRepository;
     private final MessageSender messageSender;
     private final SendLogBufferService sendLogBufferService;
-    @Qualifier("messageDispatchTaskExecutor")
     private final Executor messageDispatchTaskExecutor;
+
+    public MessageDispatchScheduler(
+            WaitingQueueService waitingQueueService,
+            MessageJdbcRepository messageJdbcRepository,
+            MessageSender messageSender,
+            SendLogBufferService sendLogBufferService,
+            @Qualifier("messageDispatchTaskExecutor") Executor messageDispatchTaskExecutor) {
+        this.waitingQueueService = waitingQueueService;
+        this.messageJdbcRepository = messageJdbcRepository;
+        this.messageSender = messageSender;
+        this.sendLogBufferService = sendLogBufferService;
+        this.messageDispatchTaskExecutor = messageDispatchTaskExecutor;
+    }
 
     @Value("${message.dispatch.batch-size:500}")
     private int batchSize;

@@ -52,7 +52,8 @@ public class WaitingQueueService {
 
     /**
      * 대기열에 메시지 추가
-     * @param messageId 메시지 ID
+     * 
+     * @param messageId   메시지 ID
      * @param scheduledAt 발송 예정 시간 (null이면 즉시 발송)
      */
     public void addToQueue(Long messageId, LocalDateTime scheduledAt) {
@@ -85,8 +86,9 @@ public class WaitingQueueService {
     /**
      * Redis Pipeline으로 대기열에 메시지 일괄 추가
      * - N번 네트워크 왕복 → 1번으로 감소
+     * 
      * @param messageIdScheduledAtMap messageId → scheduledAt 매핑
-     * @param delaySeconds 추가 지연 시간 (초)
+     * @param delaySeconds            추가 지연 시간 (초)
      */
     public void addToQueueBatch(Map<Long, LocalDateTime> messageIdScheduledAtMap, long delaySeconds) {
         if (messageIdScheduledAtMap == null || messageIdScheduledAtMap.isEmpty()) {
@@ -124,8 +126,8 @@ public class WaitingQueueService {
         long now = System.currentTimeMillis() / 1000;
         double score = now;
 
-        Set<ZSetOperations.TypedTuple<String>> last =
-                redisTemplate.opsForZSet().reverseRangeWithScores(QUEUE_KEY, 0, 0);
+        Set<ZSetOperations.TypedTuple<String>> last = redisTemplate.opsForZSet().reverseRangeWithScores(QUEUE_KEY, 0,
+                0);
         if (last != null && !last.isEmpty()) {
             ZSetOperations.TypedTuple<String> tuple = last.iterator().next();
             if (tuple != null && tuple.getScore() != null && tuple.getScore() >= score) {
@@ -142,7 +144,7 @@ public class WaitingQueueService {
         return scheduledAt;
     }
 
-    private static final long RETRY_DELAY_SECONDS = 5;  // 재시도 지연 시간
+    private static final long RETRY_DELAY_SECONDS = 5; // 재시도 지연 시간
 
     /**
      * 실패 메시지 일괄 재큐잉 (Pipeline) - 고정 지연 방식
@@ -180,6 +182,7 @@ public class WaitingQueueService {
 
     /**
      * 발송 가능한 메시지 ID 조회 (현재 시간 이전)
+     * 
      * @param limit 최대 조회 건수
      * @return 발송 가능한 메시지 ID 목록
      */
