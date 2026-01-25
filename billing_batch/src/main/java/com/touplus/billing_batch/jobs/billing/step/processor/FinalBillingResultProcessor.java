@@ -40,6 +40,19 @@ public class FinalBillingResultProcessor
     @Override
     public BillingResult process(BillingWorkDto work) throws Exception {
 
+        // 10원 미만 처리
+        long totalSum = Math.round(work.getTotalPrice());
+        int underTen = (int)(totalSum % 10);
+        int totalPrice = (int)(totalSum - underTen);
+
+        DetailItem detailUnderTen = DetailItem.builder()
+                .productName("10원 미만 할인")
+                .productType("DISCOUNT_UNDERTEN")
+                .price(underTen)
+                .build();
+
+        work.getDiscounts().add(detailUnderTen);
+
         // 상세 내역 구성
         SettlementDetailsDto settlementDetailsDto = SettlementDetailsDto.builder()
                 .mobile(work.getMobile())
@@ -55,7 +68,7 @@ public class FinalBillingResultProcessor
         return BillingResult.builder()
                 .userId(work.getRawData().getUserId())
                 .settlementMonth(LocalDate.parse(targetMonth))
-                .totalPrice((int)work.getTotalPrice())
+                .totalPrice(totalPrice)
                 .settlementDetails(detailsJson)
                 .sendStatus(SendStatus.READY)
                 .batchExecutionId(jobExecutionId)

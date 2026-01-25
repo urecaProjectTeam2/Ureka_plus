@@ -2,6 +2,7 @@ package com.touplus.billing_batch.jobs.billing.step.listener;
 
 import com.touplus.billing_batch.common.BillingException;
 import com.touplus.billing_batch.common.BillingFatalException;
+import com.touplus.billing_batch.common.BillingFileRedirectionLogger;
 import com.touplus.billing_batch.domain.entity.BillingErrorLog;
 import com.touplus.billing_batch.domain.enums.ErrorType;
 import lombok.RequiredArgsConstructor;
@@ -25,16 +26,24 @@ public class BillingStepListener implements StepExecutionListener {
 
     private final BillingErrorLogger billingErrorLogger;
     private StepExecution stepExecution;
+    private final BillingFileRedirectionLogger fileLogger;
 
     // Step 시작 시점에 StepExecution을 주입받음
     @Override
     public void beforeStep(StepExecution stepExecution) {
         this.stepExecution = stepExecution;
+        fileLogger.write("--- [Step 시작] " + stepExecution.getStepName() + " ---");
     }
 
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public ExitStatus afterStep(StepExecution stepExecution){
+        // 스탭 종료 시 처리 통계 --> 파일에 리다이렉션
+        fileLogger.write(String.format("--- [Step 종료] %s ---", stepExecution.getStepName()));
+        fileLogger.write(String.format("- 최종 상태: %s", stepExecution.getStatus()));
+        fileLogger.write(String.format("- 읽기 건수: %d", stepExecution.getReadCount()));
+        fileLogger.write(String.format("- 쓰기 성공: %d", stepExecution.getWriteCount()));
+        fileLogger.write(String.format("- 스킵 건수: %d", stepExecution.getSkipCount()));
         // step 성공 시 배치 작업으로 돌아가기
         if (stepExecution.getStatus() != BatchStatus.FAILED) {
             return stepExecution.getExitStatus();
@@ -51,6 +60,8 @@ public class BillingStepListener implements StepExecutionListener {
 
         Long userId = (t instanceof BillingFatalException bfe) ? bfe.getUserId()
                 : (t instanceof BillingException be) ? be.getUserId() : 0L;
+
+        fileLogger.write(String .format("[ERROR 발생] 단계: %s, 사용자 ID: %d, 메세지 %s",phase,userId,t.getMessage()));
 
         log.error(">> [Stop In {}] UserId: {}, Reason: {}", phase, userId, t.getMessage());
         billingErrorLogger.saveErrorLog(stepExecution, userId, t, phase, false);

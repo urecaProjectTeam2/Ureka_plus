@@ -121,7 +121,7 @@ public class AmountCalculationProcessor
             DetailItem detail = DetailItem.builder()
                     .productType(productType.name().toUpperCase())
                     .productName(productName)
-                    .price(price)
+                    .price((int)price)
                     .build();
 
             // 상세 내역 생성 (JSON 최종용)
@@ -161,7 +161,7 @@ public class AmountCalculationProcessor
             workDto.getAddon().add(DetailItem.builder()
                     .productType("ADDITIONAL_CHARGE")
                     .productName(ac.getCompanyName())
-                    .price((double)ac.getPrice())
+                    .price(ac.getPrice())
                     .build());
         }
 
@@ -212,17 +212,14 @@ public class AmountCalculationProcessor
                 workDto.getAddon().add(DetailItem.builder()
                         .productType("OVERUSE_CHARGE")
                         .productName(us.getUseType().name() + "초과 요금")
-                        .price(overCharge)
+                        .price((int)overCharge)
                         .build());
             }
         }
 
-        // 4.           -> 값이 있으면 -> 사용자 사용량 - 기본 사용량
-        // 5. if) 추가 요금이 있으면, 추가요금 정책에 따라 청구요금 계산
-
         // 정산 로직 이상 탐지
         double baseAmount = productSum + additionalSum;
-        if (productSum < 0 || additionalSum < 0 || baseAmount < 0 || baseAmount > Integer.MAX_VALUE) {
+        if (productSum < 0 || additionalSum < 0 || baseAmount < 0) {
             throw BillingFatalException.invalidProductAmount(item.getUserId(), productSum, additionalSum, baseAmount);
         }
 

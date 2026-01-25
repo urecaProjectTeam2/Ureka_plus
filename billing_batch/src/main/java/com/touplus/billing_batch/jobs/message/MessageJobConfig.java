@@ -4,6 +4,7 @@ import com.touplus.billing_batch.domain.dto.BillingResultDto;
 import com.touplus.billing_batch.jobs.message.step.MessageSkipListener;
 import com.touplus.billing_batch.jobs.message.step.MessageStepLogger;
 import com.touplus.billing_batch.jobs.message.step.TopicCreateTasklet;
+import com.touplus.billing_batch.jobs.message.step.listener.MessageJobListener;
 import com.touplus.billing_batch.jobs.message.step.writer.MessageItemWriter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
@@ -38,12 +39,14 @@ public class MessageJobConfig {
     private final MessageSkipListener messageSkipListener;
     private final MessageStepLogger messageStepLogger;
     private final TopicCreateTasklet topicCreateTasklet;
+    private final MessageJobListener messageJobListener;
     private final int chunkSize = 2500;     // 1000 --> 2500개로 상향(ItemReader 와 맞춤)
 
     @Bean
     public Job messageJob(@Qualifier("createTopicStep") Step createTopicStep,
                           @Qualifier("messageJobStep") Step messageStepInstance) {
         return new JobBuilder("messageJob", jobRepository)
+                .listener(messageJobListener)
                 .start(createTopicStep)      // 1. 토픽 생성 (TopicCreateTasklet 실행)
                 .next(messageStepInstance)   // 2. 메시지 발송 실행
                 .build();

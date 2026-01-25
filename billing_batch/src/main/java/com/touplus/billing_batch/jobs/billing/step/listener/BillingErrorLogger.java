@@ -47,6 +47,28 @@ public class BillingErrorLogger {
 
         errorLogRepository.save(errorLog);
     }
+    public void saveForKafkaJobLevel(
+            JobExecution jobExecution,
+            Long userId,
+            Throwable t,
+            String phase,
+            ErrorType forcedType
+    ) {
+        StepExecution fakeStep = jobExecution.getStepExecutions()
+                .stream()
+                .findFirst()
+                .orElseThrow();
+
+        saveErrorLog(
+                fakeStep,
+                userId,
+                t,
+                phase,
+                false,
+                forcedType
+        );
+    }
+
     // 기본 5개 파라미터를 사용하는 메서드
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void saveErrorLog(StepExecution stepExecution, Long userId, Throwable t, String stepPhase, boolean resolved) {

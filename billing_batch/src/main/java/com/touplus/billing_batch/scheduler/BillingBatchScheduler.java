@@ -50,6 +50,12 @@ public class BillingBatchScheduler {
 
             jobLauncher.run(billingJob, params);
 
+            // DB에 기록
+
+
+            // kafka 호출
+            billingKafkaScheduler.runBillingKafkaJob();
+
         } catch (JobInstanceAlreadyCompleteException e) {
             log.warn("[BillingBatchScheduler] 이미 완료된 정산 작업입니다: {}", e.getMessage());
         } catch (JobExecutionAlreadyRunningException e) {

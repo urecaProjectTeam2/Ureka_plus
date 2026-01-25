@@ -48,7 +48,7 @@ public class DiscountCalculationProcessor implements ItemProcessor<BillingWorkDt
             throw BillingFatalException.cacheNotFound("할인 정보 캐싱이 이루어지지 않았습니다.");
         if (productMap == null || productMap.isEmpty())
             throw BillingFatalException.cacheNotFound("상품 정보 캐싱이 이루어지지 않았습니다.");
-        if (discountMap == null || discountMap.isEmpty()) {
+        if (discountPolicyMap == null || discountPolicyMap.isEmpty()) {
             throw BillingFatalException.cacheNotFound("할인 정책 캐싱이 이루어지지 않았습니다.");
         }
 
@@ -65,18 +65,11 @@ public class DiscountCalculationProcessor implements ItemProcessor<BillingWorkDt
                         ));
 
         // 할인금액 합산 변수
-        double totalDiscount = 0;
+        double totalDiscountSum = 0;
         int joinedYear = work.getJoinedYear();
         long userId = work.getRawData().getUserId();
 
         BillingUserMemberDto userGroup = work.getRawData().getUsers();
-
-        // 결합 할인을 위해 모바일/인터냇 보유 여부 확인용
-        boolean hasMobile = false;
-        boolean hasInternet = false;
-        long mobilePrice = 0;
-        long internetPrice = 0;
-        int skipCnt = 0;
 
         Queue<UserSubscribeDiscountDto> multi = new LinkedList<>();
         Queue<UserSubscribeDiscountDto> singleRate = new LinkedList<>();
@@ -126,22 +119,28 @@ public class DiscountCalculationProcessor implements ItemProcessor<BillingWorkDt
                 if ("group".equals(contentType)) {
                     if (userGroup == null || userGroup.getGroupId() == null ||
                             userGroup.getGroupNumOfMember() != configValue ||
-                            userGroup.getUserNumOfMember() != configValue){
+                            userGroup.getUserNumOfMember() != configValue) {
                         throw BillingException.invalidDiscountCondition(userId, discount.getDiscountId());
                     }
                 }
                 Long productId = usd.getProductId();
                 // map 안의 price에서 할인 금액 빼기
                 // 할인 금액
-                double discountAmount = discountMap.get(usd.getDiscountId()).getCash();
+                double discountAmount = discountMap.get(usd.getDiscountId()).getCash() * -1;
                 double nowProductPrice = productPriceMap.get(productId);
-                productPriceMap.replace(productId, nowProductPrice - discountAmount);
 
-                // totalDiscount에 할인 금액 더하기
-                totalDiscount += discountAmount;
+                productPriceMap.replace(productId, Math.max(0, nowProductPrice + discountAmount));
 
                 // 할인 상세내역 기록
-                saveDiscountDetails(work, discountPolicy.getDiscountRange(), discount.getDiscountName(), discountAmount);
+                if (discountAmount > nowProductPrice) {
+                    // totalDiscount에 할인 금액 더하기
+                    totalDiscountSum += (nowProductPrice * -1);
+                    saveDiscountDetails(work, discountPolicy.getDiscountRange(), discount.getDiscountName(), nowProductPrice * -1);
+                }else {
+                    // totalDiscount에 할인 금액 더하기
+                    totalDiscountSum += discountAmount;
+                    saveDiscountDetails(work, discountPolicy.getDiscountRange(), discount.getDiscountName(), discountAmount);
+                }
             }
             // 2. Single Ratio
             else if (discountPolicy.getCalOrder() == CalOrderType.SINGLE && discount.getIsCash() == DiscountType.RATE) {
@@ -172,15 +171,19 @@ public class DiscountCalculationProcessor implements ItemProcessor<BillingWorkDt
                 throw BillingException.invalidDiscountData(userId, String.valueOf(usd.getDiscountId()));
             }
 
-            double originalProductPrice = product.getPrice();  // 원가
-            double calculateDiscount = (originalProductPrice * discountPercent) / 100.0;    // 할인액
+            double nowProductPrice = productPriceMap.get(usd.getProductId());  // map에 등록된 가격
+            if(nowProductPrice <= 0) continue;
 
-            double nowProductPrice = productPriceMap.get(usd.getProductId());
-            productPriceMap.replace(usd.getProductId(), nowProductPrice - calculateDiscount);
+            double calculateDiscount = ((nowProductPrice * discountPercent) / 100.0) * -1;    // 할인액
+            productPriceMap.replace(usd.getProductId(), Math.max(0, nowProductPrice + calculateDiscount));
 
-            totalDiscount += calculateDiscount;
-
-            saveDiscountDetails(work, discountPolicy.getDiscountRange(), discount.getDiscountName(), calculateDiscount);
+            if(calculateDiscount > nowProductPrice){
+                totalDiscountSum += (nowProductPrice * -1);
+                saveDiscountDetails(work, discountPolicy.getDiscountRange(), discount.getDiscountName(), nowProductPrice * -1);
+            }else {
+                totalDiscountSum += calculateDiscount;
+                saveDiscountDetails(work, discountPolicy.getDiscountRange(), discount.getDiscountName(), calculateDiscount);
+            }
         }
 
         // multi Queue poll
@@ -198,40 +201,50 @@ public class DiscountCalculationProcessor implements ItemProcessor<BillingWorkDt
             if (discountPolicy.getDiscountRange() == DiscountRangeType.MOBILE_INTERNET) {
                 if ("year".equals(contentType)) {
                     if (joinedYear < configValue) { // 장기 할인 혜택 오류
-                        log.error(joinedYear+" "+configValue+" "+userId);
+                        log.error(joinedYear + " " + configValue + " " + userId);
                         throw BillingException.invalidDiscountCondition(userId, discount.getDiscountId());
                     }
                 }
                 if (discount.getIsCash() == DiscountType.RATE) {
                     double discountPercent = (discountMap.get(usd.getDiscountId()).getPercent()) * 0.01;
                     double nowPrice = productPriceMap.get(usd.getProductId()); // map 기준
-                    double price = nowPrice * discountPercent;  // 할인액
+                    if(nowPrice <= 0) continue;
 
-                    productPriceMap.replace(usd.getProductId(), nowPrice - price);
-                    totalDiscount += price;
-                    saveDiscountDetails(work, discountPolicy.getDiscountRange(), discount.getDiscountName(), price);
+                    double price = (nowPrice * discountPercent) * -1;  // 할인액
+
+                    productPriceMap.replace(usd.getProductId(), nowPrice + price);
+
+
+                    if(price > nowPrice){
+                        totalDiscountSum += (nowPrice * -1);
+                        saveDiscountDetails(work, discountPolicy.getDiscountRange(), discount.getDiscountName(), nowPrice * -1);
+                    }else {
+                        totalDiscountSum += price;
+                        saveDiscountDetails(work, discountPolicy.getDiscountRange(), discount.getDiscountName(), price);
+                    }
                 }
             }
         }
 
         // 총 할인 금액 저장
-        if (totalDiscount > Integer.MAX_VALUE) {
-            throw BillingFatalException.invalidDiscountAmount(userId, totalDiscount);
+        if (Math.abs(totalDiscountSum) > Integer.MAX_VALUE) {
+            throw BillingFatalException.invalidDiscountAmount(userId, totalDiscountSum);
         }
 
-        work.setDiscountAmount(totalDiscount);
+        work.setDiscountAmount(totalDiscountSum);
         // 총 정산 금액 업데이트
-        work.setTotalPrice(Math.max(0, work.getBaseAmount() - work.getDiscountAmount()));
+        //                                  양수             +        음수
+        work.setTotalPrice(Math.max(0, work.getBaseAmount() + work.getDiscountAmount()));
 
         return work;
     }
 
-    private void saveDiscountDetails(BillingWorkDto work, DiscountRangeType discountRangeType, String discountName, double price){
+    private void saveDiscountDetails(BillingWorkDto work, DiscountRangeType discountRangeType, String discountName, double price) {
         // 할인 상세 내역 저장
         work.getDiscounts().add(SettlementDetailsDto.DetailItem.builder()
                 .productType("DISCOUNT_" + discountRangeType)
                 .productName(discountName)
-                .price(price * -1)
+                .price((int) price)
                 .build());
     }
 }

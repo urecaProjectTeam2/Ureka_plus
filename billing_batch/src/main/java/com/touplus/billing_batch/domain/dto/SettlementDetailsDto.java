@@ -33,14 +33,11 @@ public class SettlementDetailsDto {
     @Builder.Default
     private List<DetailItem> discounts = new ArrayList<>(); // 할인 내역
 
-    @Builder.Default
-    private List<DetailItem> unpaids = new ArrayList<>(); // 미납 내역
-
     @Getter
     @Builder
     public static class DetailItem {
         private String productType;
         private String productName;
-        private Double price;
+        private int price;
     }
 }
