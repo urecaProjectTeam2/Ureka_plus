@@ -5,7 +5,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 
 import com.touplus.billing_message.domain.entity.MessageSnapshot;
 import com.touplus.billing_message.domain.entity.MessageType;
@@ -19,10 +18,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * 메시지 발송 워커
- * DelayQueue에서 메시지를 꺼내 병렬로 발송 처리
+ * [비활성화] Redis ZSet 기반으로 전환됨
+ * - MessageDispatchScheduler에서 Redis 폴링 + 직접 발송 처리
  */
-@Component
+// @Component  // 비활성화
 @RequiredArgsConstructor
 @Slf4j
 public class MessageSendWorker {
