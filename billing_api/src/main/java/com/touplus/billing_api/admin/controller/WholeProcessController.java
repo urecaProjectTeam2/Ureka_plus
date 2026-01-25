@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
+import com.touplus.billing_api.admin.dto.WholeProcessDto;
 import com.touplus.billing_api.admin.entity.BatchProcessEntity;
 import com.touplus.billing_api.admin.entity.MessageProcessEntity;
 import com.touplus.billing_api.admin.service.WholeProcessService;
@@ -28,6 +29,7 @@ public class WholeProcessController {
     public String dashboard(Model model) {
         model.addAttribute("batch", wholeProcessService.getBatchStatus());
         model.addAttribute("message", wholeProcessService.getMessageStatus());
+        model.addAttribute("whole", wholeProcessService.getWholeProcessStatus());
         return "whole-process-dashboard";
     }
 
@@ -42,6 +44,7 @@ public class WholeProcessController {
                 while (true) {
                     BatchProcessEntity batch = wholeProcessService.getBatchStatus();
                     MessageProcessEntity message = wholeProcessService.getMessageStatus();
+                    WholeProcessDto whole = wholeProcessService.getWholeProcessStatus();
 
                     Map<String, Object> data = Map.of(
                         "batchJob", batch.getJob(),
@@ -53,6 +56,7 @@ public class WholeProcessController {
 
                     try {
                         emitter.send(data);
+                        emitter.send(whole);
                     } catch (IOException e) {
                         break;
                     }

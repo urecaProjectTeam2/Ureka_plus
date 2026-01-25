@@ -16,7 +16,7 @@ public class WholeProcessDto {
     
     private double batchRate;
     private double kafkaSentRate;
-    private double kafkaReceivRate;
+    private double kafkaReceiveRate;
     private double createMessageRate;
     private double sentMessageRate;
     

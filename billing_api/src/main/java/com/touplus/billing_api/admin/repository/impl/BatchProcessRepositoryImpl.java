@@ -18,35 +18,30 @@ public class BatchProcessRepositoryImpl implements BatchProcessRepository {
 
     @Override
     public ProcessType findLatestJobStatus() {
-        String sql = """
-            SELECT job
-            FROM billing_batch.batch_process
-        """;
+        String sql = "SELECT job FROM billing_batch.batch_process";
 
-        return jdbcTemplate.query(
+        return jdbcTemplate.queryForObject(
             sql,
-            (rs, rowNum) -> ProcessType.valueOf(rs.getString("job"))
-        )
-        .stream()
-        .findFirst()
-        .orElse(null);
+            (rs, rowNum) -> {
+                String val = rs.getString("job");
+                return val != null ? ProcessType.valueOf(val.trim().toUpperCase()) : ProcessType.WAITED;
+            }
+        );
     }
 
     @Override
     public ProcessType findLatestKafkaSentStatus() {
-    String sql = """
-            SELECT kafka_sent
-            FROM billing_batch.batch_process
-        """;
+        String sql = "SELECT kafka_sent FROM billing_batch.batch_process";
 
-    	return jdbcTemplate.query(
+        return jdbcTemplate.queryForObject(
             sql,
-            (rs, rowNum) -> ProcessType.valueOf(rs.getString("kafka_sent"))
-        )
-        .stream()
-        .findFirst()
-        .orElse(null);    
+            (rs, rowNum) -> {
+                String val = rs.getString("kafka_sent");
+                return val != null ? ProcessType.valueOf(val.trim().toUpperCase()) : ProcessType.WAITED;
+            }
+        );
     }
+
     
     /* 나중에 업데이트문 필요하다고 하면 주기
     @Override

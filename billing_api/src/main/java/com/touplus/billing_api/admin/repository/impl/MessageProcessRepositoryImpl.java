@@ -15,47 +15,46 @@ import lombok.RequiredArgsConstructor;
 public class MessageProcessRepositoryImpl implements MessageProcessRepository {
 
     private final JdbcTemplate jdbcTemplate;
-
+    
     @Override
     public ProcessType findLatestKafkaReceiveStatus() {
-        String sql = """
-            SELECT kafka_receive
-            FROM billing_message.message_process
-        """;
+        String sql = "SELECT kafka_receive FROM billing_message.message_process";
 
-
-	    return jdbcTemplate.query(
-	            sql,
-	            (rs, rowNum) -> ProcessType.valueOf(rs.getString("kafka_receive"))
-	    ).stream().findFirst().orElse(null);
+        return jdbcTemplate.queryForObject(
+            sql,
+            (rs, rowNum) -> {
+                String val = rs.getString("kafka_receive");
+                return val != null ? ProcessType.valueOf(val.trim().toUpperCase()) : ProcessType.WAITED;
+            }
+        );
     }
 
     @Override
     public ProcessType findLatestCreateMessageStatus() {
-        String sql = """
-            SELECT create_message
-            FROM billing_message.message_process
-        """;
+        String sql = "SELECT create_message FROM billing_message.message_process";
 
-        return jdbcTemplate.query(
-                sql,
-                (rs, rowNum) -> ProcessType.valueOf(rs.getString("create_message"))
-        ).stream().findFirst().orElse(null);
+        return jdbcTemplate.queryForObject(
+            sql,
+            (rs, rowNum) -> {
+                String val = rs.getString("create_message");
+                return val != null ? ProcessType.valueOf(val.trim().toUpperCase()) : ProcessType.WAITED;
+            }
+        );
     }
 
     @Override
     public ProcessType findLatestSentMessageStatus() {
-        String sql = """
-            SELECT sent_message
-            FROM billing_message.message_process
-        """;
+        String sql = "SELECT sent_message FROM billing_message.message_process";
 
-
-        return jdbcTemplate.query(
-                sql,
-                (rs, rowNum) -> ProcessType.valueOf(rs.getString("sent_message"))
-        ).stream().findFirst().orElse(null);
+        return jdbcTemplate.queryForObject(
+            sql,
+            (rs, rowNum) -> {
+                String val = rs.getString("sent_message");
+                return val != null ? ProcessType.valueOf(val.trim().toUpperCase()) : ProcessType.WAITED;
+            }
+        );
     }
+
     
     
     

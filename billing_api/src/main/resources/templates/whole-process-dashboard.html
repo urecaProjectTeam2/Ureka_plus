@@ -11,11 +11,14 @@
 
     <!-- ================= 총 데이터 ================= -->
     <div class="card">
+        <div class="month">
+            정산월: <span id="settlementMonth">2026-01</span>
+        </div>
         <div class="step-row">
             <span class="step-name">
                 총 데이터
                 <small>
-                    <span th:text="${summary?.totalCount ?: 0}">0</span>건
+                    <span class="totalCount">0</span>건
                 </small>
             </span>
         </div>
@@ -28,18 +31,15 @@
             <span class="step-name">
                 Batch Job 진행 상태
                 <small>
-                    ( <span th:text="${summary?.batchCount ?: 0}">0</span>
-                    / <span th:text="${summary?.totalCount ?: 0}">0</span> )
-                    · <span th:text="${#numbers.formatDecimal(summary?.batchRate ?: 0,1,2)}">0</span>%
+                    ( <span id="batchCount">0</span>
+                    / <span class="totalCount">0</span> )
+                    · <span class="batchRate">0</span>%
                 </small>
             </span>
             <span id="batchJob" class="status waited"></span>
         </div>
         <div class="bar-wrap">
-            <div id="bar-batchJob"
-                 class="bar wait"
-                 th:style="'width:' + (${summary?.batchRate ?: 0}) + '%'">
-            </div>
+            <div id="bar-batchJob" class="bar wait" style="width:0%"></div>
         </div>
 
         <!-- Kafka Sent -->
@@ -47,18 +47,15 @@
             <span class="step-name">
                 Kafka Sent 진행 상태
                 <small>
-                    ( <span th:text="${summary?.kafkaSentCount ?: 0}">0</span>
-                    / <span th:text="${summary?.totalCount ?: 0}">0</span> )
-                    · <span th:text="${#numbers.formatDecimal(summary?.kafkaSentRate ?: 0,1,2)}">0</span>%
+                    ( <span id="kafkaSentCount">0</span>
+                    / <span class="totalCount">0</span> )
+                    · <span class="kafkaSentRate">0</span>%
                 </small>
             </span>
             <span id="batchKafkaSent" class="status waited"></span>
         </div>
         <div class="bar-wrap">
-            <div id="bar-batchKafkaSent"
-                 class="bar wait"
-                 th:style="'width:' + (${summary?.kafkaSentRate ?: 0}) + '%'">
-            </div>
+            <div id="bar-batchKafkaSent" class="bar wait" style="width:0%"></div>
         </div>
     </div>
 
@@ -69,22 +66,15 @@
             <span class="step-name">
                 Kafka Receive 진행 상태
                 <small>
-                    ( <span th:text="${summary?.kafkaReceiveCount ?: 0}">0</span>
-                    / <span th:text="${summary?.totalCount ?: 0}">0</span> )
-                    · <span th:text="${#numbers.formatDecimal(summary?.kafkaReceiveRate ?: 0,1,2)}">0</span>%
+                    ( <span id="kafkaReceiveCount">0</span>
+                    / <span class="totalCount">0</span> )
+                    · <span class="kafkaReceiveRate">0</span>%
                 </small>
             </span>
-            <span id="messageKafkaReceive"
-                  class="status"
-                  th:text="${message?.kafkaReceive?.label ?: '대기'}"
-                  th:classappend="${message?.kafkaReceive?.name()?.toLowerCase()}">
-            </span>
+            <span id="messageKafkaReceive" class="status waited"></span>
         </div>
         <div class="bar-wrap">
-            <div id="bar-messageKafkaReceive"
-                 class="bar wait"
-                 th:style="'width:' + (${summary?.kafkaReceiveRate ?: 0}) + '%'">
-            </div>
+            <div id="bar-messageKafkaReceive" class="bar wait" style="width:0%"></div>
         </div>
 
         <!-- Create Message -->
@@ -92,22 +82,15 @@
             <span class="step-name">
                 Create Message 진행 상태
                 <small>
-                    ( <span th:text="${summary?.createMessageCount ?: 0}">0</span>
-                    / <span th:text="${summary?.totalCount ?: 0}">0</span> )
-                    · <span th:text="${#numbers.formatDecimal(summary?.createMessageRate ?: 0,1,2)}">0</span>%
+                    ( <span id="createMessageCount">0</span>
+                    / <span class="totalCount">0</span> )
+                    · <span class="createMessageRate">0</span>%
                 </small>
             </span>
-            <span id="messageCreateMessage"
-                  class="status"
-                  th:text="${message?.createMessage?.label ?: '대기'}"
-                  th:classappend="${message?.createMessage?.name()?.toLowerCase()}">
-            </span>
+            <span id="messageCreateMessage" class="status waited"></span>
         </div>
         <div class="bar-wrap">
-            <div id="bar-messageCreateMessage"
-                 class="bar wait"
-                 th:style="'width:' + (${summary?.createMessageRate ?: 0}) + '%'">
-            </div>
+            <div id="bar-messageCreateMessage" class="bar wait" style="width:0%"></div>
         </div>
 
         <!-- Sent Message -->
@@ -115,22 +98,15 @@
             <span class="step-name">
                 Sent Message 진행 상태
                 <small>
-                    ( <span th:text="${summary?.sentMessageCount ?: 0}">0</span>
-                    / <span th:text="${summary?.totalCount ?: 0}">0</span> )
-                    · <span th:text="${#numbers.formatDecimal(summary?.sentMessageRate ?: 0,1,2)}">0</span>%
+                    ( <span id="sentMessageCount">0</span>
+                    / <span class="totalCount">0</span> )
+                    · <span class="sentMessageRate">0</span>%
                 </small>
             </span>
-            <span id="messageSentMessage"
-                  class="status"
-                  th:text="${message?.sentMessage?.label ?: '대기'}"
-                  th:classappend="${message?.sentMessage?.name()?.toLowerCase()}">
-            </span>
+            <span id="messageSentMessage" class="status waited"></span>
         </div>
         <div class="bar-wrap">
-            <div id="bar-messageSentMessage"
-                 class="bar wait"
-                 th:style="'width:' + (${summary?.sentMessageRate ?: 0}) + '%'">
-            </div>
+            <div id="bar-messageSentMessage" class="bar wait" style="width:0%"></div>
         </div>
     </div>
 </div>
@@ -145,11 +121,13 @@ const STATUS_LABEL = {
 };
 
 /* ================= 상태 업데이트 ================= */
-function updateStatus(id, status) {
+function updateStatus(id, statusStr) {
     const el = document.getElementById(id);
-    if (!el || !status) return;
+    if (!el) return;
 
-    el.textContent = STATUS_LABEL[status] ?? status;
+    const status = (statusStr ?? 'WAITED').toUpperCase();
+    el.textContent = STATUS_LABEL[status] ?? '대기';
+
     el.classList.remove('waited', 'pending', 'done', 'fail');
     el.classList.add(status.toLowerCase());
 }
@@ -163,55 +141,72 @@ function updateBar(barId, rate) {
     bar.style.width = value + '%';
 
     bar.classList.remove('wait', 'pending', 'done', 'fail');
-
-    if (value === 0) {
-        bar.classList.add('wait');
-    } else if (value < 100) {
-        bar.classList.add('pending');
-    } else {
-        bar.classList.add('done');
-    }
+    if (value === 0) bar.classList.add('wait');
+    else if (value < 100) bar.classList.add('pending');
+    else bar.classList.add('done');
 }
 
-/* ================= 초기 로딩 ================= */
-function initProgressBars() {
-    document.querySelectorAll('.bar').forEach(bar => {
-        const rate = parseFloat(bar.style.width) || 0;
-        updateBar(bar.id, rate);
+/* ================= 클래스 단일 적용 ================= */
+function updateClassText(className, value) {
+    document.querySelectorAll(`.${className}`).forEach(el => {
+        el.textContent = value;
     });
 }
 
+/* ================= 안전한 textContent ================= */
+function safeSetText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+}
+
 /* ================= SSE ================= */
-const eventSource = new EventSource('/admin/process/stream');
+document.addEventListener('DOMContentLoaded', function() {
+    const eventSource = new EventSource('/admin/process/stream');
 
-eventSource.onmessage = function(event) {
-    try {
-        const data = JSON.parse(event.data);
+    eventSource.onmessage = function(event) {
+        try {
+            const data = JSON.parse(event.data);
 
-        updateStatus('batchJob', data.batchJob);
-        updateStatus('batchKafkaSent', data.batchKafkaSent);
-        updateStatus('messageKafkaReceive', data.messageKafkaReceive);
-        updateStatus('messageCreateMessage', data.messageCreateMessage);
-        updateStatus('messageSentMessage', data.messageSentMessage);
+            // ================= 상태 업데이트 =================
+            if (data.batchJob !== undefined) updateStatus('batchJob', data.batchJob);
+            if (data.batchKafkaSent !== undefined) updateStatus('batchKafkaSent', data.batchKafkaSent);
+            if (data.messageKafkaReceive !== undefined) updateStatus('messageKafkaReceive', data.messageKafkaReceive);
+            if (data.messageCreateMessage !== undefined) updateStatus('messageCreateMessage', data.messageCreateMessage);
+            if (data.messageSentMessage !== undefined) updateStatus('messageSentMessage', data.messageSentMessage);
 
-        updateBar('bar-batchJob', data.batchRate);
-        updateBar('bar-batchKafkaSent', data.kafkaSentRate);
-        updateBar('bar-messageKafkaReceive', data.kafkaReceiveRate);
-        updateBar('bar-messageCreateMessage', data.createMessageRate);
-        updateBar('bar-messageSentMessage', data.sentMessageRate);
+            // ================= 진행률 바 업데이트 =================
+            if (data.batchRate !== undefined) updateBar('bar-batchJob', data.batchRate);
+            if (data.kafkaSentRate !== undefined) updateBar('bar-batchKafkaSent', data.kafkaSentRate);
+            if (data.kafkaReceiveRate !== undefined) updateBar('bar-messageKafkaReceive', data.kafkaReceiveRate);
+            if (data.createMessageRate !== undefined) updateBar('bar-messageCreateMessage', data.createMessageRate);
+            if (data.sentMessageRate !== undefined) updateBar('bar-messageSentMessage', data.sentMessageRate);
 
-    } catch (e) {
-        console.error('SSE 업데이트 오류:', e);
-    }
-};
+            // ================= 텍스트 값 업데이트 =================
+            if (data.totalCount !== undefined) updateClassText('totalCount', data.totalCount);
+            if (data.batchRate !== undefined) updateClassText('batchRate', data.batchRate.toFixed(2));
+            if (data.kafkaSentRate !== undefined) updateClassText('kafkaSentRate', data.kafkaSentRate.toFixed(2));
+            if (data.kafkaReceiveRate !== undefined) updateClassText('kafkaReceiveRate', data.kafkaReceiveRate.toFixed(2));
+            if (data.createMessageRate !== undefined) updateClassText('createMessageRate', data.createMessageRate.toFixed(2));
+            if (data.sentMessageRate !== undefined) updateClassText('sentMessageRate', data.sentMessageRate.toFixed(2));
 
-eventSource.onerror = function(err) {
-    console.error('SSE 연결 오류:', err);
-};
+            if (data.settlementMonth !== undefined) safeSetText('settlementMonth', data.settlementMonth);
+            if (data.batchCount !== undefined) safeSetText('batchCount', data.batchCount);
+            if (data.kafkaSentCount !== undefined) safeSetText('kafkaSentCount', data.kafkaSentCount);
+            if (data.kafkaReceiveCount !== undefined) safeSetText('kafkaReceiveCount', data.kafkaReceiveCount);
+            if (data.createMessageCount !== undefined) safeSetText('createMessageCount', data.createMessageCount);
+            if (data.sentMessageCount !== undefined) safeSetText('sentMessageCount', data.sentMessageCount);
 
-/* ================= 최초 실행 ================= */
-document.addEventListener('DOMContentLoaded', initProgressBars);
+        } catch (e) {
+            console.error('SSE 업데이트 오류:', e);
+        }
+    };
+
+    eventSource.onerror = function(err) {
+        console.error('SSE 연결 오류:', err);
+    };
+});
 </script>
+
 
 </body>
 </html>
