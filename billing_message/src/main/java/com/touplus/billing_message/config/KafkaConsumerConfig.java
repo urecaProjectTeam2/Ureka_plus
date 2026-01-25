@@ -51,5 +51,25 @@ public class KafkaConsumerConfig {
 
         return factory;
     }
+
+    @Bean
+    public ConsumerFactory<String, String> signalConsumerFactory() {
+        Map<String, Object> props = new HashMap<>(kafkaProperties.buildConsumerProperties(null));
+        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+        return new DefaultKafkaConsumerFactory<>(props, new StringDeserializer(), new StringDeserializer());
+    }
+
+    @Bean
+    public ConcurrentKafkaListenerContainerFactory<String, String> signalKafkaListenerContainerFactory(
+            ConsumerFactory<String, String> signalConsumerFactory) {
+        ConcurrentKafkaListenerContainerFactory<String, String> factory =
+                new ConcurrentKafkaListenerContainerFactory<>();
+        factory.setConsumerFactory(signalConsumerFactory);
+        factory.setBatchListener(false);
+        factory.setConcurrency(1);
+        factory.getContainerProperties().setAckMode(ContainerProperties.AckMode.MANUAL_IMMEDIATE);
+        return factory;
+    }
 }
 

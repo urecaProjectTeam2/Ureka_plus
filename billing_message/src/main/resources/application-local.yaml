@@ -62,6 +62,8 @@ spring:
       idle-between-polls: 100     # 빈 토픽일 때 과도 폴링 방지
       
 message:
+  signal:
+    topic: billing-batch-done
   dispatch:
     pool-size: 500            # 배치 크기와 동일 (1배치=1초)
     queue-size: 1500

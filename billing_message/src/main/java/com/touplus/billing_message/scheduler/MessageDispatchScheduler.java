@@ -6,6 +6,7 @@ import com.touplus.billing_message.domain.respository.MessageJdbcRepository;
 import com.touplus.billing_message.domain.respository.MessageSnapshotJdbcRepository;
 import com.touplus.billing_message.sender.MessageSender;
 import com.touplus.billing_message.sender.SendResult;
+import com.touplus.billing_message.service.DispatchActivationFlag;
 import com.touplus.billing_message.service.SendLogBufferService;
 import com.touplus.billing_message.service.WaitingQueueService;
 import lombok.extern.slf4j.Slf4j;
@@ -39,18 +40,21 @@ public class MessageDispatchScheduler {
     private final MessageSender messageSender;
     private final SendLogBufferService sendLogBufferService;
     private final Executor messageDispatchTaskExecutor;
+    private final DispatchActivationFlag dispatchActivationFlag;
 
     public MessageDispatchScheduler(
             WaitingQueueService waitingQueueService,
             MessageJdbcRepository messageJdbcRepository,
             MessageSender messageSender,
             SendLogBufferService sendLogBufferService,
-            @Qualifier("messageDispatchTaskExecutor") Executor messageDispatchTaskExecutor) {
+            @Qualifier("messageDispatchTaskExecutor") Executor messageDispatchTaskExecutor,
+            DispatchActivationFlag dispatchActivationFlag) {
         this.waitingQueueService = waitingQueueService;
         this.messageJdbcRepository = messageJdbcRepository;
         this.messageSender = messageSender;
         this.sendLogBufferService = sendLogBufferService;
         this.messageDispatchTaskExecutor = messageDispatchTaskExecutor;
+        this.dispatchActivationFlag = dispatchActivationFlag;
     }
 
     @Value("${message.dispatch.batch-size:500}")
@@ -104,6 +108,9 @@ public class MessageDispatchScheduler {
      * - Redis Lua 스크립트로 원자적 pop (중복 방지)
      */
     private void doDispatch(int schedulerNo) {
+        if (!dispatchActivationFlag.isEnabled()) {
+            return;
+        }
         List<String> readyIds = waitingQueueService.popReadyMessageIds(batchSize);
 
         if (readyIds == null || readyIds.isEmpty()) {
