@@ -22,6 +22,7 @@ public class BillingWorkDto {
     private int discountAmount; // 총 할인 금액
     private int unpaidAmount; // 총 미납 금액
     private int totalPrice; // 총 정산 금액
+    private int joinedYear;
 
     // 상세 내역 임시 보관함 (각 프로세서가 여기에 채워넣습니다)
     @Builder.Default
