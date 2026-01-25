@@ -22,7 +22,7 @@ public class MessageSendLogJdbcRepository {
         if (logs.isEmpty()) return;
 
         String sql = """
-            INSERT INTO message_send_log
+            INSERT IGNORE INTO message_send_log
             (message_id, retry_no, message_type, provider_response_code, provider_response_message, sent_at)
             VALUES (?, ?, ?, ?, ?, ?)
         """;

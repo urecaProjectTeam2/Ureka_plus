@@ -61,3 +61,6 @@ message:
     batch-size: 500           # pool-size와 동일
     poll-delay-ms: 300        # 더 빠른 폴링
     worker-count: 50          # DelayQueue 워커 스레드 수
+
+batch:
+  idle-minutes: 30            # Kafka 입력 종료 판단 기준 (분)

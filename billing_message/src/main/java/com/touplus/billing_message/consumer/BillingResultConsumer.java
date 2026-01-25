@@ -17,6 +17,8 @@ import com.touplus.billing_message.domain.entity.User;
 import com.touplus.billing_message.domain.respository.BillingSnapshotJdbcRepository;
 import com.touplus.billing_message.domain.respository.UserRepository;
 import com.touplus.billing_message.processor.MessageProcessor;
+import com.touplus.billing_message.service.KafkaInputTracker;
+import com.touplus.billing_message.service.BatchClosureScheduler;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,15 +31,21 @@ public class BillingResultConsumer {
     private final BillingSnapshotJdbcRepository jdbcRepository;
     private final UserRepository userRepository;
     private final MessageProcessor messageProcessor;
+    private final KafkaInputTracker kafkaInputTracker;
+    private final BatchClosureScheduler batchClosureScheduler;
 
     @KafkaListener(
     		topics = "billing-result-topic-2512", 
-    		groupId = "billing-message-group-JH11-17", 
+    		groupId = "billing-message-group-JH111-12", 
     		containerFactory = "kafkaListenerContainerFactory")
     public void consume(
             List<BillingResultDto> messages,
             Acknowledgment ack) {
         try {
+            // 입력 추적 + 배치 상태 리셋
+            kafkaInputTracker.recordInput();
+            batchClosureScheduler.resetBatchClosure();
+            
             LocalDate now = LocalDate.now();
             log.info("Kafka 메시지 수신: {}건, 시작 시각: {}", messages.size(), LocalDateTime.now());
 

@@ -56,9 +56,11 @@ public class MessageSnapshotService {
                                                 User::getUserId,
                                                 u -> u));
 
-                MessageTemplate template = messageTemplateRepository.findByMessageType(messageType)
+                // template_id 매핑: EMAIL=1, SMS=2 (다른 모듈과 중복 방지)
+                Long templateId = messageType == MessageType.EMAIL ? 1L : 2L;
+                MessageTemplate template = messageTemplateRepository.findById(templateId)
                                 .orElseThrow(() -> new IllegalStateException(
-                                                "MessageTemplate not found: " + messageType));
+                                                "MessageTemplate not found: templateId=" + templateId));
 
                 // 중복 생성된 스냅샷 제외
                 Set<Long> existingMessageIds = messageSnapshotRepository.findExistingMessageIds(messageIds);
