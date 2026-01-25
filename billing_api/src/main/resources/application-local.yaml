@@ -1,0 +1,14 @@
+# application-local.yml
+spring:
+  config:
+    activate:
+      on-profile: local
+
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    # ?rewriteBatchedStatements=true&allowMultiQueries=true 옵션 설명
+    # (기존) 1000건 저장 시: DB와 1000번 대화
+    # (변경) 1000건 저장 시: DB와 1번 대화
+    url: jdbc:mysql://localhost:13306
+    username: ${DB_USER} #로컬로 테스트 시, 직접 값 입력하기
+    password: ${DB_PASSWORD} #로컬로 테스트 시, 직접 값 입력하기

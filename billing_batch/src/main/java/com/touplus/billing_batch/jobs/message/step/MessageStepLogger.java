@@ -14,6 +14,8 @@ public class MessageStepLogger implements ChunkListener {
     public void afterChunk(ChunkContext context) {
         // 현재까지 쓰기(Write) 완료된 전체 건수를 가져옴
         long count = context.getStepContext().getStepExecution().getWriteCount();
-        log.info(">>>> [Progress] 현재까지 메시지 전송 완료 건수: {}", count);
+        if (count % 1000 == 0) {
+            log.info(">>>> [Progress] 현재까지 메시지 전송 완료 건수: {}", count);
+        }
     }
 }

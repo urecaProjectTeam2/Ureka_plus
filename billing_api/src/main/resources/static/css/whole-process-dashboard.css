@@ -1,0 +1,83 @@
+
+h1 {
+    text-align: center;
+    margin-bottom: 40px;
+    font-size: 30px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.card {
+    background-color: #ffffff;
+    padding: 24px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08); /* 그림자 부드럽게 */
+}
+
+.step-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.step-name {
+    font-weight: 500;
+    color: #374151;
+    font-size: 15px;
+}
+
+.step-name small {
+    font-weight: 400;
+    color: #6b7280;
+    margin-left: 6px;
+}
+
+.status {
+    padding: 6px 16px;
+    border-radius: 999px;
+    font-weight: 600;
+    min-width: 90px;
+    text-align: center;
+    font-size: 13px;
+    letter-spacing: 0.5px;
+    transition: background-color 0.3s ease;
+}
+
+.status.waited  { background-color: #d1d5db; color: #374151; }
+.status.pending { background-color: #facc15; color: #1f2937; }
+.status.done    { background-color: #10b981; color: #fff; }
+.status.fail    { background-color: #ef4444; color: #fff; }
+
+.bar-wrap {
+    width: 100%;
+    height: 14px;
+    background-color: #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 8px 0 16px;
+}
+
+.bar {
+    height: 100%;
+    width: 0;
+    transition: width 0.5s ease, background-color 0.5s ease;
+    border-radius: 8px;
+}
+
+.bar.wait    { background-color: #d1d5db; }
+.bar.pending { background-color: #fbbf24; }
+.bar.done    { background-color: #34d399; }
+.bar.fail    { background-color: #f87171; }
+
+/* 월 표시 */
+.month {
+    font-size: 16px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.month small {
+    color: #6b7280;
+}

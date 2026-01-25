@@ -28,14 +28,17 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
 
-      retries: 5
-      batch-size: 65536         # 64KB (spring.kafka.producer.batch-size)
+      retries: 0
+      batch-size: 131072         # 65536 --> 131072(64KB-->128KB) (spring.kafka.producer.batch-size)
       compression-type: lz4     # 압축 (spring.kafka.producer.compression-type)
-      acks: all                 # 안정성 (spring.kafka.producer.acks)
+      acks: 1                 #수정(all --> 1) 안정성 < 속도 <---------------추후에 변경 가능
 
       properties:
-        linger.ms: 20           # 20ms 대기 ( Throughput 향상 핵심)
+        enable.idempotence: false
+        buffer.memory: 67108864   # 버퍼가 꽉 찼을 때 기다리는 시간 (기본 60초)
         max.request.size: 5242880 # 5MB로 확장
+        linger.ms: 50           # 10ms -> 50ms (메시지를 더 모아서 한 번에 쏴 성능 향상)
+        request.timeout.ms: 30000  #추가
 
     consumer:
       group-id: billing-group

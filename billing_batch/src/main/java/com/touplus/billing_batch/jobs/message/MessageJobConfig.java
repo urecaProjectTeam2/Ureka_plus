@@ -3,6 +3,8 @@ package com.touplus.billing_batch.jobs.message;
 import com.touplus.billing_batch.domain.dto.BillingResultDto;
 import com.touplus.billing_batch.jobs.message.step.MessageSkipListener;
 import com.touplus.billing_batch.jobs.message.step.MessageStepLogger;
+import com.touplus.billing_batch.jobs.message.step.TopicCreateTasklet;
+import com.touplus.billing_batch.jobs.message.step.listener.MessageJobListener;
 import com.touplus.billing_batch.jobs.message.step.writer.MessageItemWriter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.batch.core.Job;
@@ -10,7 +12,9 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.job.builder.JobBuilder;
 import org.springframework.batch.core.repository.JobRepository;
 import org.springframework.batch.core.step.builder.StepBuilder;
-import org.springframework.batch.item.database.JdbcCursorItemReader;
+import org.springframework.batch.item.ItemReader;
+import org.springframework.batch.item.database.JdbcPagingItemReader;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.task.TaskExecutor;
@@ -30,35 +34,46 @@ public class MessageJobConfig {
      */
 
 
-
     private final JobRepository jobRepository;
     private final PlatformTransactionManager transactionManager;
-    //  1. 필드 주입 제거 (순환 고리 끊기)
-    // private final MessageItemWriter messageItemWriter;
     private final MessageSkipListener messageSkipListener;
     private final MessageStepLogger messageStepLogger;
-    private final int chunkSize = 1000;
+    private final TopicCreateTasklet topicCreateTasklet;
+    private final MessageJobListener messageJobListener;
+    private final int chunkSize = 2500;     // 1000 --> 2500개로 상향(ItemReader 와 맞춤)
 
     @Bean
-    public Job messageJob(Step messageStep) {
+    public Job messageJob(@Qualifier("createTopicStep") Step createTopicStep,
+                          @Qualifier("messageJobStep") Step messageStepInstance) {
         return new JobBuilder("messageJob", jobRepository)
-                .start(messageStep)
+                .listener(messageJobListener)
+                .start(createTopicStep)      // 1. 토픽 생성 (TopicCreateTasklet 실행)
+                .next(messageStepInstance)   // 2. 메시지 발송 실행
                 .build();
     }
 
-    @Bean
-    public Step messageStep(JdbcCursorItemReader<BillingResultDto> messageReader,
-                            MessageItemWriter messageItemWriter) { //  2. 파라미터로 주입받음
-        return new StepBuilder("messageStep", jobRepository)
+    // kafka topic 설정 담당 메소드
+    @Bean(name = "createTopicStep")
+    public Step createTopicStep() {
+        return new StepBuilder("createTopicStep", jobRepository)
+                .tasklet(topicCreateTasklet, transactionManager)
+                .build();
+    }
+
+    // 메서드 이름을 messageStep에서 messageJobStep으로 변경 (중복 방지)
+    @Bean(name = "messageJobStep")
+    public Step messageJobStep(ItemReader<BillingResultDto> messageReader,
+                               MessageItemWriter messageItemWriter) {
+        return new StepBuilder("messageJobStep", jobRepository)
                 .<BillingResultDto, BillingResultDto>chunk(chunkSize, transactionManager)
                 .reader(messageReader)
-                .writer(messageItemWriter) //  3. 전달받은 파라미터 사용
+                .writer(messageItemWriter)
                 .faultTolerant()
                 .skip(Exception.class)
                 .skipLimit(1000)
                 .listener(messageStepLogger)
                 .listener(messageSkipListener)
-                .taskExecutor(taskExecutor())
+                .taskExecutor(messageTaskExecutor()) // 멀티스레드 적용
                 .build();
     }
 
@@ -70,16 +85,19 @@ public class MessageJobConfig {
                 .build();
     }
 
-    @Bean
-    public TaskExecutor taskExecutor() {
+    @Bean(name = "messageTaskExecutor")
+    public TaskExecutor messageTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(10);
         executor.setMaxPoolSize(20);
-        executor.setQueueCapacity(2000);
-        executor.setThreadNamePrefix("Batch-Thread-");
+
+        // [사용자 버전 채택] 비동기 Kafka 발송 작업이 밀릴 경우를 대비해 큐 용량을 넉넉히 설정 (10,000)
+        executor.setQueueCapacity(10000);
+
+        // [사용자 버전 채택] 스레드 이름 접두사 설정
+        executor.setThreadNamePrefix("Msg-Thread-");
+
         executor.initialize();
         return executor;
     }
 }
-
-

@@ -11,18 +11,22 @@ import lombok.*;
 public class BillingUserDto {
 
     private Long userId;
+    private Long groupId;
 
     // Entity -> DTO 변환
-    public static BillingUserDto fromEntity(com.touplus.billing_batch.domain.entity.BillingUser entity) {
+    public static BillingUserDto fromEntity(BillingUser entity) {
+        if (entity == null) return null;
         return BillingUserDto.builder()
                 .userId(entity.getUserId())
+                .groupId(entity.getGroupId())
                 .build();
     }
 
     // DTO -> Entity 변환
     public BillingUser toEntity() {
-        BillingUser user = new com.touplus.billing_batch.domain.entity.BillingUser();
-        // ID는 JPA에서 자동 생성되므로, 신규 생성 시는 set 하지 않아도 됨
-        return user;
+        return BillingUser.builder()
+                .userId(this.userId)
+                .groupId(this.groupId)
+                .build();
     }
 }

@@ -1,7 +1,6 @@
 package com.touplus.billing_batch.domain.dto;
 
 import com.touplus.billing_batch.domain.entity.AdditionalCharge;
-import com.touplus.billing_batch.domain.entity.BillingUser;
 import lombok.*;
 
 import java.time.LocalDate;
@@ -21,30 +20,25 @@ public class AdditionalChargeDto {
 
     // Entity -> DTO 변환
     public static AdditionalChargeDto fromEntity(AdditionalCharge entity) {
+        if (entity == null) return null;
+
         return AdditionalChargeDto.builder()
                 .id(entity.getId())
                 .companyName(entity.getCompanyName())
                 .price(entity.getPrice())
                 .additionalChargeMonth(entity.getAdditionalChargeMonth())
-                .userId(entity.getUser() != null ? entity.getUser().getUserId() : null)
+                .userId(entity.getUserId())
                 .build();
     }
 
     // DTO -> Entity 변환
     public AdditionalCharge toEntity() {
-        BillingUser user = null;
-        if (this.userId != null) {
-            user = BillingUser.builder()
-                    .userId(this.userId)
-                    .build();
-        }
-
         return AdditionalCharge.builder()
                 .id(this.id)
                 .companyName(this.companyName)
                 .price(this.price)
                 .additionalChargeMonth(this.additionalChargeMonth)
-                .user(user)
+                .userId(this.userId)
                 .build();
     }
 }

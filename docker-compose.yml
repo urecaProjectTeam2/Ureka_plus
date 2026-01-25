@@ -83,9 +83,11 @@ services:
       - "host.docker.internal:host-gateway"
     environment:
       SPRING_PROFILES_ACTIVE: docker
-      SPRING_DATASOURCE_URL: jdbc:mysql://host.docker.internal:13306/billing_batch
+      SPRING_DATASOURCE_URL: jdbc:mysql://host.docker.internal:13306
       SPRING_DATASOURCE_USERNAME: ${DB_USER}
       SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+      CRYPTO_AES_SECRET_KEY: ${CRYPTO_AES_SECRET_KEY}
+      CRYPTO_AES_IV: ${CRYPTO_AES_IV}
 
     networks:
       - billing-net

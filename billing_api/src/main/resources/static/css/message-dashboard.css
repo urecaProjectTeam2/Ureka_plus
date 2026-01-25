@@ -1,0 +1,88 @@
+
+h1 {
+    text-align: center;
+    margin-bottom: 36px;
+    margin-top: 0;     
+    font-size: 28px;   
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.subtitle {
+    text-align: center;
+    font-size: 14px;
+    color: #718093;
+    margin-bottom: 30px;
+}
+
+.card {
+    background-color: #ffffff;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+}
+
+/* 총 발송 메시지 강조 */
+.total {
+    font-size: 18px;
+    font-weight: 700; /* 굵게 */
+    margin-bottom: 15px;
+}
+
+.month {
+    font-size: 16px;
+    margin-bottom: 10px;
+}
+
+.section {
+    margin-bottom: 20px;
+}
+
+.section-title {
+    display: flex;
+    justify-content: space-between;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.bar-wrap {
+    background-color: #e1e1e1;
+    height: 12px; /* 이전 버전처럼 얇게 조정 */
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.bar {
+    height: 100%;
+    width: 0;
+    border-radius: 6px;
+    transition: width 0.8s ease-in-out;
+}
+
+.bar.wait {
+    background-color: #f1c40f; /* 노랑 */
+}
+
+.bar.sent {
+    background-color: #2ecc71; /* 초록 */
+}
+
+.bar.retry {
+    background-color: #3498db; /* 파랑 */
+}
+
+.bar.sms {
+    background-color: #9b59b6; /* 보라 */
+}
+
+.bar.fail {
+    background-color: #e74c3c; /* 빨강 */
+}
+
+.footer {
+    text-align: center;
+    font-size: 12px;
+    color: #7f8c8d;
+    margin-top: 20px;
+}

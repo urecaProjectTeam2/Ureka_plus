@@ -5,33 +5,35 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "batch_billing_action_log")
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED)
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class BillingActionLog {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "action_log_id", nullable = false)
     private Long actionLogId;
 
+    @Column(name = "error_log_id")
     private Long errorLogId;
 
-    @Enumerated(EnumType.STRING)
+    @Column(name = "actor_type")
     private ActorType actorType;
 
+    @Column(name = "actor_id")
     private String actorId;
 
-    @Enumerated(EnumType.STRING)
+    @Column(name = "action_type")
     private ActionType actionType;
 
+    @Column(name = "action_message")
     private String actionMessage;
 
-    @Enumerated(EnumType.STRING)
+    @Column(name = "action_result")
     private ActionResult actionResult;
 
-    @Builder.Default
-    private LocalDateTime actionAt = LocalDateTime.now();
+    @Column(name = "action_at")
+    private LocalDateTime actionAt;
 }

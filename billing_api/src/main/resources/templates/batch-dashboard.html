@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+<meta charset="EUC-KR">
+<title>Insert title here</title>
+ <link rel="stylesheet" th:href="@{/css/message-dashboard.css}">
+ <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+<div class="navbar">
+	<a th:href="@{/admin/process/dashboard}">대시보드</a>
+    <a th:href="@{/admin/batch/dashboard}" class="active">배치 대시보드</a>
+    <a th:href="@{/admin/message/dashboard}">메시지 대시보드</a>
+</div>
+</body>
+</html>

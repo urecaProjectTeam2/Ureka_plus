@@ -1,50 +1,32 @@
 package com.touplus.billing_batch.scheduler;
 
-import org.springframework.batch.core.Job;
-import org.springframework.batch.core.JobParameters;
-import org.springframework.batch.core.JobParametersBuilder;
-import org.springframework.batch.core.launch.JobLauncher;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-
+@Slf4j
 @RestController
 @RequestMapping("/batch")
+@RequiredArgsConstructor
 public class BillingBatchController {
 
-    private final JobLauncher jobLauncher;
-    private final Job billingJob;
-
-    public BillingBatchController(
-            JobLauncher jobLauncher,
-            Job billingJob
-    ) {
-        this.jobLauncher = jobLauncher;
-        this.billingJob = billingJob;
-    }
+    private final BillingBatchScheduler billingBatchScheduler;
 
     @GetMapping("/billing")
     public ResponseEntity<String> runBillingJob(
-            @RequestParam(required = false) String settlementMonth
+            @RequestParam(value = "forceFullScan", defaultValue = "false") boolean forceFullScan
     ) throws Exception {
 
-        // settlementMonth 없으면 현재 월 사용 (YYYY-MM)
-        if (settlementMonth == null) {
-            settlementMonth = LocalDate.now()
-                    .format(DateTimeFormatter.ofPattern("yyyy-MM"));
-        }
+        log.info("[Get batch/billing] 배치 수동 호출");
 
-        JobParameters params = new JobParametersBuilder()
-                .addString("settlementMonth", settlementMonth)
-                .addLong("run.id", System.currentTimeMillis())
-                .toJobParameters();
-
-        jobLauncher.run(billingJob, params);
+        billingBatchScheduler.runBillingJob(forceFullScan);
 
         return ResponseEntity.ok(
-                "Billing batch started. settlementMonth=" + settlementMonth
+                "[Get batch/billing] Billing batch started."
         );
     }
 }

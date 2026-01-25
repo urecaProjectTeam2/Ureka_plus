@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="UTF-8">
+	<title>상품 구독 통계 | 관리자</title>
+
+	<link rel="stylesheet" th:href="@{/css/productDonut.css}">
+	<link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+
+<body>
+<div th:replace="layout/sidebar :: sidebar"></div>
+
+<div class="container">
+	<h1>상품 유형별 구독 비율</h1>
+
+	<div class="chart-grid">
+		<div class="card"
+			 th:each="chart, stat : ${charts}">
+			<div class="chart-wrapper donut-wrapper">
+				<h3 th:text="${chart.title}"></h3>
+				<canvas th:id="'donutChart_' + ${stat.index}"></canvas>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script th:inline="javascript">
+	/* ===== 서버 데이터 ===== */
+    const charts = [[${charts}]];
+
+    /* ===== 공통 색상 ===== */
+    const donutColors = [
+      '#ff6b6b',
+      '#4fc3f7',
+      '#ffd166',
+      '#6c63ff',
+      '#4dd0a3',
+      '#ff9f1c',
+      '#a0cded',
+      '#c77dff',
+      '#2ec4b6',
+      '#e76f51'
+    ];
+
+    /* ===== 차트 생성 ===== */
+    charts.forEach((chart, index) => {
+
+        const total = chart.data.reduce((sum, v) => sum + v, 0);
+
+        new Chart(
+            document.getElementById(`donutChart_${index}`),
+            {
+                type: 'doughnut',
+                data: {
+                    labels: chart.labels,
+                    datasets: [{
+                        data: chart.data,
+                        backgroundColor: donutColors,
+                        borderColor: '#ffffff',
+                        borderWidth: 2,
+                        hoverOffset: 12
+                    }]
+                },
+                options: {
+                    responsive: false,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function (context) {
+                                    const value = context.raw;
+                                    const percent = ((value / total) * 100).toFixed(1);
+                                    return `${context.label} : ${value}명 (${percent}%)`;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        );
+    });
+</script>
+
+</body>
+</html>

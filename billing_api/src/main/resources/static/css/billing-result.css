@@ -1,0 +1,17 @@
+.table-hover tbody tr:hover {
+    background-color: #e0f2ff;
+}
+
+.table th, .table td {
+    vertical-align: middle;
+}
+
+.container-fluid h2 {
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.table-responsive {
+    max-height: 700px;
+    overflow-y: auto;
+}

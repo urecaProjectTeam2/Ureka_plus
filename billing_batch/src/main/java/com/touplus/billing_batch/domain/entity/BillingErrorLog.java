@@ -33,7 +33,7 @@ public class BillingErrorLog {
     private String errorMessage;
 
     @Builder.Default
-    private boolean isRecoverable = true;
+    private boolean resolved = true;
 
     @Builder.Default
     private boolean processed = false;

@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>정산 · 메시지 대시보드</title>
+    <link rel="stylesheet" th:href="@{/css/whole-process-dashboard.css}">
+	<link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+<body>
+<div th:replace="layout/sidebar :: sidebar"></div>
+
+<div class="container">
+    <h1>정산 · 메시지 대시보드</h1>
+
+    <!-- ================= 총 데이터 ================= -->
+        <div class="month">
+           정산월: <small><span class="step-name" id="settlementMonth"></span></small>
+        </div>
+        <br>
+        <div class="step-row">
+            <span class="step-name">
+                총 데이터
+                <small>
+                    <span class="totalCount" id="totalCount1"></span>건
+                </small>
+            </span>
+        </div>
+    <!-- ================= 배치 프로세스 ================= -->
+    <div class="card">
+        <!-- Batch Job -->
+        <div class="step-row">
+            <span class="step-name">
+                Batch Job 진행 상태
+                <small>
+                    ( <span id="batchCount"></span>
+                    / <span class="totalCount" id="totalCount2"></span> )
+                    · <span class="batchRate" id="batchRate"></span>%
+                </small>
+            </span>
+            <span id="batchJob" class="status waited"></span>
+        </div>
+        <div class="bar-wrap">
+            <div id="bar-batchJob" class="bar wait" style="width:0%"></div>
+        </div>
+
+        <!-- Kafka Sent -->
+        <div class="step-row">
+            <span class="step-name">
+                Kafka Sent 진행 상태
+                <small>
+                    ( <span id="kafkaSentCount"></span>
+                    / <span class="totalCount" id="totalCount3"></span> )
+                    · <span class="kafkaSentRate" id="kafkaSentRate"></span>%
+                </small>
+            </span>
+            <span id="batchKafkaSent" class="status waited"></span>
+        </div>
+        <div class="bar-wrap">
+            <div id="bar-batchKafkaSent" class="bar wait" style="width:0%"></div>
+        </div>
+    </div>
+
+    <!-- ================= 메시지 프로세스 ================= -->
+    <div class="card">
+        <!-- Kafka Receive -->
+        <div class="step-row">
+            <span class="step-name">
+                Kafka Receive 진행 상태
+                <small>
+                    ( <span id="kafkaReceiveCount"></span>
+                    / <span class="totalCount" id="totalCount4"></span> )
+                    · <span class="kafkaReceiveRate" id="kafkaReceiveRate"></span>%
+                </small>
+            </span>
+            <span id="messageKafkaReceive" class="status waited"></span>
+        </div>
+        <div class="bar-wrap">
+            <div id="bar-messageKafkaReceive" class="bar wait" style="width:0%"></div>
+        </div>
+
+        <!-- Create Message -->
+        <div class="step-row">
+            <span class="step-name">
+                Create Message 진행 상태
+                <small>
+                    ( <span id="createMessageCount"></span>
+                    / <span class="totalCount" id="totalCount5"></span> )
+                    · <span class="createMessageRate" id="createMessageRate"></span>%
+                </small>
+            </span>
+            <span id="messageCreateMessage" class="status waited"></span>
+        </div>
+        <div class="bar-wrap">
+            <div id="bar-messageCreateMessage" class="bar wait" style="width:0%"></div>
+        </div>
+
+        <!-- Sent Message -->
+        <div class="step-row">
+            <span class="step-name">
+                Sent Message 진행 상태
+                <small>
+                    ( <span id="sentMessageCount"></span>
+                    / <span class="totalCount" id="totalCount6"></span> )
+                    · <span class="sentMessageRate" id="sentMessageRate"></span>%
+                </small>
+            </span>
+            <span id="messageSentMessage" class="status waited"></span>
+        </div>
+        <div class="bar-wrap">
+            <div id="bar-messageSentMessage" class="bar wait" style="width:0%"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ================= 상태 한글 매핑 ================= */
+const STATUS_LABEL = {
+    WAITED: '대기',
+    PENDING: '진행 중',
+    DONE: '완료',
+    FAIL: '실패'
+};
+
+/* ================= 상태 업데이트 ================= */
+function updateStatus(id, statusStr) {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    const status = (statusStr ?? 'WAITED').toUpperCase();
+    el.textContent = STATUS_LABEL[status] ?? '대기';
+
+    el.classList.remove('waited', 'pending', 'done', 'fail');
+    el.classList.add(status.toLowerCase());
+
+    el.style.transition = 'background-color 0.5s ease, color 0.5s ease';
+}
+
+/* ================= 진행률 바 업데이트 ================= */
+function updateBar(barId, rate) {
+    const bar = document.getElementById(barId);
+    if (!bar) return;
+
+    const value = Math.max(0, Math.min(rate ?? 0, 100));
+    bar.style.width = value + '%';
+
+    bar.classList.remove('wait', 'pending', 'done', 'fail');
+    if (value === 0) bar.classList.add('wait');
+    else if (value < 100) bar.classList.add('pending');
+    else bar.classList.add('done');
+
+    bar.style.transition = 'width 0.5s ease, background-color 0.5s ease';
+}
+
+/* ================= 숫자 애니메이션 (특정 3개만 적용) ================= */
+function animateNumber(id, newValue, decimals = 0) {
+    const el = document.getElementById(id);
+    if (!el) return;
+
+    const current = parseFloat(el.textContent.replace(/,/g, '')) || 0;
+    const target = parseFloat(newValue) || 0;
+    const duration = 500; // 애니메이션 시간 (ms)
+    const steps = Math.ceil(duration / 20);
+    const increment = (target - current) / steps;
+    let step = 0;
+    let value = current;
+
+    const timer = setInterval(() => {
+        step++;
+        value += increment;
+        if (step >= steps) {
+            value = target;
+            clearInterval(timer);
+        }
+        el.textContent = decimals === 0 ? Math.round(value) : value.toFixed(decimals);
+    }, 20);
+}
+
+/* ================= SSE 처리 ================= */
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.querySelector('.container');
+    container.style.visibility = 'hidden';
+
+    const eventSource = new EventSource('/admin/process/stream');
+
+    eventSource.onmessage = function(event) {
+        try {
+            const data = JSON.parse(event.data);
+
+            // 상태 업데이트
+            if (data.batchJob !== undefined) updateStatus('batchJob', data.batchJob);
+            if (data.batchKafkaSent !== undefined) updateStatus('batchKafkaSent', data.batchKafkaSent);
+            if (data.messageKafkaReceive !== undefined) updateStatus('messageKafkaReceive', data.messageKafkaReceive);
+            if (data.messageCreateMessage !== undefined) updateStatus('messageCreateMessage', data.messageCreateMessage);
+            if (data.messageSentMessage !== undefined) updateStatus('messageSentMessage', data.messageSentMessage);
+
+            // 진행률 바 업데이트
+            if (data.batchRate !== undefined) updateBar('bar-batchJob', data.batchRate);
+            if (data.kafkaSentRate !== undefined) updateBar('bar-batchKafkaSent', data.kafkaSentRate);
+            if (data.kafkaReceiveRate !== undefined) updateBar('bar-messageKafkaReceive', data.kafkaReceiveRate);
+            if (data.createMessageRate !== undefined) updateBar('bar-messageCreateMessage', data.createMessageRate);
+            if (data.sentMessageRate !== undefined) updateBar('bar-messageSentMessage', data.sentMessageRate);
+
+            // 숫자 애니메이션 적용 (3개만)
+            if (data.sentMessageCount !== undefined) animateNumber('sentMessageCount', data.sentMessageCount);
+            if (data.totalCount !== undefined) animateNumber('totalCount', data.totalCount);
+            if (data.sentMessageRate !== undefined) animateNumber('sentMessageRate', data.sentMessageRate, 2);
+
+            // 기타 텍스트 값 (즉시 반영)
+            if (data.settlementMonth !== undefined) document.getElementById('settlementMonth').textContent = data.settlementMonth;
+            if (data.batchCount !== undefined) document.getElementById('batchCount').textContent = data.batchCount;
+            if (data.kafkaSentCount !== undefined) document.getElementById('kafkaSentCount').textContent = data.kafkaSentCount;
+            if (data.kafkaReceiveCount !== undefined) document.getElementById('kafkaReceiveCount').textContent = data.kafkaReceiveCount;
+            if (data.createMessageCount !== undefined) document.getElementById('createMessageCount').textContent = data.createMessageCount;
+            
+
+            if (data.batchRate !== undefined) animateNumber('batchRate', data.batchRate, 2);
+            if (data.kafkaSentRate !== undefined) animateNumber('kafkaSentRate', data.kafkaSentRate, 2);
+            if (data.kafkaReceiveRate !== undefined) animateNumber('kafkaReceiveRate', data.kafkaReceiveRate, 2);
+            if (data.createMessageRate !== undefined) animateNumber('createMessageRate', data.createMessageRate, 2);
+            if (data.sentMessageRate !== undefined) animateNumber('sentMessageRate', data.sentMessageRate, 2);
+
+            if (data.totalCount !== undefined) document.getElementById('totalCount1').textContent = data.totalCount;
+            if (data.totalCount !== undefined) document.getElementById('totalCount2').textContent = data.totalCount;
+            if (data.totalCount !== undefined) document.getElementById('totalCount3').textContent = data.totalCount;
+            if (data.totalCount !== undefined) document.getElementById('totalCount4').textContent = data.totalCount;
+            if (data.totalCount !== undefined) document.getElementById('totalCount5').textContent = data.totalCount;
+            if (data.totalCount !== undefined) document.getElementById('totalCount6').textContent = data.totalCount;
+
+            container.style.visibility = 'visible';
+
+            console.log("data.batchRat" + data.batchRate);
+            console.log("data.createMessageRate" + data.createMessageRate);
+            console.log("data.sentMessageRate" + data.sentMessageRate);
+            console.log("data.totalCount" + data.totalCount);
+        } catch (e) {
+            console.error('SSE 업데이트 오류:', e);
+        }
+    };
+
+    eventSource.onerror = function(err) {
+        console.error('SSE 연결 오류:', err);
+    };
+});
+
+</script>
+
+
+</body>
+</html>

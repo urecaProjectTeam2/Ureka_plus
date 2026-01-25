@@ -1,40 +1,33 @@
 package com.touplus.billing_batch.domain.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-
+import lombok.*;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "user_subscribe_discount", indexes = {
-        @Index(name = "idx_usd_user_month", columnList = "user_id, discount_subscribe_month")
-})
 @Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class UserSubscribeDiscount {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "user_discount_subscribe_id")
+    @Column(name = "user_discount_subscribe_id", nullable = false)
     private Long udsId;
 
     @Column(name = "discount_subscribe_month", nullable = false)
     private LocalDate discountSubscribeMonth;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false, foreignKey = @ForeignKey(name = "fk_usd_user"))
-    private BillingUser billingUser;
+    @Column(name = "user_id", nullable = false)
+    private Long userId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "discount_id", nullable = false, foreignKey = @ForeignKey(name = "fk_usd_discount"))
-    private BillingDiscount billingDiscount;
+    @Column(name = "discount_id", nullable = false)
+    private Long discountId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id", nullable = false, foreignKey = @ForeignKey(name = "fk_usd_product"))
-    private BillingProduct billingProduct;
+    @Column(name = "product_id", nullable = false)
+    private Long productId;
+
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
 }

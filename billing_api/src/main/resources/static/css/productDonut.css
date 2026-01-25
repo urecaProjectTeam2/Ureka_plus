@@ -1,0 +1,44 @@
+h1 {
+    text-align: center;
+    margin-bottom: 40px;
+    font-size: 30px;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+/* 카드 */
+.card {
+    background-color: #ffffff;
+    padding: 24px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 6px 16px rgba(0,0,0,0.08);
+    height: 480px;
+}
+
+/* 🔥 기존 chart-box 대신 grid 사용 */
+.chart-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 x 2 */
+    gap: 60px;
+    padding-left: 80px;
+    padding-right: 80px;
+}
+
+/* 차트 래퍼 */
+.chart-wrapper {
+    position: relative;
+    text-align: center;
+}
+
+/* 도넛 크기 유지 */
+.donut-wrapper {
+    width: 400px;
+    height: 400px;
+    margin: 0 auto;
+}
+
+canvas {
+    width: 100% !important;
+    height: 100% !important;
+}

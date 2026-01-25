@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>메시지 발송 현황 | 관리자</title>
+    <link rel="stylesheet" th:href="@{/css/message-dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+</head>
+
+<body>
+<div th:replace="layout/sidebar :: sidebar"></div>
+<div class="container">
+    <h1>메시지 발송 현황</h1>
+
+    <div class="card">
+        <!-- 정산월 -->
+        <div class="month">
+            정산월: <span id="settlementMonth" th:text="${summary.settlementMonth}">2026-01</span>
+        </div>
+
+        <div class="total">
+            총 발송 메시지 <span id="totalCount" th:text="${summary.totalCount}">0</span>건
+        </div>
+
+        <!-- 이메일 WAITED -->
+        <div class="section">
+            <div class="section-title">
+                <span>이메일 발송 대기 건</span>
+                <span class="rate">
+                    <span id="waitCount" th:text="${summary.waitCount}">0</span>건
+                    · <span id="waitRate" th:text="${#numbers.formatDecimal(summary.waitRate,1,2)}">0</span>%
+                </span>
+            </div>
+            <div class="bar-wrap">
+                <div id="waitBar" class="bar wait" th:style="'width:' + ${summary.waitRate} + '%'"></div>
+            </div>
+        </div>
+
+        <!-- 이메일 SENT -->
+        <div class="section">
+            <div class="section-title">
+                <span>이메일 발송 성공 건</span>
+                <span class="rate">
+                    <span id="sentCount" th:text="${summary.sentCount}">0</span>건
+                    · <span id="sentRate" th:text="${#numbers.formatDecimal(summary.sentRate,1,2)}">0</span>%
+                </span>
+            </div>
+            <div class="bar-wrap">
+                <div id="sentBar" class="bar sent" th:style="'width:' + ${summary.sentRate} + '%'"></div>
+            </div>
+        </div>
+
+        <!-- 이메일 RETRY -->
+        <div class="section">
+            <div class="section-title">
+                <span>이메일 재발송 대기 건</span>
+                <span class="rate">
+                    <span id="retryCount" th:text="${summary.retryCount}">0</span>건
+                    · <span id="retryRate" th:text="${#numbers.formatDecimal(summary.retryRate,1,2)}">0</span>%
+                </span>
+            </div>
+            <div class="bar-wrap">
+                <div id="retryBar" class="bar retry" th:style="'width:' + ${summary.retryRate} + '%'"></div>
+            </div>
+        </div>
+
+       <!-- SMS -->
+		<div class="section">
+		    <div class="section-title">
+		        <span>SMS 발송 건</span>
+		        <span class="rate">
+		            <span id="smsCount" th:text="${summary.smsCount}">0</span>건
+		            · <span id="smsRate" th:text="${#numbers.formatDecimal(summary.smsRate,1,2)}">0</span>%
+		        </span>
+		    </div>
+		    <div class="bar-wrap">
+		        <div id="smsBar" class="bar sms" th:style="'width:' + ${summary.smsRate} + '%'"></div>
+		    </div>
+		</div>
+
+
+        <!-- FAIL -->
+        <div class="section">
+            <div class="section-title">
+                <span>메시지 발송 실패 건</span>
+                <span class="rate">
+                    <span id="failCount" th:text="${summary.failCount}">0</span>건
+                    · <span id="failRate" th:text="${#numbers.formatDecimal(summary.failRate,1,2)}">0</span>%
+                </span>
+            </div>
+            <div class="bar-wrap">
+                <div id="failBar" class="bar fail" th:style="'width:' + ${summary.failRate} + '%'"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="footer">
+        실시간 갱신 · 2초 주기
+    </div>
+</div>
+
+<script>
+function updateStatus(id, status) {
+    const el = document.getElementById(id);
+    if(!el) return;
+    el.textContent = status;
+    el.classList.remove('pending','done','fail');
+    el.classList.add(status.toLowerCase());
+}
+
+const eventSource = new EventSource('/admin/process/stream');
+eventSource.onmessage = function(event) {
+    const data = JSON.parse(event.data);
+    updateStatus('batchJob', data.batchJob);
+    updateStatus('batchKafkaSent', data.batchKafkaSent);
+    updateStatus('messageKafkaReceive', data.messageKafkaReceive);
+    updateStatus('messageCreateMessage', data.messageCreateMessage);
+    updateStatus('messageSentMessage', data.messageSentMessage);
+};
+</script>
+
+</body>
+</html>

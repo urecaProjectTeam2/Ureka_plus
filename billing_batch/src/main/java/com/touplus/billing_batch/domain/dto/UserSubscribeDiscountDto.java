@@ -4,12 +4,15 @@ import com.touplus.billing_batch.domain.entity.BillingDiscount;
 import com.touplus.billing_batch.domain.entity.BillingProduct;
 import com.touplus.billing_batch.domain.entity.BillingUser;
 import com.touplus.billing_batch.domain.entity.UserSubscribeDiscount;
+import com.touplus.billing_batch.domain.enums.DiscountType;
+import com.touplus.billing_batch.domain.enums.ProductType;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Data
 @Builder
@@ -21,24 +24,27 @@ public class UserSubscribeDiscountDto {
     private Long userId;
     private Long discountId;
     private Long productId;
+    private LocalDateTime deletedAt;
 
     public static UserSubscribeDiscountDto fromEntity(UserSubscribeDiscount entity) {
         return UserSubscribeDiscountDto.builder()
                 .udsId(entity.getUdsId())
                 .discountSubscribeMonth(entity.getDiscountSubscribeMonth())
-                .userId(entity.getBillingUser() != null ? entity.getBillingUser().getUserId() : null)
-                .discountId(entity.getBillingDiscount() != null ? entity.getBillingDiscount().getDiscountId() : null)
-                .productId(entity.getBillingProduct() != null ? entity.getBillingProduct().getProductId() : null)
+                .userId(entity.getUserId())
+                .discountId(entity.getDiscountId())
+                .productId(entity.getProductId())
+                .deletedAt(entity.getDeletedAt())
                 .build();
     }
 
-    public UserSubscribeDiscount toEntity(BillingUser user, BillingDiscount discount, BillingProduct product) {
+    public UserSubscribeDiscount toEntity() {
         return UserSubscribeDiscount.builder()
                 .udsId(this.udsId)
                 .discountSubscribeMonth(this.discountSubscribeMonth)
-                .billingUser(user)
-                .billingDiscount(discount)
-                .billingProduct(product)
+                .userId(this.userId)
+                .discountId(this.discountId)
+                .productId(this.productId)
+                .deletedAt((this.deletedAt))
                 .build();
     }
 }
