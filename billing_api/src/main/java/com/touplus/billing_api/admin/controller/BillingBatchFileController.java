@@ -1,4 +1,4 @@
-package com.touplus.billing_api.admin;
+package com.touplus.billing_api.admin.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.io.Resource;

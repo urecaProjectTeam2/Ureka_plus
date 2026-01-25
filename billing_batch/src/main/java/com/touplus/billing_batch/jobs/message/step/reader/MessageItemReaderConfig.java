@@ -30,6 +30,7 @@ public class MessageItemReaderConfig {
                 .dataSource(dataSource)
                 .queryProvider(queryProvider())
                 .pageSize(chunkSize)
+//                .maxItemCount(100_000)  /// //////// 임시로 100,000개만 보냄
                 // BeanPropertyRowMapper 대신 아래와 같이 직접 매핑합니다.
                 .rowMapper((rs, rowNum) -> BillingResultDto.builder()
                         .id(rs.getLong("billing_result_id"))

@@ -1,4 +1,4 @@
-package com.touplus.billing_api.admin;
+package com.touplus.billing_api.admin.controller;
 
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;

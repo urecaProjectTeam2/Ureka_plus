@@ -37,7 +37,6 @@ public class BillingBatchScheduler {
 
     public void runBillingJob(Boolean forceFullScan) {
         // 정산 대상이 되는 월 계산. 정산 해당 월 1일로 계산
-//        String targetMonth = LocalDate.now().minusMonths(1).withDayOfMonth(1).toString();
         String targetMonth = LocalDate.of(2025, 12, 1).toString();
 
         try{
