@@ -1,17 +1,13 @@
 package com.touplus.billing_batch.jobs.billing.step.processor;
 
 import com.touplus.billing_batch.common.BillingException;
-import com.touplus.billing_batch.domain.enums.UseType;
-import com.touplus.billing_batch.jobs.billing.cache.BillingReferenceCache;
-import com.touplus.billing_batch.domain.dto.*;
 import com.touplus.billing_batch.common.BillingFatalException;
-import com.touplus.billing_batch.domain.dto.AdditionalChargeDto;
-import com.touplus.billing_batch.domain.dto.BillingUserBillingInfoDto;
-import com.touplus.billing_batch.domain.dto.BillingWorkDto;
+import com.touplus.billing_batch.domain.dto.*;
 import com.touplus.billing_batch.domain.dto.SettlementDetailsDto.DetailItem;
 import com.touplus.billing_batch.domain.enums.ProductType;
+import com.touplus.billing_batch.domain.enums.UseType;
+import com.touplus.billing_batch.jobs.billing.cache.BillingReferenceCache;
 import lombok.RequiredArgsConstructor;
-import com.touplus.billing_batch.domain.dto.UserSubscribeProductDto;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.item.ItemProcessor;
@@ -19,11 +15,9 @@ import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
-import java.util.HashMap;
-import java.util.Map;
-
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Component
@@ -45,9 +39,10 @@ public class AmountCalculationProcessor
         Map<UsageKeyDto, ProductBaseUsageDto> productBaseUsageMap = referenceCache.getProductBaseUsageMap();
         Map<Long, RefundPolicyDto> refundPolicyMap = referenceCache.getRefundPolicyMap();
 
-        int joinedYear= 0;
+        int joinedYear = 0;
+        long mobileProductId = 0;
 
-        if(productMap == null || productMap.isEmpty())
+        if (productMap == null || productMap.isEmpty())
             throw BillingFatalException.cacheNotFound("상품 정보 캐싱이 이루어지지 않았습니다.");
 
 //        log.info("[AmountCalculationProcessor] 상품 정보 가져오기 성공");
@@ -57,7 +52,7 @@ public class AmountCalculationProcessor
         // 상품 가격 합산
         // product는 무조건 1개 이상 존재.
         List<UserSubscribeProductDto> products = item.getProducts();
-        if(products == null || products.isEmpty())
+        if (products == null || products.isEmpty())
             throw BillingException.dataNotFound(item.getUserId(), "상품 이용 내역이 존재하지 않습니다."); //데이터가 없는 경우. error. skip
 
         for (UserSubscribeProductDto usp : products) {
@@ -69,8 +64,8 @@ public class AmountCalculationProcessor
             }
 
             // 환불 체크
-            if(usp.getDeletedAt() != null){
-                RefundPolicyDto refundPolicy= refundPolicyMap.get(product.getProductId());
+            if (usp.getDeletedAt() != null) {
+                RefundPolicyDto refundPolicy = refundPolicyMap.get(product.getProductId());
                 if (refundPolicy != null) {
                     long usedDays = ChronoUnit.DAYS.between(
                             usp.getCreatedMonth(),
@@ -102,12 +97,16 @@ public class AmountCalculationProcessor
                 throw BillingException.invalidProductData(item.getUserId(), String.valueOf(usp.getProductId()));
             }
 
-            if(productType == ProductType.mobile || productType == ProductType.internet){
+            // 장기 할인에 대한 사용일 계산
+            if (productType == ProductType.mobile || productType == ProductType.internet) {
                 LocalDate createdMonth = usp.getCreatedMonth();
                 LocalDate deletedAt = usp.getDeletedAt() == null ? LocalDate.now() : usp.getDeletedAt();
                 long yearsUsed = ChronoUnit.YEARS.between(createdMonth, deletedAt);
                 joinedYear += (int) yearsUsed;
             }
+
+            // MOBILE 구독 상품이 있으면 productId 저장
+            if (productType == ProductType.mobile) mobileProductId = usp.getProductId();
 
             productSum += price;
             DetailItem detail = DetailItem.builder()
@@ -137,7 +136,7 @@ public class AmountCalculationProcessor
         long additionalSum = 0;
         for (AdditionalChargeDto ac : charges) {
             //추가 요금 데이터 이상.
-            if(ac==null){
+            if (ac == null) {
                 throw BillingException.dataNotFound(item.getUserId(), "추가요금 Row가 비어있습니다.");
             }
 
@@ -166,19 +165,47 @@ public class AmountCalculationProcessor
             throw BillingFatalException.cacheNotFound("초과 요금 정책 캐시가 비어 있습니다.");
         }
 
-        if(productBaseUsageMap == null || productBaseUsageMap.isEmpty()){
+        if (productBaseUsageMap == null || productBaseUsageMap.isEmpty()) {
             throw BillingFatalException.cacheNotFound("상품별 기본 사용량 캐시가 비어 있습니다.");
         }
 
         // 2. 사용자당 월 사용량 리스트가 비었는지 확인 -> 비었으면 종료 예외 처리
         List<UserUsageDto> userUsages = item.getUsage();
 
-        if(userUsages == null || userUsages.isEmpty()){
+        if (userUsages == null || userUsages.isEmpty()) {
             throw BillingFatalException.dataNotFound("사용자별 사용량 데이터가 존재하지 않습니다.");
         }
         // 3. 사용자 요금 확인 -> 무제한이면 건너뛰기(혹은 기본 사용량 테이블에 값이 없으면 건너뛰기)
-        for (UserUsageDto us: userUsages){
+        for (UserUsageDto us : userUsages) {
+            if (mobileProductId == 0) break; // 모바일 상품 이용을 안하는 경우
+            UsageKeyDto usageKey = new UsageKeyDto(mobileProductId, us.getUseType());
 
+            // 해당 상품에 대한 기본 사용량 정책 가져오기
+            ProductBaseUsageDto baseUsageDto = productBaseUsageMap.get(usageKey);
+
+            if (baseUsageDto == null) continue; // 무제한이면 다음으로 넘어가기
+
+            OverusePolicyDto policy = overusePolicyMap.get(us.getUseType());
+            if (policy == null) {
+                log.warn("사용유형 {}에 대한 초과 요금 정책이 없습니다.", us.getUseType());
+                continue;
+            }
+
+            // 초과 요금이 있으면 추가요금 계산
+            int basicAmount = baseUsageDto.getBasicAmount();
+            int useAmount = us.getUseAmount();
+            // 실제 사용량 < 기본 사용량이면 continue
+            if(basicAmount < useAmount) {
+                // 실제 사용량 > 기본 사용량인 경우
+                long overCharge = (long) ((useAmount - basicAmount) * policy.getUnitPrice());
+
+                additionalSum += overCharge;
+                workDto.getAddon().add(DetailItem.builder()
+                        .productType("OVERUSE_CHARGE")
+                        .productName(us.getUseType().name() + "초과 요금")
+                        .price((int) overCharge)
+                        .build());
+            }
         }
 
         // 4.           -> 값이 있으면 -> 사용자 사용량 - 기본 사용량
@@ -186,20 +213,20 @@ public class AmountCalculationProcessor
 
         // 정산 로직 이상 탐지
         long baseAmount = productSum + additionalSum;
-        if(productSum<0 || additionalSum<0 || baseAmount <0 || baseAmount > Integer.MAX_VALUE){
+        if (productSum < 0 || additionalSum < 0 || baseAmount < 0 || baseAmount > Integer.MAX_VALUE) {
             throw BillingFatalException.invalidProductAmount(item.getUserId(), productSum, additionalSum, baseAmount);
         }
 
         // 정산이 없음.
-        if(baseAmount == 0){
+        if (baseAmount == 0) {
             throw BillingException.NoSettlementFee(item.getUserId());
         }
 
-        workDto.setProductAmount((int)productSum);
-        workDto.setAdditionalCharges((int)additionalSum);
+        workDto.setProductAmount((int) productSum);
+        workDto.setAdditionalCharges((int) additionalSum);
 
         // 총 상품 금액 + 총 추가요금
-        workDto.setBaseAmount((int)baseAmount);
+        workDto.setBaseAmount((int) baseAmount);
 
 //        log.info("[AmountCalculationProcessor] DTO에 상품/추가요금 내역 저장");
 
