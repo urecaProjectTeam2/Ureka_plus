@@ -9,58 +9,83 @@ h1 {
 }
 
 
-/* 테이블 */
+/* 테이블 *//
+ .template-wide {
+     max-width: 1920px;     /* Full HD 기준 */
+     width: 100%;
+     margin: 0 auto;
+ }
 
-#templateTable {
-    width: 100%;
-    min-width : 700px;
-    table-layout: fixed; 
-    
-    border-collapse: collapse;
-    margin-top: 20px;
-    background-color: #fff;
-    box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
-}
+ /* 테이블 전체 */
+ .template-table {
+     width: 100%;
+     table-layout: fixed;
+     border-collapse: separate;
+     border-spacing: 0;
+ }
 
+ /* 가로 스크롤 제거 */
+ .template-no-xscroll {
+     overflow-x: hidden;
+ }
 
-#templateTable th:nth-child(1),
-#templateTable td:nth-child(1) { width: 50px; }   /* ID */
+ /* 🔽 세로 밀도 ↓ / 가로 여유 ↑ */
+ .template-table th,
+ .template-table td {
+     padding: 12px 20px;   /* 세로 ↓ / 가로 ↑ */
+     vertical-align: middle;
+     font-size: 14px;
+ }
 
-#templateTable th:nth-child(2),
-#templateTable td:nth-child(2) { width: 100px; }  /* 템플릿 이름 */
+ /* 헤더 */
+ .template-thead {
+     background: linear-gradient(90deg, #e8f2ff, #f4f9ff);
+ }
 
-#templateTable th:nth-child(3),
-#templateTable td:nth-child(3) { width: 80px; }  /* 메시지 타입 */
+ .template-thead th {
+     color: #1e3a8a;
+     font-weight: 600;
+     white-space: nowrap;
+     padding-top: 14px;
+     padding-bottom: 14px;
+ }
 
-#templateTable th:nth-child(4),
-#templateTable td:nth-child(4) { width: 250px; }  /* 내용 */
+ /* ✨ 내용 컬럼: 가로 여백의 미 */
+ .content-cell {
+     max-width: 900px;        /* 체감 확장 */
+     padding-left: 32px;     /* 여백의 미 */
+     padding-right: 32px;
+     white-space: normal;
+     line-height: 1.5;
+     color: #1f2937;
+ }
 
-#templateTable th:nth-child(5),
-#templateTable td:nth-child(5) { width: 100px; }  /* 액션 */
+ /* 버튼 */
+ .action-btn-fixed {
+     width: 70px;
+     padding: 4px 0;
+ }
 
-#templateTable td {
-    white-space: normal;     /* 줄바꿈 허용 */
-    overflow: visible;
-    text-overflow: clip;
-    word-break: break-word; /* 긴 단어도 줄바꿈 */
-}
+ /* 버튼 영역 살짝 여유 */
+ .action-wrap {
+     padding: 0 8px;
+ }
 
+ /* 배지 */
+ .badge-type {
+     background-color: #e0f2fe;
+     color: #0369a1;
+     font-weight: 600;
+     padding: 5px 12px;
+     border-radius: 999px;
+     font-size: 13px;
+ }
 
-#templateTable th, #templateTable td {
-    padding: 12px 15px;
-    border: 1px solid #ddd;
-    text-align: left;
-}
-
-#templateTable th {
-    background-color: #3498db;
-    color: #fff;
-}
-
-#templateTable tbody tr:nth-child(even) {
-    background-color: #f2f2f2;
-}
-
+ /* 테이블 가장자리 숨 쉴 공간 */
+ .card-body {
+     padding: 8px 16px;
+ }
+/* 테이블 끝! */
 /* 액션 버튼 */
 .action-btn {
     cursor: pointer;

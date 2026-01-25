@@ -33,34 +33,63 @@
     </div>
 </div>
 <!-- 템플릿 목록 -->
-<table id="templateTable">
-    <thead>
-        <tr>
-            <th>ID</th>
-            <th>템플릿 이름</th>
-            <th>메시지 타입</th>
-            <th>내용</th>
-            <th>액션</th>
-        </tr>
-    </thead>
-    <tbody>		    
-	    <tr th:each="template : ${templates}" th:id="'row-' + ${template.templateId}">
-	        <td th:text="${template.templateId}"></td>
-	        <td th:text="${template.templateName}"></td>
-	        <td th:text="${template.messageType}"></td>
-	        <td th:text="${template.templateContent}"
-	        	  th:title="${template.templateContent}">
-	        </td>
-	        <td>
-	            <span class="action-btn" th:onclick="'editTemplate(' + ${template.templateId} + ')'" style="color: blue;">수정</span>
-	            <span class="action-btn" th:onclick="'deleteTemplate(' + ${template.templateId} + ')'" style="color: red;">삭제</span>
-	        </td>
-	    </tr>
-	</tbody>
-</table>
+    <div class="container-fluid px-4 template-wide">
+        <div class="card template-card mt-4">
+            <div class="card-body p-0">
+                <div class="table-responsive template-no-xscroll">
+                    <table class="table table-hover mb-0 text-center template-table">
+                        <thead class="template-thead">
+                        <tr>
+                            <th>템플릿 이름</th>
+                            <th style="width: 160px;">메시지 타입</th>
+                            <th class="text-start">내용</th>
+                            <th style="width: 180px;">관리</th>
+                        </tr>
+                        </thead>
+
+                        <tbody>
+                        <tr th:each="template : ${templates}">
+                            <td class="fw-semibold"
+                                th:text="${template.templateName}">
+                            </td>
+
+                            <td>
+                            <span class="badge badge-type"
+                                  th:text="${template.messageType}">
+                            </span>
+                            </td>
+
+                            <td class="content-cell text-start"
+                                th:text="${template.templateContent}"
+                                th:title="${template.templateContent}">
+                            </td>
+
+                            <td>
+                                <div class="d-flex justify-content-center gap-2 action-wrap">
+                                    <button class="btn btn-sm btn-outline-primary action-btn-fixed"
+                                            th:onclick="'editTemplate(' + ${template.templateId} + ')'">
+                                        수정
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger action-btn-fixed"
+                                            th:onclick="'deleteTemplate(' + ${template.templateId} + ')'">
+                                        삭제
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        </tbody>
+
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
 
 
-<!-- ================= 모달 ================= -->
+
+
+
+    <!-- ================= 모달 ================= -->
 <div class="modal fade" id="templateModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
