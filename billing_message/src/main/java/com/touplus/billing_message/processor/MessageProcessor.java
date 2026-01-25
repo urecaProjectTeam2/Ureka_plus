@@ -14,11 +14,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import com.touplus.billing_message.domain.entity.BillingSnapshot;
 import com.touplus.billing_message.domain.entity.Message;
+import com.touplus.billing_message.domain.entity.MessageType;
 import com.touplus.billing_message.domain.entity.User;
 import com.touplus.billing_message.domain.respository.MessageJdbcRepository;
 import com.touplus.billing_message.domain.respository.MessageRepository;
 import com.touplus.billing_message.domain.respository.UserRepository;
-import com.touplus.billing_message.service.MessageDispatchService;
+import com.touplus.billing_message.service.MessageSnapshotService;
+import com.touplus.billing_message.service.WaitingQueueService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * MessageProcessor
  * billing_snapshot 저장 후 호출되어 Message 생성
+ * - Message INSERT → 스냅샷 생성 → Redis 큐에 추가
  */
 @Component
 @RequiredArgsConstructor
@@ -33,10 +36,10 @@ import lombok.extern.slf4j.Slf4j;
 public class MessageProcessor {
 
     private final UserRepository userRepository;
-    private final com.touplus.billing_message.domain.respository.MessageRepository messageRepository;
-    private final com.touplus.billing_message.domain.respository.MessageJdbcRepository messageJdbcRepository;
-    private final com.touplus.billing_message.service.MessageDispatchService messageDispatchService;
-    private final org.springframework.context.ApplicationEventPublisher eventPublisher;
+    private final MessageRepository messageRepository;
+    private final MessageJdbcRepository messageJdbcRepository;
+    private final MessageSnapshotService messageSnapshotService;
+    private final WaitingQueueService waitingQueueService;
 
     private static final int MAX_RETRY = 3;
 
@@ -46,9 +49,9 @@ public class MessageProcessor {
     public void processBatchWithUsers(List<BillingSnapshot> snapshots, Map<Long, User> userMap) {
         if (snapshots.isEmpty())
             return;
-        
+
         LocalDate today = LocalDate.now();
-        
+
         // Message 생성
         List<Message> messages = new ArrayList<>(snapshots.size());
 
@@ -67,26 +70,26 @@ public class MessageProcessor {
         if (messages.isEmpty())
             return;
 
-        // INSERT
+        // 1. Message INSERT
         int inserted = insertBatch(messages);
-        
+
         if (log.isDebugEnabled()) {
             log.debug("Message insert: expected={}, actual={}", messages.size(), inserted);
         }
 
-        // 저장 완료 후 이벤트 발행 (비동기 처리)
         if (inserted > 0) {
-            log.info("Message 저장 완료: {}건, 발송 이벤트 발행 (Async)", inserted);
-            eventPublisher.publishEvent(new com.touplus.billing_message.event.MessageReadyEvent(inserted));
+            // 2. 스냅샷 생성 + Redis 큐에 추가
+            createSnapshotsAndEnqueue(messages);
+            log.info("Message 저장 완료: {}건 → 스냅샷 생성 → Redis 큐에 추가됨", inserted);
         }
     }
 
     public void processBatch(List<BillingSnapshot> snapshots) {
-    
+
         if (snapshots.isEmpty())
             return;
         LocalDate today = LocalDate.now();
-        
+
         int retry = 0;
         List<BillingSnapshot> target = snapshots;
 
@@ -122,16 +125,15 @@ public class MessageProcessor {
 
             // 3. INSERT (짧은 트랜잭션)
             int inserted = insertBatch(messages);
-            
+
             if (log.isDebugEnabled()) {
                 log.debug("Message insert: expected={}, actual={}", messages.size(), inserted);
             }
 
-            
             if (inserted == messages.size()) {
-                // 저장 완료 후 즉시 발송 처리 (직접 호출)
-                log.info("Message 저장 완료: {}건, 발송 처리 시작", inserted);
-                messageDispatchService.dispatchAllWaitedMessages();
+                // 스냅샷 생성 + Redis 큐에 추가
+                createSnapshotsAndEnqueue(messages);
+                log.info("Message 저장 완료: {}건 → 스냅샷 생성 → Redis 큐에 추가됨", inserted);
                 return; // 정상 완료
             }
 
@@ -151,21 +153,53 @@ public class MessageProcessor {
         }
     }
 
+    /**
+     * INSERT 후 스냅샷 생성 + Redis 큐에 추가
+     */
+    private void createSnapshotsAndEnqueue(List<Message> messages) {
+        List<Long> billingIds = messages.stream()
+                .map(Message::getBillingId)
+                .toList();
+
+        // 1. INSERT된 Message 엔티티 조회 (messageId 포함)
+        List<Message> insertedMessages = messageRepository.findByBillingIdIn(billingIds);
+
+        if (insertedMessages.isEmpty()) {
+            log.warn("INSERT된 메시지 조회 실패");
+            return;
+        }
+
+        // 2. 스냅샷 생성
+        try {
+            int snapshotCount = messageSnapshotService.createSnapshotsBatch(insertedMessages, MessageType.EMAIL);
+            log.debug("스냅샷 {}건 생성됨", snapshotCount);
+        } catch (Exception e) {
+            log.error("스냅샷 생성 실패", e);
+        }
+
+        // 3. Redis 큐에 추가 (EMAIL 1초 지연)
+        for (Message msg : insertedMessages) {
+            waitingQueueService.addToQueue(msg.getMessageId(), msg.getScheduledAt(), 1);
+        }
+
+        log.debug("Redis 큐에 {}건 추가됨", insertedMessages.size());
+    }
+
     @Transactional
     public int insertBatch(List<Message> messages) {
         return messageJdbcRepository.batchInsert(messages);
     }
 
     /* 발송 예정 시간 계산
-    	- sendingDay: 발송 예정일 (1~28)
-    	- banStartTime/banEndTime: 발송 금지 시간대 */
+        - sendingDay: 발송 예정일 (1~28)
+        - banStartTime/banEndTime: 발송 금지 시간대 */
     private LocalDateTime calculateScheduledTime(User user, LocalDate today) {
-        
+
         int sendingDay = user.getSendingDay();
 
         // [테스트용] 항상 현재 달의 sendingDay로 생성
         LocalDate sendDate = today.withDayOfMonth(sendingDay);
-        
+
         // [원본] 날짜가 지났으면 다음 달로 생성
         // LocalDate sendDate = today.getDayOfMonth() < sendingDay
         //         ? today.withDayOfMonth(sendingDay)
