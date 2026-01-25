@@ -1,6 +1,5 @@
 package com.touplus.billing_batch.jobs.billing.step.reader;
 
-import com.touplus.billing_batch.common.BillingFatalException;
 import com.touplus.billing_batch.domain.dto.*;
 import com.touplus.billing_batch.domain.entity.BillingUser;
 import com.touplus.billing_batch.domain.repository.service.*;
@@ -165,6 +164,7 @@ public class BillingItemReader implements ItemStreamReader<BillingUserBillingInf
         for (BillingUser user : users) {
             BillingUserBillingInfoDto dto = BillingUserBillingInfoDto.builder()
                     .userId(user.getUserId())
+                    // Null 방지 --> List.of() 사용
                     .products(uspMap.getOrDefault(user.getUserId(), List.of()))
                     .additionalCharges(chargeMap.getOrDefault(user.getUserId(), List.of()))
                     .discounts(discountMap.getOrDefault(user.getUserId(), List.of()))
