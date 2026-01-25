@@ -124,7 +124,7 @@ public class DiscountCalculationProcessor implements ItemProcessor<BillingWorkDt
                 int configValue = discount.getValue() == null ? 0 : discount.getValue(); // 할인 value
 
                 if ("group".equals(contentType)) {
-                    if (userGroup == null || userGroup.getGroupId() != null ||
+                    if (userGroup == null || userGroup.getGroupId() == null ||
                             userGroup.getGroupNumOfMember() != configValue ||
                             userGroup.getUserNumOfMember() != configValue){
                         throw BillingException.invalidDiscountCondition(userId, discount.getDiscountId());
@@ -167,15 +167,6 @@ public class DiscountCalculationProcessor implements ItemProcessor<BillingWorkDt
             String contentType = discount.getContentType().toString().toLowerCase();
             int configValue = discount.getValue() == null ? 0 : discount.getValue(); // 할인 value
 
-            if ("group".equals(contentType)) {
-                if (userGroup == null || userGroup.getGroupId() == null ||
-                        userGroup.getGroupNumOfMember() != configValue||
-                        userGroup.getUserNumOfMember() != configValue){
-                    log.warn("사용자 {}는 그룹 할인 조건을 만족하지 않아 할인을 제외합니다.", userId);
-                    continue;
-                }
-            }
-
             double discountPercent = discount.getPercent();
             if (discountPercent <= 0 || discountPercent > 100) {
                 throw BillingException.invalidDiscountData(userId, String.valueOf(usd.getDiscountId()));
@@ -207,6 +198,7 @@ public class DiscountCalculationProcessor implements ItemProcessor<BillingWorkDt
             if (discountPolicy.getDiscountRange() == DiscountRangeType.MOBILE_INTERNET) {
                 if ("year".equals(contentType)) {
                     if (joinedYear < configValue) { // 장기 할인 혜택 오류
+                        log.error(joinedYear+" "+configValue+" "+userId);
                         throw BillingException.invalidDiscountCondition(userId, discount.getDiscountId());
                     }
                 }

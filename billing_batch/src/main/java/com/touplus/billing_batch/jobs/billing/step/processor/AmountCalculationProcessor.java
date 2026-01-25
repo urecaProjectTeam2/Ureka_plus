@@ -104,7 +104,11 @@ public class AmountCalculationProcessor
             // 장기 할인에 대한 사용일 계산
             if (productType == ProductType.mobile || productType == ProductType.internet) {
                 LocalDate createdMonth = usp.getCreatedMonth();
-                LocalDate deletedAt = usp.getDeletedAt() == null ? LocalDate.parse(targetMonth) : usp.getDeletedAt();
+                LocalDate deletedAt = usp.getDeletedAt() == null
+                        ? LocalDate.parse(targetMonth).withDayOfMonth(
+                        LocalDate.parse(targetMonth).lengthOfMonth()
+                )
+                        : usp.getDeletedAt();
                 long daysUsed = ChronoUnit.DAYS.between(createdMonth, deletedAt);
                 int yearsUsed = (int) (daysUsed / 365); // 365일 기준
                 joinedYear += yearsUsed;
