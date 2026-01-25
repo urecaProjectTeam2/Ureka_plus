@@ -3,15 +3,15 @@ package com.touplus.billing_message.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
+import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Set;
-import org.springframework.data.redis.core.ZSetOperations;
 
 /**
  * Redis ZSet 기반 대기열 서비스
@@ -25,6 +25,23 @@ public class WaitingQueueService {
 
     private final StringRedisTemplate redisTemplate;
     private static final String QUEUE_KEY = "queue:message:waiting";
+    private static final RedisScript<List> POP_READY_SCRIPT;
+
+    static {
+        DefaultRedisScript<List> script = new DefaultRedisScript<>();
+        script.setResultType(List.class);
+        script.setScriptText(
+                "local key = KEYS[1]\n"
+                        + "local maxScore = ARGV[1]\n"
+                        + "local limit = tonumber(ARGV[2])\n"
+                        + "if limit <= 0 then return {} end\n"
+                        + "local ids = redis.call('ZRANGEBYSCORE', key, '-inf', maxScore, 'LIMIT', 0, limit)\n"
+                        + "if #ids > 0 then\n"
+                        + "  redis.call('ZREM', key, unpack(ids))\n"
+                        + "end\n"
+                        + "return ids\n");
+        POP_READY_SCRIPT = script;
+    }
 
     /**
      * 대기열에 메시지 추가
@@ -70,7 +87,7 @@ public class WaitingQueueService {
 
     /**
      * ZPOPMIN으로 원자적으로 가져온 뒤, 현재 시간 이전만 반환
-     * - 미래 스코어는 다시 큐에 복원
+     * - Lua로 현재 시간 이전만 원자적으로 pop
      */
     public List<String> popReadyMessageIds(int limit) {
         if (limit <= 0) {
@@ -78,34 +95,13 @@ public class WaitingQueueService {
         }
 
         long now = System.currentTimeMillis() / 1000;
-        Set<ZSetOperations.TypedTuple<String>> popped =
-                redisTemplate.opsForZSet().popMin(QUEUE_KEY, limit);
+        List<String> result = redisTemplate.execute(
+                POP_READY_SCRIPT,
+                Collections.singletonList(QUEUE_KEY),
+                String.valueOf(now),
+                String.valueOf(limit));
 
-        if (popped == null || popped.isEmpty()) {
-            return Collections.emptyList();
-        }
-
-        List<String> ready = new ArrayList<>();
-        List<ZSetOperations.TypedTuple<String>> future = new ArrayList<>();
-
-        for (ZSetOperations.TypedTuple<String> tuple : popped) {
-            if (tuple == null || tuple.getValue() == null || tuple.getScore() == null) {
-                continue;
-            }
-            if (tuple.getScore() <= now) {
-                ready.add(tuple.getValue());
-            } else {
-                future.add(tuple);
-            }
-        }
-
-        if (!future.isEmpty()) {
-            for (ZSetOperations.TypedTuple<String> tuple : future) {
-                redisTemplate.opsForZSet().add(QUEUE_KEY, tuple.getValue(), tuple.getScore());
-            }
-        }
-
-        return ready;
+        return result != null ? result : Collections.emptyList();
     }
 
     /**
