@@ -21,41 +21,47 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script th:inline="javascript">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script><script th:inline="javascript">
 
 	const barLabels = [[${barLabels}]];
-	const barData = [[${barData}]];
-		
-	new Chart(document.getElementById('barChart'), {
-	    type: 'bar',
-	    data: {
-	        labels: barLabels,
-	        datasets: [{
-	            label: '구독자 수',
-	            data: barData
-	        }]
-	    },
-	    options: {
-	        maintainAspectRatio: false,
-	        plugins: {
-	            tooltip: {
-	                enabled: true,
-	                callbacks: {
-	                    label: function(context) {
-	                        return '구독자 수: ' + context.raw;
-	                    }
-	                }
-	            },
-	            legend: {
-	                display: false
-	            }
-	        }
-	    }
-	});
-	
+    const barData = [[${barData}]];
 
+    new Chart(document.getElementById('barChart'), {
+        type: 'bar',
+        data: {
+            labels: barLabels,
+            datasets: [{
+                label: '구독자 수',
+                data: barData
+            }]
+        },
+        options: {
+            maintainAspectRatio: false,
+            scales: {
+                y: {
+                    min: 40000,
+                    max: 80000,
+                    ticks: {
+                        stepSize: 5000,
+                        callback: value => value.toLocaleString()
+                    }
+                }
+            },
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        label: ctx =>
+                            `구독자 수: ${ctx.raw.toLocaleString()}`
+                    }
+                },
+                legend: {
+                    display: false
+                }
+            }
+        }
+    });
 </script>
+
 
 
 </body>
