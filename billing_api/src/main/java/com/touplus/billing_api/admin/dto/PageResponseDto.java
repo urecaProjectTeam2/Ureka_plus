@@ -7,7 +7,7 @@ import java.util.List;
 
 @Getter
 @Builder
-public class PageResponse<T> {
+public class PageResponseDto<T> {
 
     private List<T> contents;   // 현재 페이지의 데이터 목록
     private int page;           // 현재 페이지 (0-based)

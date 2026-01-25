@@ -1,6 +1,6 @@
 package com.touplus.billing_api.admin.controller;
 
-import com.touplus.billing_api.admin.dto.PageResponse;
+import com.touplus.billing_api.admin.dto.PageResponseDto;
 import com.touplus.billing_api.admin.dto.UnpaidUserResponse;
 import com.touplus.billing_api.admin.service.AdminUnpaidService;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ public class AdminUnpaidController {
     private final AdminUnpaidService adminUnpaidService;
 
     @GetMapping
-    public PageResponse<UnpaidUserResponse> getUnpaidUsers(
+    public PageResponseDto<UnpaidUserResponse> getUnpaidUsers(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size
     ) {
@@ -27,7 +27,7 @@ public class AdminUnpaidController {
     }
 
     @GetMapping("/search")
-    public PageResponse<UnpaidUserResponse> searchUnpaidUsers(
+    public PageResponseDto<UnpaidUserResponse> searchUnpaidUsers(
             @RequestParam(defaultValue = "1") int page,
             @RequestParam(defaultValue = "20") int size,
             @RequestParam(required = false) String keyword

@@ -1,19 +1,23 @@
 package com.touplus.billing_api.domain.message.entity;
 
+import java.time.LocalTime;
+
 import com.touplus.billing_api.domain.message.enums.MessageType;
-import jakarta.persistence.*;
+
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
-import java.time.LocalTime;
 
 /**
  * users 테이블 Entity
  * 유저 정보 조회용 (발송 시간 계산에 사용)
  */
 
+@Entity
 @Getter
 @Setter
 @NoArgsConstructor

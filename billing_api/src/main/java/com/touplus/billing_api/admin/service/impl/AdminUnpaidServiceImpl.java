@@ -1,6 +1,6 @@
 package com.touplus.billing_api.admin.service.impl;
 
-import com.touplus.billing_api.admin.dto.PageResponse;
+import com.touplus.billing_api.admin.dto.PageResponseDto;
 import com.touplus.billing_api.admin.dto.UnpaidUserResponse;
 import com.touplus.billing_api.admin.service.AdminUnpaidService;
 import com.touplus.billing_api.domain.billing.entity.Unpaid;
@@ -25,7 +25,7 @@ public class AdminUnpaidServiceImpl implements AdminUnpaidService {
     private final UserContactService userContactService;
 
     @Override
-    public PageResponse<UnpaidUserResponse> getUnpaidUsers(int page, int size) {
+    public PageResponseDto<UnpaidUserResponse> getUnpaidUsers(int page, int size) {
 
         int offset = page * size;
 
@@ -37,7 +37,7 @@ public class AdminUnpaidServiceImpl implements AdminUnpaidService {
         int totalPages = (int) Math.ceil((double) totalElements / size);
 
         if (unpaids.isEmpty()) {
-            return PageResponse.<UnpaidUserResponse>builder()
+            return PageResponseDto.<UnpaidUserResponse>builder()
                     .contents(List.of())
                     .page(page)
                     .size(size)
@@ -69,7 +69,7 @@ public class AdminUnpaidServiceImpl implements AdminUnpaidService {
                 .toList();
 
         // 5. PageResponse 생성
-        return PageResponse.<UnpaidUserResponse>builder()
+        return PageResponseDto.<UnpaidUserResponse>builder()
                 .contents(contents)
                 .page(page)
                 .size(size)
@@ -111,7 +111,7 @@ public class AdminUnpaidServiceImpl implements AdminUnpaidService {
 //    }
 
     @Override
-    public PageResponse<UnpaidUserResponse> searchUnpaidUsersByKeyword(
+    public PageResponseDto<UnpaidUserResponse> searchUnpaidUsersByKeyword(
             int page,
             int size,
             String keyword
@@ -127,7 +127,7 @@ public class AdminUnpaidServiceImpl implements AdminUnpaidService {
         int totalPages = (int) Math.ceil((double) totalElements / size);
 
         if (unpaids.isEmpty()) {
-            return PageResponse.<UnpaidUserResponse>builder()
+            return PageResponseDto.<UnpaidUserResponse>builder()
                     .contents(List.of())
                     .page(page)
                     .size(size)
@@ -156,7 +156,7 @@ public class AdminUnpaidServiceImpl implements AdminUnpaidService {
                 })
                 .toList();
 
-        return PageResponse.<UnpaidUserResponse>builder()
+        return PageResponseDto.<UnpaidUserResponse>builder()
                 .contents(contents)
                 .page(page)
                 .size(size)

@@ -6,7 +6,7 @@ import java.util.Map;
 import org.springframework.stereotype.Service;
 
 import com.touplus.billing_api.admin.dto.MessageWithSettlementMonthDto;
-import com.touplus.billing_api.admin.dto.PageResponse;
+import com.touplus.billing_api.admin.dto.PageResponseDto;
 import com.touplus.billing_api.domain.message.dto.MessageStatusSummaryDto;
 import com.touplus.billing_api.domain.message.enums.MessageStatus;
 import com.touplus.billing_api.domain.message.service.MessageService;
@@ -38,7 +38,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public PageResponse<MessageWithSettlementMonthDto> getMessagesByStatus(
+    public PageResponseDto<MessageWithSettlementMonthDto> getMessagesByStatus(
             MessageStatus messageStatus, int page) {
 
         String status = messageStatus != null ? messageStatus.name() : null;
@@ -49,7 +49,7 @@ public class MessageServiceImpl implements MessageService {
         List<MessageWithSettlementMonthDto> contents =
                 messagePagingRepository.findAllByStatus(status, page, PAGE_SIZE);
 
-        return PageResponse.<MessageWithSettlementMonthDto>builder()
+        return PageResponseDto.<MessageWithSettlementMonthDto>builder()
                 .contents(contents)
                 .page(page)
                 .size(PAGE_SIZE)
@@ -59,7 +59,7 @@ public class MessageServiceImpl implements MessageService {
     }
 
     @Override
-    public PageResponse<MessageWithSettlementMonthDto> getMessagesWithPagination(
+    public PageResponseDto<MessageWithSettlementMonthDto> getMessagesWithPagination(
             MessageStatus messageStatus, String settlementMonth, int page) {
 
         if (messageStatus == null || settlementMonth == null || settlementMonth.isEmpty()) {
@@ -70,7 +70,7 @@ public class MessageServiceImpl implements MessageService {
             List<MessageWithSettlementMonthDto> contents =
                     messagePagingRepository.findAll(page, PAGE_SIZE);
 
-            return PageResponse.<MessageWithSettlementMonthDto>builder()
+            return PageResponseDto.<MessageWithSettlementMonthDto>builder()
                     .contents(contents)
                     .page(page)
                     .size(PAGE_SIZE)
@@ -88,7 +88,7 @@ public class MessageServiceImpl implements MessageService {
         List<MessageWithSettlementMonthDto> contents =
                 messagePagingRepository.findMessages(status, settlementMonth, page, PAGE_SIZE);
 
-        return PageResponse.<MessageWithSettlementMonthDto>builder()
+        return PageResponseDto.<MessageWithSettlementMonthDto>builder()
                 .contents(contents)
                 .page(page)
                 .size(PAGE_SIZE)

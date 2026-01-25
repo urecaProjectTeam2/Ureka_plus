@@ -27,8 +27,8 @@
         <li th:classappend="${#strings.contains(currentPath, '/admin/users')} ? ' active open' : ''">
             <a href="#">사용자 대시보드 ▾</a>
             <ul class="dropdown">
-                <li th:classappend="${#strings.contains(currentPath, '/admin/process/dashboard')} ? ' active' : ''">
-                    <a th:href="@{/admin/process/dashboard}">사용자별 정산 결과</a>
+                <li th:classappend="${#strings.contains(currentPath, '/admin/users/settlements')} ? ' active' : ''">
+                    <a th:href="@{/admin/users/settlements}">사용자별 정산 결과</a>
                 </li>
                 <li th:classappend="${#strings.contains(currentPath, '/admin/users/products/bar')} ? ' active' : ''">
                     <a th:href="@{/admin/users/products/bar}">구독 TOP 7</a>

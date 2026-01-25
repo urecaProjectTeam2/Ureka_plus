@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.touplus.billing_api.admin.dto.MessageWithSettlementMonthDto;
-import com.touplus.billing_api.admin.dto.PageResponse;
+import com.touplus.billing_api.admin.dto.PageResponseDto;
 import com.touplus.billing_api.domain.message.enums.MessageStatus;
 import com.touplus.billing_api.domain.message.service.MessageService;
 
@@ -48,7 +48,7 @@ public class MessageController {
      * 달만 빼와서 처리하는 로직 필요할 듯
      */
     @GetMapping
-    public PageResponse<MessageWithSettlementMonthDto> getMessagesByMonth(
+    public PageResponseDto<MessageWithSettlementMonthDto> getMessagesByMonth(
             @RequestParam(value = "month") String settlementMonth,
             @RequestParam(value = "page", defaultValue = "0") int page
     ) {
@@ -60,7 +60,7 @@ public class MessageController {
      * GET /admin/message/status?status=SENT&page=0
      */
     @GetMapping("/status")
-    public PageResponse<MessageWithSettlementMonthDto> getMessagesByStatus(
+    public PageResponseDto<MessageWithSettlementMonthDto> getMessagesByStatus(
             @RequestParam("status") String messageStatusStr,
             @RequestParam(value = "page", defaultValue = "0") int page
     ) {
@@ -76,7 +76,7 @@ public class MessageController {
      * GET /admin/message/query?status=SENT&month=20251201&page=0
      */
     @GetMapping("/query")
-    public PageResponse<MessageWithSettlementMonthDto> queryMessages(
+    public PageResponseDto<MessageWithSettlementMonthDto> queryMessages(
             @RequestParam(value = "status", required = false) String messageStatusStr,
             @RequestParam(value = "month", required = false) String settlementMonth,
             @RequestParam(value = "page", defaultValue = "0") int page
