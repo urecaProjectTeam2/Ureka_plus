@@ -1,5 +1,6 @@
 package com.touplus.billing_batch.jobs.billing.step.reader;
 
+import com.touplus.billing_batch.common.BillingFatalException;
 import com.touplus.billing_batch.domain.dto.*;
 import com.touplus.billing_batch.domain.entity.BillingUser;
 import com.touplus.billing_batch.domain.repository.service.*;
@@ -20,7 +21,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-// targetMonth 를 어디서 활용...?
 @Component
 @StepScope
 @Slf4j
