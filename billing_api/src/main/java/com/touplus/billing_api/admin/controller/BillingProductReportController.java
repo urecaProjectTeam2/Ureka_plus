@@ -3,6 +3,8 @@ package com.touplus.billing_api.admin.controller;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.touplus.billing_api.admin.dto.DonutChartView;
+import com.touplus.billing_api.domain.billing.enums.ProductType;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,7 +26,7 @@ public class BillingProductReportController {
     @GetMapping("/bar")
     public String billingReportBar(Model model, HttpServletRequest request) {
 
-        List<String> productTypes = List.of("MOVIE", "ADDON");
+        List<String> productTypes = List.of("MOVIE", "ADDON", "IPTV", "INTERNET");
 
         List<BillingProductStatResponse> topProducts =
                 reportService.getTopSubscribedProducts(productTypes, 7);
@@ -43,28 +45,41 @@ public class BillingProductReportController {
         
         return "productBar";
     }
-    
+
     @GetMapping("/donut")
     public String billingReportDonut(Model model, HttpServletRequest request) {
 
-        List<String> productTypes = List.of("MOVIE", "ADDON");
-        
-        List<BillingProductStatResponse> allProducts =
-                reportService.getTopSubscribedProducts(productTypes, 100);
+        List<ProductType> types = List.of(
+                ProductType.mobile,
+                ProductType.internet,
+                ProductType.iptv,
+                ProductType.addon
+        );
 
+        List<DonutChartView> charts = types.stream()
+                .map(type -> {
+                    var products =
+                            reportService.getTopSubscribedProducts(
+                                    List.of(type.name()), 100
+                            );
 
-        model.addAttribute("donutLabels",
-                allProducts.stream()
-                        .map(BillingProductStatResponse::getProductName)
-                        .collect(Collectors.toList()));
+                    return new DonutChartView(
+                            type,
+                            type.name() + " 상품 구독 비율",
+                            products.stream()
+                                    .map(BillingProductStatResponse::getProductName)
+                                    .toList(),
+                            products.stream()
+                                    .map(BillingProductStatResponse::getSubscribeCount)
+                                    .toList()
+                    );
+                })
+                .toList();
 
-        model.addAttribute("donutData",
-                allProducts.stream()
-                        .map(BillingProductStatResponse::getSubscribeCount)
-                        .collect(Collectors.toList()));
-
+        model.addAttribute("charts", charts);
         model.addAttribute("currentPath", request.getRequestURI());
-        
+
         return "productDonut";
     }
+
 }
