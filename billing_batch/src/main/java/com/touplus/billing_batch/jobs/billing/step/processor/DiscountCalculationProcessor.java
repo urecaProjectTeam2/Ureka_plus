@@ -164,6 +164,17 @@ public class DiscountCalculationProcessor implements ItemProcessor<BillingWorkDt
             BillingDiscountDto discount = discountMap.get(usd.getDiscountId());
             DiscountPolicyDto discountPolicy = discountPolicyMap.get(usd.getDiscountId());
 
+            String contentType = discount.getContentType().toString().toLowerCase();
+            int configValue = discount.getValue() == null ? 0 : discount.getValue(); // 할인 value
+
+            if ("group".equals(contentType)) {
+                if (userGroup == null || userGroup.getGroupId() == null ||
+                        userGroup.getGroupNumOfMember() != configValue||
+                        userGroup.getUserNumOfMember() != configValue){
+                    log.warn("사용자 {}는 그룹 할인 조건을 만족하지 않아 할인을 제외합니다.", userId);
+                    continue;
+                }
+            }
 
             double discountPercent = discount.getPercent();
             if (discountPercent <= 0 || discountPercent > 100) {

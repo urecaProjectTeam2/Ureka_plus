@@ -29,8 +29,34 @@ public class BillingSkipListener implements SkipListener<BillingUserBillingInfoD
 
     @Override
     public void onSkipInProcess(BillingUserBillingInfoDto item, Throwable t) {
-        log.error(">> [Skip In Process] UserID: {}, Reason: {}", item.getUserId(), t.getMessage());
-        billingErrorLogger.saveErrorLog(stepExecution, item.getUserId(), t, "PROCESSOR", false);
+        Long userId = (item != null) ? item.getUserId() : 0L;
+        log.error(">>> [Skip In Process] UserID: [{}], Error: {}", userId, t.getMessage());
+
+        if (item != null) {
+            // 1. Users 정보 (DTO에 @ToString 추가 시 상세 내용이 찍힘)
+            String userInfo = (item.getUsers() != null) ? item.getUsers().toString() : "NULL";
+
+            // 2. 리스트 사이즈 확인
+            int products = (item.getProducts() != null) ? item.getProducts().size() : 0;
+            int usages = (item.getUsage() != null) ? item.getUsage().size() : 0;
+
+            log.error("    [Skip Details] Users: {}, Products: {}, Usages: {}", userInfo, products, usages);
+
+            // 3. 사용량 데이터의 실제 월(Month) 확인 (매우 중요)
+            // UserUsageDto에도 @ToString이 있으면 객체 내용이 보이고,
+            // 없으면 최소한 getUseMonth() 메서드가 있는지 확인하여 호출해야 합니다.
+            if (usages > 0) {
+                try {
+                    // UserUsageDto에 getUseMonth()가 있다고 가정
+                    log.error("    [Sample Usage Date] First Usage Month: {}", item.getUsage().get(0).getUseMonth());
+                } catch (Exception e) {
+                    // 메서드가 없을 경우를 대비한 안전장치
+                    log.error("    [Sample Usage Date] {}", item.getUsage().get(0).toString());
+                }
+            }
+        }
+
+        billingErrorLogger.saveErrorLog(stepExecution, userId, t, "PROCESSOR", false);
     }
 
     @Override
