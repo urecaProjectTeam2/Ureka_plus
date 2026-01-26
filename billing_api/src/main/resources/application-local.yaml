@@ -12,3 +12,16 @@ spring:
     url: jdbc:mysql://localhost:13306
     username: ${DB_USER} #로컬로 테스트 시, 직접 값 입력하기
     password: ${DB_PASSWORD} #로컬로 테스트 시, 직접 값 입력하기
+
+    hikari:
+      maximum-pool-size: 5
+      idle-timeout: 30000
+
+  batch:
+    jdbc:
+      initialize-schema: never
+
+billing:
+  log:
+    dir: logs/billing_audit
+

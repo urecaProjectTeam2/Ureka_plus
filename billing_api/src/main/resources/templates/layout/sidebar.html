@@ -4,44 +4,53 @@
 
 <div class="sidebar" th:fragment="sidebar">
     <!-- Sidebar Header -->
-    <div class="sidebar-header">
-        <span class="logo-icon">📊</span>
-        <span class="logo-text">To U+</span>
-    </div>
+<div class="sidebar-header">
+<span class="logo-icon">
+    <i class="bi bi-lightning-fill" style="font-size: 24px; color: #F26EB8;"></i>
+</span>
+    <span class="logo-text">To U+</span>
+</div>
+
 
     <ul>
         <!-- 메인 메뉴 -->
         <li th:classappend="${#strings.contains(currentPath, '/admin/process/dashboard')} ? ' active' : ''">
-            <a th:href="@{/admin/process/dashboard}">대시보드</a>
+            <a th:href="@{/admin/process/dashboard}" class="sidebar-link"><i class="bi bi-speedometer2 me-2"></i>대시보드</a>
         </li>
 
         <li th:classappend="${#strings.contains(currentPath, '/admin/batch/dashboard')} ? ' active' : ''">
-            <a th:href="@{/admin/batch/dashboard}">배치 대시보드</a>
+            <a th:href="@{/admin/batch/dashboard}" class="sidebar-link"> <i class="bi bi-cpu me-2"></i> 배치 대시보드</a>
         </li>
 
         <li th:classappend="${#strings.contains(currentPath, '/admin/message/dashboard')} ? ' active' : ''">
-            <a th:href="@{/admin/message/dashboard}">메시지 대시보드</a>
+            <a th:href="@{/admin/message/dashboard}" class="sidebar-link"><i class="bi bi-envelope me-2"></i>메시지 대시보드</a>
         </li>
+
+        <li th:classappend="${#strings.contains(currentPath, '/admin/logs')} ? ' active' : ''">
+		    <a th:href="@{/admin/logs}" class="sidebar-link">
+		        <i class="bi bi-clipboard-check me-2"></i>Audit 로그 관리
+		    </a>
+		</li>
 
         <!-- 사용자 대시보드 (드롭다운) -->
         <li th:classappend="${#strings.contains(currentPath, '/admin/users')} ? ' active open' : ''">
-            <a href="#">사용자 대시보드 ▾</a>
+            <a href="#" class="sidebar-link"> <i class="bi bi-people me-2"></i> 사용자 대시보드 ▾</a>
             <ul class="dropdown">
                 <li th:classappend="${#strings.contains(currentPath, '/admin/users/settlements')} ? ' active' : ''">
                     <a th:href="@{/admin/users/settlements}">사용자별 정산 결과</a>
                 </li>
-                <li th:classappend="${#strings.contains(currentPath, '/admin/users/products/bar')} ? ' active' : ''">
-                    <a th:href="@{/admin/users/products/bar}">구독 TOP 7</a>
-                </li>
                 <li th:classappend="${#strings.contains(currentPath, '/admin/users/products/donut')} ? ' active' : ''">
                     <a th:href="@{/admin/users/products/donut}">전체 구독 분포</a>
+                </li>
+                <li th:classappend="${#strings.contains(currentPath, '/admin/users/products/bar')} ? ' active' : ''">
+                    <a th:href="@{/admin/users/products/bar}">구독 TOP 7</a>
                 </li>
             </ul>
         </li>
 
         <!-- 템플릿 관리 -->
         <li th:classappend="${#strings.contains(currentPath, '/admin/process/templates')} ? ' active' : ''">
-            <a th:href="@{/admin/process/templates/management}">템플릿 관리</a>
+            <a th:href="@{/admin/process/templates/management}" class="sidebar-link"><i class="bi bi-file-earmark-text me-2" ></i>템플릿 관리</a>
         </li>
     </ul>
 </div>

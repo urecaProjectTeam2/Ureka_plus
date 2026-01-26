@@ -1,16 +1,265 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="EUC-KR">
-<title>Insert title here</title>
- <link rel="stylesheet" th:href="@{/css/message-dashboard.css}">
- <link rel="stylesheet" th:href="@{/css/common.css}">
+    <meta charset="UTF-8">
+    <title>To U+ | Billing Tower</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <link rel="stylesheet" th:href="@{/css/batch-dashboard.css}">
 </head>
 <body>
-<div class="navbar">
-	<a th:href="@{/admin/process/dashboard}">��ú���</a>
-    <a th:href="@{/admin/batch/dashboard}" class="active">��ġ ��ú���</a>
-    <a th:href="@{/admin/message/dashboard}">�޽��� ��ú���</a>
+<div th:replace="~{layout/sidebar :: sidebar}"></div>
+<div class="main-content">
+    <h1>배치 모니터링</h1>
+
+    <div id="liveArea" class="monitor-card inactive-monitor">
+      <div id="liveHeader" class="card-header bg-secondary">
+
+    <div>
+        <span id="statusDot" class="status-dot dot-offline"></span>
+        <span id="statusText">연결 대기 중...</span>
+    </div>
+    <div id="lastSuccessInfo" th:if="${lastSuccess != null}" style="font-size: 0.8rem; opacity: 0.9;">
+        최종 성공: #[[${lastSuccess.JOB_EXECUTION_ID}]] ([[${lastSuccess.END_TIME}]])
+    </div>
 </div>
+
+
+        <div class="card-body">
+            <div class="progress-wrapper">
+                <div class="progress-outer">
+                    <div id="progressBar" class="progress-inner">0%</div>
+                </div>
+                <div style="min-width: 120px; text-align: right;">
+                    <span id="processedCount" style="font-weight: 800; font-size: 1.2rem;">0</span>
+                    <span style="color: #6c757d; font-size: 0.9rem;">/ 1,000,000</span>
+                </div>
+            </div>
+
+            <div class="metrics-container">
+                <div class="metric-box">
+                    <div class="metric-label">TPS</div>
+                    <div id="tpsValue" class="metric-value text-primary">0.0</div>
+                </div>
+                <div class="metric-box">
+                    <div class="metric-label">ETC (남은 시간)</div>
+                    <div id="etcValue" class="metric-value text-success">00:00:00</div>
+                </div>
+                <div class="metric-box" id="skipCard">
+                    <div class="metric-label">Skip</div>
+                    <div id="skipCount" class="metric-value text-danger">0</div>
+                </div>
+            </div>
+
+            <div id="partitionGrid" class="partition-grid">
+            </div>
+        </div>
+    </div>
+
+    <div id="historyTableContainer" th:fragment="history-table-content" class="history-card">
+        <div class="history-header">최근 배치 실행 이력</div>
+        <table>
+            <thead>
+            <tr>
+                <th>ID</th><th>상태</th><th>시작 시간</th><th>처리 건수</th><th>소요 시간</th><th>스킵 건수</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="h : ${historyList}">
+                <td th:text="${h.executionId}" style="color: var(--primary-color); font-weight: bold;"></td>
+                <td style="min-width: 120px;">
+                    <div th:if="${h.exitCode != null}" th:switch="${h.exitCode}">
+                        <span th:case="'FAILED'" class="badge badge-danger">FAILED</span>
+                        <span th:case="'UNKNOWN'" class="badge badge-secondary">TERMINATED</span>
+                        <span th:case="*"
+                              th:text="${h.status}"
+                              th:class="'badge ' + (${h.status == 'COMPLETED' ? 'badge-success' : 'badge-warning'})">
+                        </span>
+                    </div>
+                    <div th:if="${h.exitCode == null}">
+                        <span th:text="${h.status}"
+                              th:class="'badge ' + (${h.status == 'COMPLETED' ? 'badge-success' : 'badge-warning'})">
+                        </span>
+                    </div>
+                </td>
+                <td th:text="${#temporals.format(h.startTime, 'MM-dd HH:mm:ss')}"></td>
+                <td th:text="${#numbers.formatInteger(h.totalWrite, 0, 'COMMA')}" style="font-weight: bold;"></td>
+                <td th:text="${h.duration + '초'}"></td>
+                <td>
+                    <div th:if="${h.skipCount > 0}">
+                        <a th:href="@{/admin/batch/error/list/{id}(id=${h.executionId})}"
+                           class="btn-detail">
+                            [[${h.skipCount}]]건 (상세)
+                        </a>
+                    </div>
+                    <span th:unless="${h.skipCount > 0}" style="color: #adb5bd;">0</span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div><script th:inline="javascript">
+const eventSource = new EventSource('/admin/batch/realtime/stream');
+
+let targetProgress = 0;
+let displayProgress = 0;
+let interpolationTimer = null;
+let currentTps = 0;
+const TOTAL_COUNT = 1000000;
+
+const liveArea = document.getElementById('liveArea');
+const liveHeader = document.getElementById('liveHeader');
+const pb = document.getElementById('progressBar');
+const skipCard = document.getElementById('skipCard');
+const partitionGrid = document.getElementById('partitionGrid');
+const statusDot = document.getElementById('statusDot');
+const statusText = document.getElementById('statusText');
+const processedCount = document.getElementById('processedCount');
+const tpsValue = document.getElementById('tpsValue');
+const etcValue = document.getElementById('etcValue');
+const skipCount = document.getElementById('skipCount');
+
+let isMonitoringStopped = false; // 완료 후 SSE 무시 플래그
+
+// ✅ 초기 상태 설정
+function initDashboard() {
+    liveHeader.classList.remove('bg-danger', 'bg-primary');
+    liveHeader.classList.add('bg-secondary'); // 초기 회색
+    partitionGrid.style.display = 'none';
+    liveArea.classList.add('inactive-monitor');
+
+    statusDot.className = 'status-dot dot-offline';
+    statusText.textContent = "연결 대기 중...";
+    processedCount.textContent = '0';
+    tpsValue.textContent = '0.0';
+    etcValue.textContent = '00:00:00';
+    skipCount.textContent = '0';
+    pb.style.width = '0%';
+    pb.innerText = '0%';
+    pb.classList.remove('bg-danger', 'bg-primary', 'animated-stripes');
+}
+initDashboard();
+
+// ✅ SSE 이벤트 처리
+eventSource.addEventListener("batchUpdate", (event) => {
+    const data = JSON.parse(event.data);
+
+    if (isMonitoringStopped) return; // 완료 후 무시
+
+    liveArea.classList.remove('inactive-monitor');
+
+    if (!data.isCompleted) {
+        // 진행 중 빨강
+       liveHeader.classList.remove('bg-primary', 'bg-secondary', 'bg-danger', 'bg-info-custom', 'bg-warning-custom');
+
+		// 하늘색 적용 (진행 중)
+		liveHeader.classList.add('bg-secondary');
+		statusDot.className = 'status-dot dot-online';
+		statusText.textContent = "배치 Job 모니터링";
+
+        // 파티션 표시
+        if (data.partitions && data.partitions.length > 0) {
+            partitionGrid.style.display = 'grid';
+            partitionGrid.innerHTML = data.partitions.map(p => `
+                <div class="partition-item">
+                    <div style="color:#888">${p.stepName.split(':').pop()}</div>
+                    <div style="font-weight:800">${p.writeCount.toLocaleString()}</div>
+                </div>
+            `).join('');
+        } else {
+            partitionGrid.style.display = 'none';
+        }
+    }
+
+    // 진행률 / 지표
+    targetProgress = parseFloat((data.progress || "0%").replace('%', ''));
+    currentTps = data.tps || 0;
+    processedCount.textContent = (data.totalProcessed || 0).toLocaleString();
+    tpsValue.textContent = currentTps.toLocaleString();
+    etcValue.textContent = data.etc || "00:00:00";
+    skipCount.textContent = (data.skipCount || 0).toLocaleString();
+
+    // 상태바 색상
+    if (data.skipCount > 0) {
+        pb.classList.remove('bg-primary');
+        pb.classList.add('bg-danger');
+        skipCard.onclick = () => location.href = `/admin/batch/error/list/${data.currentJobId}`;
+    } else {
+        pb.classList.remove('bg-danger');
+        pb.classList.add('bg-primary');
+        skipCard.onclick = null;
+    }
+
+    if (!interpolationTimer) startInterpolation();
+
+    // 완료 처리
+    if (data.isCompleted) {
+        stopMonitoring("연결 대기 중...");
+        isMonitoringStopped = true;
+    }
+});
+
+// ✅ 진행률 애니메이션
+function startInterpolation() {
+    interpolationTimer = setInterval(() => {
+        const incrementalStep = currentTps > 0 ? Math.max((currentTps / TOTAL_COUNT) * 10, 0.001) : 0;
+
+        if (displayProgress < targetProgress) {
+            displayProgress += (targetProgress - displayProgress) * 0.05;
+        } else if (currentTps > 0) {
+            displayProgress += incrementalStep;
+        }
+
+        if (displayProgress > 99.99 && targetProgress < 100) displayProgress = 99.99;
+
+        const finalVal = displayProgress.toFixed(2);
+        pb.style.width = finalVal + '%';
+        pb.innerText = finalVal + '%';
+
+        if (displayProgress >= 100) pb.classList.remove('animated-stripes');
+    }, 100);
+}
+
+// ✅ 모니터링 종료 처리
+function stopMonitoring(msg, resetPartitions = true) {
+    if (interpolationTimer) {
+        clearInterval(interpolationTimer);
+        interpolationTimer = null;
+    }
+
+    currentTps = 0;
+    targetProgress = 0;
+    displayProgress = 0;
+
+    liveArea.classList.add('inactive-monitor');
+    liveHeader.classList.remove('bg-primary', 'bg-info');
+    liveHeader.classList.add('bg-secondary');
+
+    pb.style.width = '0%';
+    pb.innerText = '0%';
+    pb.classList.remove('bg-danger', 'bg-primary', 'bg-info');
+
+    statusDot.className = 'status-dot dot-offline';
+    statusText.textContent = msg;
+
+    processedCount.textContent = '0';
+    tpsValue.textContent = '0.0';
+    etcValue.textContent = '00:00:00';
+    skipCount.textContent = '0';
+
+    if (resetPartitions && partitionGrid) {
+        partitionGrid.innerHTML = '';
+        partitionGrid.style.display = 'none';
+    }
+}
+
+// ✅ SSE finished 이벤트
+eventSource.addEventListener("finished", () => {
+    stopMonitoring("연결 대기 중...");
+    isMonitoringStopped = true;
+});
+</script>
+
+
 </body>
 </html>

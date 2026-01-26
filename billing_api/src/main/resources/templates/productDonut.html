@@ -3,9 +3,9 @@
 <head>
 	<meta charset="UTF-8">
 	<title>상품 구독 통계 | 관리자</title>
-
-	<link rel="stylesheet" th:href="@{/css/productDonut.css}">
+	<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
 	<link rel="stylesheet" th:href="@{/css/common.css}">
+	<link rel="stylesheet" th:href="@{/css/productDonut.css}">
 </head>
 
 <body>
@@ -13,7 +13,6 @@
 
 <div class="container">
 	<h1>상품 유형별 구독 비율</h1>
-
 	<div class="chart-grid">
 		<div class="card"
 			 th:each="chart, stat : ${charts}">
@@ -28,7 +27,7 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script th:inline="javascript">
-	/* ===== 서버 데이터 ===== */
+
     const charts = [[${charts}]];
 
     /* ===== 공통 색상 ===== */

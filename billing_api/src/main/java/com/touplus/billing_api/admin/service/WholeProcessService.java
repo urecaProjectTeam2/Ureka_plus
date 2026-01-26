@@ -10,6 +10,5 @@ public interface WholeProcessService {
 
    MessageProcessEntity getMessageStatus();
    
-
    WholeProcessDto getWholeProcessStatus();
 }

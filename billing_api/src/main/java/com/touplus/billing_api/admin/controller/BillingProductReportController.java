@@ -60,7 +60,7 @@ public class BillingProductReportController {
                 .map(type -> {
                     var products =
                             reportService.getTopSubscribedProducts(
-                                    List.of(type.name()), 100
+                                    List.of(type.name()), 10
                             );
 
                     return new DonutChartView(

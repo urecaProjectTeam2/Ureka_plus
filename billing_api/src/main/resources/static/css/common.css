@@ -1,5 +1,5 @@
 body {
-    background-color: #f9fafb; /* 전체 밝은 톤 */
+    background-color: #f9fafb; 
     font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
     color: #333;
     line-height: 1.6;
@@ -7,9 +7,9 @@ body {
 }
 
 .container {
-    max-width: 960px;  /* 필요에 따라 조정 */
+    max-width: 960px;  
     margin: 50px auto;
-    padding-left: 280px; /* 사이드바 공간 확보 */
+    padding-left: 280px; 
     padding-right: 32px;
 }
 
@@ -41,15 +41,23 @@ body {
 
 .logo-icon {
     font-size: 22px;
+    color: #f9fafb;
+    display: flex;
+    align-items: center;
+    justify-content: center;  
 }
 
 .logo-text {
     letter-spacing: 0.3px;
+    color: #f9fafb;
+    display: inline-flex;
+    align-items: center;
+    margin: 0;    
 }
 
 /* ===== Sidebar Layout ===== */
 .sidebar {
-    background-color: #ffffff;
+    background-color: #2d283f;
     position: fixed;
     top: 0;
     left: 0;
@@ -75,18 +83,29 @@ body {
 
 /* ===== Sidebar Links ===== */
 .sidebar a {
-    display: block;
+    display: flex;
     padding: 8px 16px;
-    color: #4b5563;
+    color: #f9fafb;
     text-decoration: none;
     border-radius: 8px;
     transition: background 0.3s, color 0.3s;
+    align-items: center;  /* 세로 중앙 정렬 */
+    gap: 18px !important;  /* 아이콘과 글씨 사이 간격 고정 */
+    
+  
 }
+.sidebar a .bi {
+    flex-shrink: 0;       /* 아이콘 크기 고정 */
+    font-size: 1.2rem;
+    width: 1.5rem;        /* 아이콘 영역 일정 */
+    text-align: center;
+}
+
 
 /* hover & active 기본 효과 */
 .sidebar a:hover {
-    background-color: #3b82f6;
-    color: #ffffff;
+    background-color: #c7d2fe;
+    color: #2d283f;
 }
 
 /* ===== Active State ===== */

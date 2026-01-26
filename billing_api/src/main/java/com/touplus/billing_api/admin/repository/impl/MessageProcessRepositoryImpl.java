@@ -15,23 +15,10 @@ import lombok.RequiredArgsConstructor;
 public class MessageProcessRepositoryImpl implements MessageProcessRepository {
 
     private final JdbcTemplate jdbcTemplate;
-    
-    @Override
-    public ProcessType findLatestKafkaReceiveStatus() {
-        String sql = "SELECT kafka_receive FROM billing_message.message_process";
-
-        return jdbcTemplate.queryForObject(
-            sql,
-            (rs, rowNum) -> {
-                String val = rs.getString("kafka_receive");
-                return val != null ? ProcessType.valueOf(val.trim().toUpperCase()) : ProcessType.WAITED;
-            }
-        );
-    }
 
     @Override
     public ProcessType findLatestCreateMessageStatus() {
-        String sql = "SELECT create_message FROM billing_message.message_process";
+        String sql = "SELECT create_message FROM billing_message.message_process ORDER BY settlement_month ASC LIMIT 1";
 
         return jdbcTemplate.queryForObject(
             sql,
@@ -44,7 +31,7 @@ public class MessageProcessRepositoryImpl implements MessageProcessRepository {
 
     @Override
     public ProcessType findLatestSentMessageStatus() {
-        String sql = "SELECT sent_message FROM billing_message.message_process";
+        String sql = "SELECT sent_message FROM billing_message.message_process ORDER BY settlement_month ASC LIMIT 1";
 
         return jdbcTemplate.queryForObject(
             sql,
@@ -53,27 +40,6 @@ public class MessageProcessRepositoryImpl implements MessageProcessRepository {
                 return val != null ? ProcessType.valueOf(val.trim().toUpperCase()) : ProcessType.WAITED;
             }
         );
-    }
-
-    
-    
-    
-    
-    @Override
-    public long countKafkaReceive(LocalDate settlementMonth) {
-     /*   String sql = """
-            SELECT COUNT(*)
-            FROM billing_message.billing_snapshot
-            WHERE settlement_month = ?
-              AND kafka_receive = 'DONE'
-        """;
-        return jdbcTemplate.queryForObject(
-                sql,
-                Long.class,
-                settlementMonth
-        );*/
-    	return 0;
-
     }
 
     @Override

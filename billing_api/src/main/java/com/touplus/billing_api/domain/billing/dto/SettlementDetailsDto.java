@@ -41,6 +41,8 @@ public class SettlementDetailsDto {
 
     @Getter
     @Builder
+    @AllArgsConstructor
+    @NoArgsConstructor
     public static class DetailItem {
         private String productType;
         private String productName;

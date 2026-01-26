@@ -40,24 +40,22 @@ public class BatchProcessRepositoryImpl implements BatchProcessRepository {
         return jdbcTemplate.update(sql, job.name(), startDate);
     }
 
-
     @Override
-    @Transactional(propagation = Propagation.REQUIRES_NEW) // 새 트랜잭션 시작
-    public int updateKafkaSent(JobType jobType, LocalDate startDate, LocalDate endDate) {
-        // 1. DB 컬럼명에 맞춰 SQL 수정 (job_type -> job, start_date -> settlement_month)
-        // 2. kafka_sent에 boolean 대신 jobType의 이름을 전달
-        String sql = "UPDATE batch_process SET kafka_sent = ? " +
-                "WHERE job = ? AND settlement_month = ?";
+    public int updateKafkaSent(JobType kafkaSent, LocalDate startDate, LocalDate endDate) {
+            String sql = """
+                        UPDATE batch_process
+                        SET kafka_sent = ?
+                        WHERE settlement_month = ?
+                    """;
 
-        // 로그 출력으로 파라미터 확인 (디버깅용)
-        System.out.println(">>> Updating Kafka Sent Status to: " + jobType.name() + " for Month: " + startDate);
+            return jdbcTemplate.update(
+                    sql,
+                    kafkaSent.name(),
+                    startDate
+            );
 
-        // 인자 순서: kafka_sent 업데이트 값, WHERE 조건(job, settlement_month)
-        return jdbcTemplate.update(sql,
-                jobType.name(),
-                jobType.name(),
-                startDate);
-    }
+        }
+
 
 
     @Transactional

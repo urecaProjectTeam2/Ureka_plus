@@ -1,171 +1,208 @@
-/* template-management.css */
+/* ================= Body & Container ================= */
+body {
+    background-color: #f9fafb;
+    font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, sans-serif;
+    color: #e5e7eb;
+    line-height: 1.6;
+    overflow-y: scroll;
+}
 
+.container {
+    max-width: 1248px; /* 기존보다 30% 늘림 */
+    margin: 50px auto;
+    padding-left: 280px; /* 사이드바 공간 확보 */
+    padding-right: 32px;
+}
+
+/* ================= h1 ================= */
 h1 {
     text-align: center;
     margin-bottom: 40px;
     font-size: 30px;
     font-weight: 700;
-    color: #1f2937;
+    color: #3b3b5e;
 }
 
-
-/* 테이블 *//
- .template-wide {
-     max-width: 1920px;     /* Full HD 기준 */
-     width: 100%;
-     margin: 0 auto;
- }
-
- /* 테이블 전체 */
- .template-table {
-     width: 100%;
-     table-layout: fixed;
-     border-collapse: separate;
-     border-spacing: 0;
- }
-
- /* 가로 스크롤 제거 */
- .template-no-xscroll {
-     overflow-x: hidden;
- }
-
- /* 🔽 세로 밀도 ↓ / 가로 여유 ↑ */
- .template-table th,
- .template-table td {
-     padding: 12px 20px;   /* 세로 ↓ / 가로 ↑ */
-     vertical-align: middle;
-     font-size: 14px;
- }
-
- /* 헤더 */
- .template-thead {
-     background: linear-gradient(90deg, #e8f2ff, #f4f9ff);
- }
-
- .template-thead th {
-     color: #1e3a8a;
-     font-weight: 600;
-     white-space: nowrap;
-     padding-top: 14px;
-     padding-bottom: 14px;
- }
-
- /* ✨ 내용 컬럼: 가로 여백의 미 */
- .content-cell {
-     max-width: 900px;        /* 체감 확장 */
-     padding-left: 32px;     /* 여백의 미 */
-     padding-right: 32px;
-     white-space: normal;
-     line-height: 1.5;
-     color: #1f2937;
- }
-
- /* 버튼 */
- .action-btn-fixed {
-     width: 70px;
-     padding: 4px 0;
- }
-
- /* 버튼 영역 살짝 여유 */
- .action-wrap {
-     padding: 0 8px;
- }
-
- /* 배지 */
- .badge-type {
-     background-color: #e0f2fe;
-     color: #0369a1;
-     font-weight: 600;
-     padding: 5px 12px;
-     border-radius: 999px;
-     font-size: 13px;
- }
-
- /* 테이블 가장자리 숨 쉴 공간 */
- .card-body {
-     padding: 8px 16px;
- }
-/* 테이블 끝! */
-/* 액션 버튼 */
-.action-btn {
-    cursor: pointer;
-    margin-right: 10px;
-}
-
-/* 폼 섹션 */
-.form-section {
-    margin-top: 40px;
-    padding: 20px;
-    background-color: #fff;
-    box-shadow: 0px 2px 5px rgba(0,0,0,0.1);
-    border-radius: 8px;
-}
-
-.form-section h3 {
-    margin-top: 0;
-}
-
-.form-section label {
-    display: block;
-    margin-top: 10px;
-    font-weight: 600;
-}
-
-.form-section input[type="text"],
-.form-section select,
-.form-section textarea {
+/* ================= 테이블 ================= */
+.template-table {
     width: 100%;
-    padding: 8px 10px;
-    margin-top: 5px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    box-sizing: border-box;
+    border-collapse: collapse;
+    color: #e5e7eb;
 }
 
-.form-section button {
-    margin-top: 15px;
-    padding: 8px 15px;
-    border: none;
-    border-radius: 5px;
-    color: #fff;
-    cursor: pointer;
+.template-table th {
+    border-bottom: 1px solid #ddd;
+    font-weight: 600;
+    text-align: center;
+    padding: 16px 12px;
+    color: #51517c;
+}
+
+.template-table td {
+    border: none; /* tr 선 없음 */
+    padding: 14px 12px;
+    vertical-align: middle;
+    text-align: center;
+    font-size: 14px;
+}
+
+.template-table th {
+    text-align: center; /* 모든 th 가운데 정렬 */
+    background-color: #f3f4f6;
+}
+
+/* ================= 테이블 칸 너비 1:1:3:1 ================= */
+.template-table td:first-child {  /* 템플릿 이름 */
+    width: 15%; /* 1 */
+}
+
+.template-table td:nth-child(2) {  /* 메시지 타입 */
+    width: 15%; /* 1 */
+}
+
+.content-cell {  /* 내용 */
+    width: 45%; /* 3 */
+    text-align: left;
+    word-break: break-word;
+    padding-left: 16px;
+}
+
+.template-table td:last-child {  /* 관리 버튼 */
+    width: 25%; /* 1 비율 맞추려고 조금 여유 */
+}
+
+/* ================= 배지 스타일 ================= */
+.badge-type {
+    display: inline-block;
+    background-color: #444466;
+    color: #c5c5ff;
+    padding: 4px 12px;
+    border-radius: 999px;
+    font-size: 12px;
     font-weight: 600;
 }
 
-.form-section button:first-of-type {
-    background-color: #3498db;
+/* ================= 액션 버튼 ================= */
+.action-btn-fixed.btn-outline-primary {
+    background-color: #51517c; /* 원래 배경 */
+    color: #e5e7eb;           /* 원래 글자색 */
+    border-color: #51517c;     /* 원래 테두리 */
 }
 
-.form-section button:last-of-type {
-    background-color: #e74c3c;
-    margin-left: 10px;
+.action-btn-fixed.btn-outline-primary:hover {
+    background-color: #3b3b5e; /* 호버 시 색상 */
+    color: #fff;
+    border-color: #3b3b5e;
 }
 
-/* 템플릿 추가 버튼 */
+.action-btn-fixed.btn-outline-primary:focus,
+.action-btn-fixed.btn-outline-primary:active,
+.action-btn-fixed.btn-outline-primary:focus-visible {
+    outline: none !important;
+    box-shadow: none !important;
+    background-color: #51517c; /* 클릭/포커스 시 색상 유지 */
+    color: #e5e7eb;            /* 글자색 유지 */
+    border-color: #51517c;
+}
+
+/* 버튼 색상 어둡게 */
+.btn-outline-primary {
+    color: #e5e7eb;
+    border-color: #3b3b5e;
+    background-color: #51517c;
+}
+
+.btn-outline-primary:hover {
+    background-color: #3b3b5e;
+    color: #fff;
+    border-color: #3b3b5e;
+}
+
+.btn-outline-danger {
+    color: #e5e7eb;
+    border-color: #5c2a2a;
+    background-color: #51517c;
+}
+
+.btn-outline-danger:hover {
+    background-color: #5c2a2a;
+    color: #fff;
+    border-color: #5c2a2a;
+}
+
+/* ================= 추가 버튼 ================= */
 #btnAddTemplate {
-    background-color: #6cb2eb;   /* 연한 블루 */
-    border-color: #6cb2eb;
-    
+    background-color: #3b3b5e;
+    border-color: #3b3b5e;
+    color: #fff;
+    border-radius: 8px;
+    padding: 6px 16px;
 }
 
 #btnAddTemplate:hover {
-    background-color: #5aa3e0;
-    border-color: #5aa3e0;
+    background-color: #51517c;
+    border-color: #51517c;
 }
 
-.optionAndBtn{
-	display: flex !important;;
-    justify-content: space-between; /* 양 끝으로 */
-    align-items: center;            /* 세로 가운데 */
-    width: 100%;
-    
+
+/* ================= 페이지 상단 옵션 select ================= */
+#filterForm select {
+    background-color: #2a2a3f; /* 필터는 흰색 */
+    color: #f9fafb;
+    border: 1px solid #3b3b5e;
+    border-radius: 8px;
+    padding: 6px 12px;
 }
 
-.btnAndOption{
+/* ================= 모달 내부 select ================= */
+#templateModal select.form-select {
+    color: #3b3b5e;
+    border: 1px solid #3b3b5e;
+    border-radius: 8px;
+    padding: 6px 12px;
+}
+.modal-select option {
+    color: #3b3b5e;
+}
+
+/* ================= 모달 글씨 색 ================= */
+#templateModal label,
+#templateModal .modal-body input,
+#templateModal .modal-body textarea {
+    color: #3b3b5e;
+}
+
+h5{
+	color: #3b3b5e;
+}
+/* 모달 저장 버튼 색상 */
+#templateModal .btn-outline-primary {
+    color: #f9fafb;
+    border-color: #3b3b5e;
+    background-color: #3b3b5e;
+}
+
+#templateModal .btn-outline-primary:hover {
+    color: #fff;
+    background-color: #51517c;
+    border-color: #51517c;
+}
+
+/* ================= 옵션/버튼 영역 ================= */
+.optionAndBtn {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 910px;
+    margin-bottom: 20px;
+}
+
+.btnAndOption {
     display: flex;
     align-items: center;
+    gap: 12px;
+    margin-left:17px;
 }
-
-
-
-
+.sidebar a {
+   gap: 10px !important;	
+}

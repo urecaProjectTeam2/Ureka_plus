@@ -6,12 +6,8 @@ import com.touplus.billing_api.admin.enums.ProcessType;
 
 public interface MessageProcessRepository {
 
-    ProcessType findLatestKafkaReceiveStatus();
     ProcessType findLatestCreateMessageStatus();
     ProcessType findLatestSentMessageStatus();
-
-    
-    long countKafkaReceive(LocalDate settlementMonth);
 
     long countCreateMessage(LocalDate settlementMonth);
 

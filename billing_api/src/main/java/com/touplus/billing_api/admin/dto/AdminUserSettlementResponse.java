@@ -17,6 +17,6 @@ public class AdminUserSettlementResponse {
 
     private UserContactDto user;            // 사용자 정보 (복호화 + 마스킹)
     private Integer totalPrice;             // 총 정산 금액
-
+    private boolean billed;
     private List<BillingProductStatResponse> details;   // 정산 상세(JSON 파싱)
 }
