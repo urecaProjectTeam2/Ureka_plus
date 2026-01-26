@@ -26,9 +26,12 @@ public class BillingLogServiceImpl implements BillingLogService {
 
     private static final String LOG_DIR = "./logs/billing_audit";
 
+    @Value("${billing.log.dir}")
+    private String logDir;
+
     @Override
     public List<String> getLogFileList() {
-        Path rootPath = Paths.get(LOG_DIR).toAbsolutePath().normalize();
+        Path rootPath = Paths.get(logDir).toAbsolutePath().normalize();
         File dir = rootPath.toFile();
 
         System.out.println("DEBUG: 로그 경로 존재 여부 = " + dir.exists());
