@@ -3,24 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <title>정산 배정 로그 목록</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
   <link rel="stylesheet" th:href="@{/css/whole-process-dashboard.css}">
   <link rel="stylesheet" th:href="@{/css/common.css}">
-  <style>
-    /* 로그 목록을 위한 추가 스타일 */
-    .log-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-    .log-table th, .log-table td { padding: 12px; border-bottom: 1px solid #eee; text-align: left; }
-    .log-table th { background-color: #f8f9fa; font-weight: bold; }
-    .btn { padding: 5px 10px; border-radius: 4px; text-decoration: none; font-size: 14px; margin-right: 5px; }
-    .btn-view { background-color: #4e73df; color: white; }
-    .btn-download { background-color: #1cc88a; color: white; }
-  </style>
+  <link rel="stylesheet" th:href="@{/css/log_list.css}">
 </head>
 <body>
 <div th:replace="~{layout/sidebar :: sidebar}"></div>
 
 <div class="container">
-  <h1>📋 정산 배치 로그 관리</h1>
-
+  <h1>정산 배치 로그 관리</h1>
   <div class="card filter-container">
     <form th:action="@{/admin/logs}" method="get" class="log-filter-form">
       <div class="filter-group main-date">
@@ -49,9 +41,9 @@
 
       <div class="filter-group sort-group">
         <label>정렬 기준</label>
-        <select name="sort" class="large-select full-width">
-          <option value="latest" th:selected="${selectedSort == 'latest'}">최근 발생순</option>
-          <option value="old" th:selected="${selectedSort == 'old'}">오래된 순</option>
+        <select name="sort" id="sort-select" class="large-select">
+          <option value="latest" th:selected="${selectedSort == 'latest'}">최신순</option>
+          <option value="old" th:selected="${selectedSort == 'old'}">과거순</option>
         </select>
       </div>
 
@@ -63,7 +55,7 @@
   </div>
 
   <div class="card list-card">
-    <table class="log-table">
+    <table class="template-table log-table">
       <thead>
       <tr>
         <th>파일명</th>
@@ -88,92 +80,5 @@
     </table>
   </div>
 </div>
-
-<style>
-  /* 필터 박스 디자인 강화 */
-  .filter-container {
-    padding: 30px;
-    margin-bottom: 30px;
-    border-radius: 12px;
-    background: #ffffff;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-  }
-
-  .log-filter-form {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 25px;
-    align-items: flex-end;
-  }
-
-  .filter-group { display: flex; flex-direction: column; gap: 8px; }
-  .main-date { flex: 2; } /* 가로로 길게 차지 */
-  .sort-group { flex: 0.5; }
-
-  .filter-group label {
-    font-weight: 700;
-    color: #4e73df;
-    font-size: 14px;
-  }
-
-  .select-wrapper { display: flex; gap: 10px; }
-
-  /* 셀렉트 박스 크기 키우기 */
-  .large-select {
-    height: 50px;
-    padding: 0 15px;
-    font-size: 16px;
-    border: 2px solid #eaecf4;
-    border-radius: 8px;
-    background-color: #f8f9fc;
-    color: #5a5c69;
-    min-width: 120px;
-  }
-
-  .large-select.full-width { width: 100%; }
-
-  .large-select:focus {
-    border-color: #4e73df;
-    outline: none;
-    background-color: #fff;
-  }
-
-  .btn-search {
-    height: 50px;
-    padding: 0 30px;
-    background-color: #4e73df;
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.3s;
-  }
-
-  /* 배지 스타일 추가 */
-  .badge {
-    padding: 4px 8px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: bold;
-    color: white;
-    display: inline-block;
-  }
-  .badge-fail { background-color: #e74a3b; }    /* 빨간색 */
-  .badge-success { background-color: #1cc88a; } /* 초록색 */
-
-  .btn-search:hover { background-color: #2e59d9; }
-
-  .btn-reset {
-    height: 50px;
-    line-height: 50px;
-    padding: 0 20px;
-    color: #858796;
-    text-decoration: none;
-    font-size: 14px;
-  }
-
-  .list-card { border-radius: 12px; }
-</style>
 </body>
 </html>

@@ -91,6 +91,7 @@ body {
     transition: background 0.3s, color 0.3s;
     align-items: center;  /* 세로 중앙 정렬 */
     gap: 18px !important;  /* 아이콘과 글씨 사이 간격 고정 */
+    
   
 }
 .sidebar a .bi {

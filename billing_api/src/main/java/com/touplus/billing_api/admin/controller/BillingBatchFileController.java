@@ -28,10 +28,10 @@ public class BillingBatchFileController {
      */
     @GetMapping
     public String listLogs(
-            @RequestParam(required = false) String sort,
-            @RequestParam(required = false) String year,
-            @RequestParam(required = false) String month,
-            @RequestParam(required = false) String day,
+    		@RequestParam(value = "sort", required = false) String sort,
+            @RequestParam(value = "year", required = false) String year,
+            @RequestParam(value = "month", required = false) String month,
+            @RequestParam(value = "day", required = false) String day,
             HttpServletRequest request, Model model) {
 
         List<String> rawFileNames = billingLogService.getLogFileList();
@@ -71,7 +71,7 @@ public class BillingBatchFileController {
     }
 
     @GetMapping("/view/{fileName}")
-    public String viewLog(@PathVariable String fileName, Model model) {
+    public String viewLog(@PathVariable("fileName") String fileName, Model model) {
         model.addAttribute("fileName", fileName);
         model.addAttribute("logLines", billingLogService.readLogFile(fileName));
         model.addAttribute("currentPath", "/admin/logs");
@@ -79,7 +79,7 @@ public class BillingBatchFileController {
     }
 
     @GetMapping("/download/{fileName}")
-    public ResponseEntity<Resource> downloadLog(@PathVariable String fileName) {
+    public ResponseEntity<Resource> downloadLog(@PathVariable("fileName") String fileName) {
         return billingLogService.downloadLogFile(fileName);
     }
 }

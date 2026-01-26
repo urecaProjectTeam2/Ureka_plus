@@ -27,8 +27,10 @@
         </li>
 
         <li th:classappend="${#strings.contains(currentPath, '/admin/logs')} ? ' active' : ''">
-            <a th:href="@{/admin/logs}">Audit 로그 관리</a>
-        </li>
+		    <a th:href="@{/admin/logs}" class="sidebar-link">
+		        <i class="bi bi-clipboard-check me-2"></i>Audit 로그 관리
+		    </a>
+		</li>
 
         <!-- 사용자 대시보드 (드롭다운) -->
         <li th:classappend="${#strings.contains(currentPath, '/admin/users')} ? ' active open' : ''">
