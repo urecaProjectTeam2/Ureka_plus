@@ -54,15 +54,13 @@ public class BatchProcessRepositoryImpl implements BatchProcessRepository {
 
     @Override
     public long countKafkaSent(LocalDate settlementMonth) {
-      /*  String sql = """
-            SELECT COUNT(*)
-            FROM billing_message.billing_snapshot;
-            WHERE settlement_month = ?
-              AND kafka_sent = 'DONE'
+        String sql = """
+       		SELECT count(*) 
+       		FROM billing_batch.billing_result 
+       		where send_status = 'SUCCESS'
+        	and settlement_month = ?;
         """;
         return jdbcTemplate.queryForObject(sql, Long.class, settlementMonth);
-    }*/
-    	return 0;
     }
 
 }

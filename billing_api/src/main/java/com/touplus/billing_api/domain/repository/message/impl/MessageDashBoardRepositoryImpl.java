@@ -69,7 +69,7 @@ public class MessageDashBoardRepositoryImpl implements MessageDashBoardRepositor
             SELECT COUNT(*) 
             FROM billing_message.message 
             WHERE status = 'SENT' 
-              AND retry_count >= 2;
+              AND retry_count >= 3;
         """;
 
         return jdbcTemplate.queryForObject(
