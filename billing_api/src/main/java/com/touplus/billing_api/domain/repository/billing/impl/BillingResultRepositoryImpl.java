@@ -1,4 +1,4 @@
-/*package com.touplus.billing_api.domain.repository.billing.impl;
+package com.touplus.billing_api.domain.repository.billing.impl;
 
 import com.touplus.billing_api.domain.billing.entity.BillingResult;
 import com.touplus.billing_api.domain.billing.enums.SendStatus;
@@ -59,39 +59,4 @@ public class BillingResultRepositoryImpl implements BillingResultRepository {
         return namedJdbcTemplate.query(sql, params, this::mapRow);
     }
 
-}*/
-
-package com.touplus.billing_api.domain.repository.billing.impl;
-
-import com.touplus.billing_api.domain.billing.entity.BillingResult;
-import com.touplus.billing_api.domain.repository.billing.BillingResultRepository;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
-import org.springframework.stereotype.Repository;
-
-import java.time.LocalDate;
-import java.util.List;
-
-@Repository
-public class BillingResultRepositoryImpl implements BillingResultRepository {
-
-    @PersistenceContext
-    private EntityManager em;
-
-    @Override
-    public List<BillingResult> findByUserIdsAndMonth(List<Long> userIds, LocalDate settlementMonth) {
-        if(userIds.isEmpty()) return List.of();
-
-        LocalDate startOfMonth = settlementMonth.withDayOfMonth(1);
-        LocalDate endOfMonth = settlementMonth.withDayOfMonth(settlementMonth.lengthOfMonth());
-
-        return em.createQuery(
-                "SELECT b FROM BillingResult b WHERE b.userId IN :userIds AND b.settlementMonth BETWEEN :start AND :end", 
-                BillingResult.class)
-                .setParameter("userIds", userIds)
-                .setParameter("start", startOfMonth)
-                .setParameter("end", endOfMonth)
-                .getResultList();
-    }
 }
-
