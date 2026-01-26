@@ -6,7 +6,9 @@ import com.touplus.billing_message.domain.respository.MessageJdbcRepository;
 import com.touplus.billing_message.domain.respository.MessageSnapshotJdbcRepository;
 import com.touplus.billing_message.sender.MessageSender;
 import com.touplus.billing_message.sender.SendResult;
+import com.touplus.billing_message.service.DeadLetterQueueService;
 import com.touplus.billing_message.service.DispatchActivationFlag;
+import com.touplus.billing_message.service.MessageProcessStatusService;
 import com.touplus.billing_message.service.SendLogBufferService;
 import com.touplus.billing_message.service.WaitingQueueService;
 import lombok.extern.slf4j.Slf4j;
@@ -39,8 +41,10 @@ public class MessageDispatchScheduler {
     private final MessageJdbcRepository messageJdbcRepository;
     private final MessageSender messageSender;
     private final SendLogBufferService sendLogBufferService;
+    private final MessageProcessStatusService messageProcessStatusService;
     private final Executor messageDispatchTaskExecutor;
     private final DispatchActivationFlag dispatchActivationFlag;
+    private final DeadLetterQueueService deadLetterQueueService;
 
     public MessageDispatchScheduler(
             WaitingQueueService waitingQueueService,
@@ -48,13 +52,17 @@ public class MessageDispatchScheduler {
             MessageSender messageSender,
             SendLogBufferService sendLogBufferService,
             @Qualifier("messageDispatchTaskExecutor") Executor messageDispatchTaskExecutor,
-            DispatchActivationFlag dispatchActivationFlag) {
+            DispatchActivationFlag dispatchActivationFlag,
+            DeadLetterQueueService deadLetterQueueService,
+            MessageProcessStatusService messageProcessStatusService) {
         this.waitingQueueService = waitingQueueService;
         this.messageJdbcRepository = messageJdbcRepository;
         this.messageSender = messageSender;
         this.sendLogBufferService = sendLogBufferService;
         this.messageDispatchTaskExecutor = messageDispatchTaskExecutor;
         this.dispatchActivationFlag = dispatchActivationFlag;
+        this.deadLetterQueueService = deadLetterQueueService;
+        this.messageProcessStatusService = messageProcessStatusService;
     }
 
     @Value("${message.dispatch.batch-size:500}")
@@ -62,6 +70,9 @@ public class MessageDispatchScheduler {
 
     @Value("${message.dispatch.chunk-size:200}")
     private int chunkSize;
+
+    @Value("${message.dlq.max-snapshot-retry:5}")
+    private int maxSnapshotRetry;
 
     /**
      * 다중 스케줄러 #1
@@ -234,7 +245,8 @@ public class MessageDispatchScheduler {
 
         // 6. Bulk UPDATE - 성공
         if (!successIds.isEmpty()) {
-            messageJdbcRepository.bulkMarkSent(successIds);
+            int updated = messageJdbcRepository.bulkMarkSent(successIds);
+            messageProcessStatusService.increaseSentCount(updated);
             log.info("발송 성공: {}건", successIds.size());
         }
 
@@ -271,7 +283,8 @@ public class MessageDispatchScheduler {
         }
 
         if (!missingMessageIds.isEmpty()) {
-            log.error("메시지 없음(정합성 오류) 제거 대상: {}건", missingMessageIds.size());
+            deadLetterQueueService.addBatch(missingMessageIds, "MESSAGE_NOT_FOUND");
+            log.error("메시지 없음 → DLQ 이동: {}건", missingMessageIds.size());
         }
 
         // 9. Redis에서 제거 (이미 pop된 상태이므로 불필요 - 제거)

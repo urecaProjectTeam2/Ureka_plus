@@ -22,6 +22,7 @@ public class MessageSnapshotService {
         private final UserRepository userRepository;
         private final MessageTemplateRepository messageTemplateRepository;
         private final MessageRepository messageRepository;
+        private final MessageProcessStatusService messageProcessStatusService;
 
         private static final DateTimeFormatter MONTH_FORMATTER = DateTimeFormatter.ofPattern("yyyy년 MM월");
         private static final NumberFormat PRICE_FORMATTER = NumberFormat.getNumberInstance(Locale.KOREA);
@@ -106,6 +107,7 @@ public class MessageSnapshotService {
 
                 // 스냅샷 삽입
                 messageSnapshotRepository.saveAll(snapshots);
+                messageProcessStatusService.increaseCreateCount(snapshots.size());
 
                 // [Redis 기반] markCreatedByIds 제거 - WAITED → SENT로 직접 변경됨
 
@@ -182,6 +184,7 @@ public class MessageSnapshotService {
 
                 // JDBC batchInsert (JPA saveAll 대비 10배 이상 빠름)
                 int inserted = messageSnapshotJdbcRepository.batchInsert(snapshots);
+                messageProcessStatusService.increaseCreateCount(inserted);
 
                 log.info("MessageSnapshot JDBC batch created: {}", inserted);
                 return inserted;
