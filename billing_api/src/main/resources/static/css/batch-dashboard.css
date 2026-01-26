@@ -94,7 +94,7 @@ h2 {
     height: 100%;
     width: 0%;
     /* 배경을 회색이 아닌 선명한 인디고 그라데이션으로 변경 */
-    background: linear-gradient(90deg, var(--primary-color), #818cf8);
+    background-color: linear-gradient(90deg, var(--primary-color), #818cf8);
     transition: width 0.1s linear;
     display: flex;
     align-items: center;
@@ -103,6 +103,10 @@ h2 {
     font-size: 0.85rem;
     font-weight: bold;
     box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+}
+
+.progress-inner.bg-idle {
+    background-color: #adb5bd; /* 회색 */
 }
 
 /* [2] 에러 발생 시 로딩바 색상 (로직에서 클래스 추가 시 작동) */
@@ -261,3 +265,13 @@ tr:hover td { background-color: #fcfcff; }
     color: #ffffff;
     box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
 }
+
+.live-header.idle {
+    background-color: #adb5bd !important;
+}
+
+.live-header.running {
+    background-color: #6f42c1 !important;
+}
+
+.hidden { display: none; }

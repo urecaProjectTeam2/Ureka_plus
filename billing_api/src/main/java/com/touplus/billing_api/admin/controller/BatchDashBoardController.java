@@ -38,7 +38,7 @@ public class BatchDashBoardController {
     }
 
     @GetMapping("/error/list/{jobExecutionId}")
-    public String errorLogList(@PathVariable Long jobExecutionId, Model model) {
+    public String errorLogList(@PathVariable("jobExecutionId") Long jobExecutionId, Model model) {
         // 해당 잡의 모든 에러 로그 조회 (batch_billing_error_log)
         model.addAttribute("errors", repository.findAllErrorLogsByJobId(jobExecutionId));
         model.addAttribute("jobId", jobExecutionId);
@@ -47,8 +47,8 @@ public class BatchDashBoardController {
 
     @GetMapping("/error/search")
     public String searchErrorLogs(
-            @RequestParam Long jobId,
-            @RequestParam Long userId,
+    		@RequestParam("jobId") Long jobId,
+    	    @RequestParam("userId") Long userId,
             Model model) {
 
         // 1. 리포지토리를 통해 필터링된 에러 로그 조회

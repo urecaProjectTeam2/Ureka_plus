@@ -99,60 +99,72 @@
 </div>
 
 <script th:inline="javascript">
-    /* [원본 로직 100% 유지] */
     const eventSource = new EventSource('/admin/batch/realtime/stream');
-    let targetProgress = 0, displayProgress = 0, interpolationTimer = null, currentTps = 0;
+
+    let targetProgress = 0;
+    let displayProgress = 0;
+    let interpolationTimer = null;
+    let currentTps = 0;
+
     const TOTAL_COUNT = 1000000;
+eventSource.addEventListener("batchUpdate", (event) => {
+    const data = JSON.parse(event.data);
 
-    eventSource.addEventListener("batchUpdate", (event) => {
-        const data = JSON.parse(event.data);
-        console.log("==> SSE 수신 데이터:", data);
-        const liveArea = document.getElementById('liveArea');
-        const liveHeader = document.getElementById('liveHeader');
-        const pb = document.getElementById('progressBar');
-        const skipCard = document.getElementById('skipCard');
+    const liveArea = document.getElementById('liveArea');
+    const liveHeader = document.getElementById('liveHeader');
+    const pb = document.getElementById('progressBar');
+    const skipCard = document.getElementById('skipCard');
 
-        if (!data.isCompleted) {
-            liveArea.classList.remove('inactive-monitor');
-            liveHeader.classList.remove('bg-secondary');
-            liveHeader.classList.add('bg-primary');
-            document.getElementById('statusDot').className = 'status-dot dot-online';
-            document.getElementById('statusText').textContent = "배치 Job 모니터링";
-            document.getElementById('liveHeader').className = 'card-header bg-primary';
+    // ✅ 헤더 색상 초기화
+    liveHeader.classList.remove('bg-primary', 'bg-secondary');
 
-            // [2] 로딩바 색상 제어
-            if (data.skipCount > 0) {
-                pb.classList.add('bg-danger', 'animated-stripes'); // 에러 시 빨간색
-                skipCard.style.cursor = 'pointer';
-                skipCard.onclick = () => location.href = `/admin/batch/error/list/${data.currentJobId}`;
-            } else {
-                pb.classList.remove('bg-danger'); // 평소엔 CSS에 정의된 보라색 적용
-                pb.classList.remove('bg-secondary');
-                pb.classList.add('animated-stripes');
-            }
+    if (data.status === 'RUNNING') {
+        liveHeader.classList.add('bg-primary');
+        liveArea.classList.remove('inactive-monitor');
+        document.getElementById('statusDot').className = 'status-dot dot-online';
+        document.getElementById('statusText').textContent = "배치 Job 모니터링";
+    } else {
+        liveHeader.classList.add('bg-secondary');
+    }
 
-            targetProgress = parseFloat((data.progress || "0%").replace('%', ''));
-            currentTps = data.tps || 0;
-            if (displayProgress === 0) displayProgress = targetProgress;
+    if (!data.isCompleted) {
+        // 진행률 / 지표 처리
+        if (data.skipCount > 0) {
+            pb.classList.add('bg-danger', 'animated-stripes');
+            skipCard.onclick = () => location.href = `/admin/batch/error/list/${data.currentJobId}`;
+        } else {
+            pb.classList.remove('bg-danger');
+            pb.classList.add('animated-stripes');
+        }
 
-            document.getElementById('processedCount').textContent = (data.totalProcessed || 0).toLocaleString();
-            document.getElementById('tpsValue').textContent = (data.tps || 0).toLocaleString();
-            document.getElementById('etcValue').textContent = data.etc || "00:00:00";
-            document.getElementById('skipCount').textContent = (data.skipCount || 0).toLocaleString();
+        targetProgress = parseFloat((data.progress || "0%").replace('%', ''));
+        currentTps = data.tps || 0;
 
-            if(data.partitions) {
-                document.getElementById('partitionGrid').innerHTML = data.partitions.map(p => `
+        document.getElementById('processedCount').textContent =
+            (data.totalProcessed || 0).toLocaleString();
+        document.getElementById('tpsValue').textContent =
+            (data.tps || 0).toLocaleString();
+        document.getElementById('etcValue').textContent =
+            data.etc || "00:00:00";
+        document.getElementById('skipCount').textContent =
+            (data.skipCount || 0).toLocaleString();
+
+        if (data.partitions) {
+            document.getElementById('partitionGrid').innerHTML =
+                data.partitions.map(p => `
                     <div class="partition-item">
-                        <div style="color: #888; margin-bottom: 4px;">${p.stepName.split(':').pop()}</div>
-                        <div style="font-weight: 800; color: ${p.skipCount > 0 ? 'var(--danger-color)' : 'var(--primary-color)'}">${p.writeCount.toLocaleString()}</div>
+                        <div style="color:#888">${p.stepName.split(':').pop()}</div>
+                        <div style="font-weight:800">${p.writeCount.toLocaleString()}</div>
                     </div>
                 `).join('');
-            }
-            if (!interpolationTimer) startInterpolation();
-        } else {
-            stopMonitoring("연결 대기 중...");
         }
-    });
+
+        if (!interpolationTimer) startInterpolation();
+    } else {
+        stopMonitoring("연결 대기 중...");
+    }
+});
+
 
     function startInterpolation() {
         interpolationTimer = setInterval(() => {
@@ -180,9 +192,13 @@
             if (displayProgress >= 100) pb.classList.remove('animated-stripes');
         }, 100);
     }
-
+    
     // 🎯 [중요] 배치가 종료되었을 때 호출되는 함수에서 데이터 완전 초기화
     function stopMonitoring(msg) {
+    	
+    	 liveHeader.classList.remove('bg-primary');
+         liveHeader.classList.add('bg-secondary');
+         
         if (interpolationTimer) {
             clearInterval(interpolationTimer);
             interpolationTimer = null;
@@ -201,7 +217,10 @@
         liveArea.classList.add('inactive-monitor');
         liveHeader.classList.remove('bg-primary');
         liveHeader.classList.add('bg-secondary');
+        liveHeader.classList.remove('idle');
+        liveHeader.classList.add('running');
 
+        
         // 3. 바와 텍스트를 0으로 고정
         pb.style.width = '0%';
         pb.innerText = '0%';
