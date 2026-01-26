@@ -1,0 +1,64 @@
+[2026-01-26 11:24:50.603] [http-nio-8081-exec-10] ========== 정산 배치 파일 리다이렉션 시작 ==========
+[2026-01-26 11:24:50.606] [http-nio-8081-exec-10] >>> 정산 대상 월 (Param): 2025-12-01
+[2026-01-26 11:24:54.533] [billing-thread-7] --- [Step 시작] workerStep:partition4 ---
+[2026-01-26 11:24:54.533] [billing-thread-10] --- [Step 시작] workerStep:partition3 ---
+[2026-01-26 11:24:54.563] [billing-thread-4] --- [Step 시작] workerStep:partition6 ---
+[2026-01-26 11:24:54.573] [billing-thread-5] --- [Step 시작] workerStep:partition2 ---
+[2026-01-26 11:24:54.583] [billing-thread-9] --- [Step 시작] workerStep:partition5 ---
+[2026-01-26 11:24:54.611] [billing-thread-1] --- [Step 시작] workerStep:partition9 ---
+[2026-01-26 11:24:54.617] [billing-thread-3] --- [Step 시작] workerStep:partition8 ---
+[2026-01-26 11:24:54.618] [billing-thread-2] --- [Step 시작] workerStep:partition0 ---
+[2026-01-26 11:24:54.636] [billing-thread-6] --- [Step 시작] workerStep:partition7 ---
+[2026-01-26 11:24:54.650] [billing-thread-8] --- [Step 시작] workerStep:partition1 ---
+[2026-01-26 11:24:56.396] [billing-thread-4] --- [Step 종료] workerStep:partition6 ---
+[2026-01-26 11:24:56.397] [billing-thread-4] - 최종 상태: COMPLETED
+[2026-01-26 11:24:56.403] [billing-thread-4] - 읽기 건수: 0
+[2026-01-26 11:24:56.404] [billing-thread-4] - 쓰기 성공: 0
+[2026-01-26 11:24:56.404] [billing-thread-4] - 스킵 건수: 0
+[2026-01-26 11:24:56.759] [billing-thread-7] --- [Step 종료] workerStep:partition4 ---
+[2026-01-26 11:24:56.759] [billing-thread-7] - 최종 상태: COMPLETED
+[2026-01-26 11:24:56.760] [billing-thread-7] - 읽기 건수: 0
+[2026-01-26 11:24:56.760] [billing-thread-7] - 쓰기 성공: 0
+[2026-01-26 11:24:56.760] [billing-thread-7] - 스킵 건수: 0
+[2026-01-26 11:24:56.796] [billing-thread-10] --- [Step 종료] workerStep:partition3 ---
+[2026-01-26 11:24:56.796] [billing-thread-10] - 최종 상태: COMPLETED
+[2026-01-26 11:24:56.796] [billing-thread-10] - 읽기 건수: 0
+[2026-01-26 11:24:56.797] [billing-thread-10] - 쓰기 성공: 0
+[2026-01-26 11:24:56.797] [billing-thread-10] - 스킵 건수: 0
+[2026-01-26 11:24:57.018] [billing-thread-5] --- [Step 종료] workerStep:partition2 ---
+[2026-01-26 11:24:57.018] [billing-thread-5] - 최종 상태: COMPLETED
+[2026-01-26 11:24:57.019] [billing-thread-5] - 읽기 건수: 0
+[2026-01-26 11:24:57.020] [billing-thread-5] - 쓰기 성공: 0
+[2026-01-26 11:24:57.020] [billing-thread-5] - 스킵 건수: 0
+[2026-01-26 11:24:57.470] [billing-thread-6] --- [Step 종료] workerStep:partition7 ---
+[2026-01-26 11:24:57.470] [billing-thread-6] - 최종 상태: COMPLETED
+[2026-01-26 11:24:57.471] [billing-thread-6] - 읽기 건수: 0
+[2026-01-26 11:24:57.471] [billing-thread-6] - 쓰기 성공: 0
+[2026-01-26 11:24:57.471] [billing-thread-6] - 스킵 건수: 0
+[2026-01-26 11:24:57.530] [billing-thread-9] --- [Step 종료] workerStep:partition5 ---
+[2026-01-26 11:24:57.531] [billing-thread-9] - 최종 상태: COMPLETED
+[2026-01-26 11:24:57.531] [billing-thread-9] - 읽기 건수: 0
+[2026-01-26 11:24:57.531] [billing-thread-9] - 쓰기 성공: 0
+[2026-01-26 11:24:57.531] [billing-thread-9] - 스킵 건수: 0
+[2026-01-26 11:24:57.604] [billing-thread-2] --- [Step 종료] workerStep:partition0 ---
+[2026-01-26 11:24:57.605] [billing-thread-2] - 최종 상태: COMPLETED
+[2026-01-26 11:24:57.605] [billing-thread-2] - 읽기 건수: 0
+[2026-01-26 11:24:57.605] [billing-thread-2] - 쓰기 성공: 0
+[2026-01-26 11:24:57.605] [billing-thread-2] - 스킵 건수: 0
+[2026-01-26 11:24:57.645] [billing-thread-1] --- [Step 종료] workerStep:partition9 ---
+[2026-01-26 11:24:57.645] [billing-thread-1] - 최종 상태: COMPLETED
+[2026-01-26 11:24:57.646] [billing-thread-1] - 읽기 건수: 0
+[2026-01-26 11:24:57.646] [billing-thread-1] - 쓰기 성공: 0
+[2026-01-26 11:24:57.646] [billing-thread-1] - 스킵 건수: 0
+[2026-01-26 11:24:57.690] [billing-thread-3] --- [Step 종료] workerStep:partition8 ---
+[2026-01-26 11:24:57.690] [billing-thread-3] - 최종 상태: COMPLETED
+[2026-01-26 11:24:57.690] [billing-thread-8] --- [Step 종료] workerStep:partition1 ---
+[2026-01-26 11:24:57.691] [billing-thread-8] - 최종 상태: COMPLETED
+[2026-01-26 11:24:57.691] [billing-thread-3] - 읽기 건수: 0
+[2026-01-26 11:24:57.691] [billing-thread-8] - 읽기 건수: 0
+[2026-01-26 11:24:57.691] [billing-thread-3] - 쓰기 성공: 0
+[2026-01-26 11:24:57.691] [billing-thread-8] - 쓰기 성공: 0
+[2026-01-26 11:24:57.691] [billing-thread-8] - 스킵 건수: 0
+[2026-01-26 11:24:57.691] [billing-thread-3] - 스킵 건수: 0
+[2026-01-26 11:24:58.402] [http-nio-8081-exec-10] >>> [AfterJob] 최종 실행 상태 : exitCode=COMPLETED;exitDescription=
+[2026-01-26 11:24:58.402] [http-nio-8081-exec-10] ========== 정산 배치 파일 리다이렉션 종료 ==========

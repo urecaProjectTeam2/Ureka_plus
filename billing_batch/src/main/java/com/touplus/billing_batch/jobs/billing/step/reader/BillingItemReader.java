@@ -61,7 +61,7 @@ public class BillingItemReader implements ItemStreamReader<BillingUserBillingInf
     @Value("#{jobParameters['targetMonth']}")
     private String targetMonth;
 
-    @Value("#{jobParameters['chunkSize'] ?: 2000}")
+    @Value("#{jobParameters['chunkSize'] ?: 1000}")
     private int chunkSize;
 
     private LocalDate startDate;

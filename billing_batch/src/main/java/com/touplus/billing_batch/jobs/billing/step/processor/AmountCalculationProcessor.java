@@ -182,7 +182,7 @@ public class AmountCalculationProcessor
         List<UserUsageDto> userUsages = item.getUsage();
 
         if (userUsages == null || userUsages.isEmpty()) {
-            throw BillingFatalException.dataNotFound("사용자별 사용량 데이터가 존재하지 않습니다.");
+            throw BillingException.dataNotFound(item.getUserId(),"사용자별 사용량 데이터가 존재하지 않습니다.");
         }
         // 3. 사용자 요금 확인 -> 무제한이면 건너뛰기(혹은 기본 사용량 테이블에 값이 없으면 건너뛰기)
         for (UserUsageDto us : userUsages) {

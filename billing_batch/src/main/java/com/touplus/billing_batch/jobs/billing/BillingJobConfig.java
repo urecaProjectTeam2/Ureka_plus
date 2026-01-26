@@ -74,7 +74,7 @@ public class BillingJobConfig {
             @Qualifier("billingItemWriter") ItemWriter<BillingResult> billingItemWriter, BillingItemReader billingItemReader
     ) { // 2. 여기서 직접 주입받음
         return new StepBuilder("workerStep", jobRepository)
-                .<BillingUserBillingInfoDto, BillingResult>chunk(2000, transactionManager) // 청크 단위를 크게 가져가 성능 최적화 //데드락 수에 따라 조정 필요
+                .<BillingUserBillingInfoDto, BillingResult>chunk(1000, transactionManager) // 청크 단위를 크게 가져가 성능 최적화 //데드락 수에 따라 조정 필요
                 .reader(billingItemReader)
                 .processor(compositeProcessor())
                 .writer(billingItemWriter)  // JdbcBatchItemWriter 주입
@@ -95,7 +95,6 @@ public class BillingJobConfig {
     public TaskExecutor billingTaskExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
         executor.setCorePoolSize(10); // 기본 유지 스레드 수
-        // 이거 왜 10으로 바꾼건지?
         executor.setMaxPoolSize(10); // 파티션 개수(gridSize)보다 약간 여유 있게 수정 // 최대 생성 가능 스레드 수 20 --> 15 --> 10
         executor.setQueueCapacity(100); // 큐를 설정하여 스레드 폭주 방지
         executor.setThreadNamePrefix("billing-thread-"); // 스레드 이름 앞에 붙는 접두가
