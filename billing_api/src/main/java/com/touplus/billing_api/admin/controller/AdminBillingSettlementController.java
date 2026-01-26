@@ -23,26 +23,28 @@ public class AdminBillingSettlementController {
 
     @GetMapping
     public String dashboard(
-            @RequestParam(value = "settlementMonth", required = false)
-            @DateTimeFormat(pattern = "yyyy-MM") LocalDate settlementMonth,
+            @RequestParam(value = "settlementMonth", required = false) String settlementMonthStr,
             @RequestParam(value = "page", defaultValue = "0") int page,
             @RequestParam(value = "size", defaultValue = "20") int size,
-            Model model, 
-            HttpServletRequest request
-    ) {
-        // settlementMonth가 null이면 이번 달 1일로 설정
-        if (settlementMonth == null) {
-            settlementMonth = LocalDate.now().withDayOfMonth(1);
+            Model model) {
+
+        LocalDate settlementMonth;
+        if (settlementMonthStr == null || settlementMonthStr.isEmpty()) {
+            settlementMonth = LocalDate.of(2025, 12, 1);
+        } else {
+            settlementMonth = LocalDate.parse(settlementMonthStr + "-01"); // "yyyy-MM-01"로 변환
         }
 
-        // 서비스 호출
         var pageResponse = adminBillingSettlementService.getMonthlySettlementResults(settlementMonth, page, size);
 
-        // 모델 세팅
-        model.addAttribute("settlements", pageResponse);   // null-safe 템플릿 기준
+        model.addAttribute("settlements", pageResponse);
         model.addAttribute("currentPage", page);
-        model.addAttribute("settlementMonth", settlementMonth);
 
-        return "billing-result"; // templates/billing-result.html
+        // String으로 HTML에서 쓰기 위한 값
+        model.addAttribute("settlementMonthStr", settlementMonth.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM")));
+        model.addAttribute("currentPath", "/admin/users/settlements");
+
+        return "billing-result";
     }
+
 }
