@@ -70,6 +70,9 @@ message:
     batch-size: 500           # pool-size와 동일
     poll-delay-ms: 300        # 더 빠른 폴링
     worker-count: 50          # DelayQueue 워커 스레드 수
+  dlq:
+    retry-interval-ms: 30000  # DLQ 재처리 주기 (30초)
+    retry-batch-size: 100     # 한 번에 재처리할 건수
 
     # 암호화 키 (환경변수에서 읽음)
     crypto:
