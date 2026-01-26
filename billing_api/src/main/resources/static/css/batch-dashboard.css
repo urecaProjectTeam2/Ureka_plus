@@ -1,0 +1,263 @@
+/* [1] 테마 컬러 및 변수 설정 (common.css와 동기화) */
+:root {
+    --bg-color: #f9fafb;
+    --sidebar-color: #2d283f;
+    --primary-color: #4f46e5;      /* 인디고 포인트 (사이드바 active 색상) */
+    --secondary-color: #9ca3af;    /* 회색 (TERMINATED/비활성) */
+    --primary-light: #eef2ff;      /* 연한 인디고 */
+    --success-color: #10b981;      /* 에메랄드 그린 */
+    --danger-color: #ef4444;       /* 로즈 레드 */
+    --warning-color: #f59e0b;      /* 앰버 오렌지 */
+    --text-dark: #111827;
+    --text-muted: #6b7280;
+    --card-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+/* [2] 레이아웃 최적화 */
+body {
+    margin: 0;
+    padding: 0;
+    display: flex;
+    background-color: var(--bg-color);
+    font-family: 'Pretendard', -apple-system, sans-serif;
+}
+
+/* 사이드바 너비(240px)를 고려한 메인 영역 설정 */
+.main-content {
+    flex: 1;
+    margin-left: 240px;
+    padding: 40px 50px;
+    box-sizing: border-box;
+    min-width: 0; /* flex 자식의 overflow 방지 */
+}
+
+h2 {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-dark);
+    margin-bottom: 32px;
+    letter-spacing: -0.5px;
+    border: none; /* 하단 선 제거 후 깔끔하게 유지 */
+}
+
+/* [3] 모니터링 카드 디자인 개선 */
+.monitor-card {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: var(--card-shadow);
+    margin-bottom: 40px;
+    border: 1px solid #f3f4f6;
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+.inactive-monitor {
+    filter: grayscale(100%);
+    opacity: 0.6;
+}
+
+/* 카드 헤더: 사이드바 인디고 컬러 활용 */
+.card-header {
+    padding: 20px 28px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: white;
+    font-weight: 600;
+    border: none;
+}
+
+/*.bg-primary { background-color: var(--primary-color); }*/
+/*.bg-secondary { background-color: #9ca3af; }*/
+
+.card-body { padding: 32px; }
+
+/* 프로그래스 바 디자인 */
+.progress-wrapper {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    margin-bottom: 40px;
+}
+
+.progress-outer {
+    flex: 1;
+    height: 24px;
+    background: #f3f4f6;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: inset 0 2px 4px rgba(0,0,0,0.03);
+}
+
+/* [1] 로딩바 기본 색상을 사이드바와 같은 인디고(보라색)로 고정 */
+.progress-inner {
+    height: 100%;
+    width: 0%;
+    /* 배경을 회색이 아닌 선명한 인디고 그라데이션으로 변경 */
+    background: linear-gradient(90deg, var(--primary-color), #818cf8);
+    transition: width 0.1s linear;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: bold;
+    box-shadow: 0 2px 4px rgba(79, 70, 229, 0.2);
+}
+
+/* [2] 에러 발생 시 로딩바 색상 (로직에서 클래스 추가 시 작동) */
+.bg-danger {
+    background: var(--danger-color) !important;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
+}
+
+/* [3] 헤더 배경색 명확화 */
+.bg-primary { background-color: var(--primary-color) !important; }   /* 실행 중 (보라색) */
+.bg-secondary { background-color: var(--secondary-color) !important; } /* 대기 중 (회색) */
+
+/* 빗금 애니메이션 최적화 */
+.animated-stripes {
+    background-image: linear-gradient(45deg, rgba(255,255,255,.15) 25%, transparent 25%, transparent 50%, rgba(255,255,255,.15) 50%, rgba(255,255,255,.15) 75%, transparent 75%, transparent);
+    background-size: 1.5rem 1.5rem;
+    animation: progress-bar-stripes 1s linear infinite;
+}
+
+/* [4] 지표 그리드 (Metric Boxes) */
+.metrics-container {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 24px;
+}
+
+.metric-box {
+    background: #ffffff;
+    border: 1px solid #f3f4f6;
+    padding: 24px;
+    border-radius: 16px;
+    text-align: center;
+    transition: all 0.2s ease;
+}
+
+.metric-box:hover {
+    border-color: var(--primary-light);
+    background-color: #fafbff;
+}
+
+.metric-label {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.metric-value {
+    font-size: 1.75rem;
+    font-weight: 700;
+    color: var(--text-dark);
+}
+
+/* [5] 상태 표시등 */
+.status-dot {
+    height: 10px;
+    width: 10px;
+    border-radius: 50%;
+    display: inline-block;
+    margin-right: 12px;
+}
+.dot-online {
+    background-color: #10b981;
+    box-shadow: 0 0 8px #10b981;
+    animation: blink 1.5s infinite;
+}
+.dot-offline { background-color: #d1d5db; }
+
+/* [6] 이력 테이블 디자인 (사이드바 인디고 테마 반영) */
+.history-card {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: var(--card-shadow);
+    border: 1px solid #f3f4f6;
+    overflow: hidden;
+}
+
+.history-header {
+    padding: 24px 30px;
+    background-color: #ffffff;
+    border-bottom: 1px solid #f3f4f6;
+    font-weight: 700;
+    font-size: 1.1rem;
+    color: var(--text-dark);
+}
+
+table { width: 100%; border-collapse: collapse; }
+th {
+    background-color: #f9fafb;
+    padding: 16px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    border-bottom: 1px solid #f3f4f6;
+}
+
+td {
+    padding: 18px 16px;
+    border-bottom: 1px solid #f9fafb;
+    font-size: 0.95rem;
+    color: #374151;
+}
+
+tr:hover td { background-color: #fcfcff; }
+
+/* 뱃지 스타일 개선 */
+.badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: white; /* 기본 글자색 흰색 */
+    display: inline-block;
+}
+
+.badge-success { background-color: var(--success-color); } /* 초록 (COMPLETED) */
+.badge-danger { background-color: var(--danger-color); }   /* 빨강 (FAILED) */
+.badge-secondary { background-color: var(--secondary-color); } /* 회색 (TERMINATED) */
+.badge-warning { background-color: var(--warning-color); color: #000; } /* 노랑 (STARTED/기타) */
+
+/* 파티션 그리드 */
+.partition-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+    margin-top: 32px;
+}
+
+.partition-item {
+    background-color: #f9fafb;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid #f3f4f6;
+    transition: all 0.2s;
+}
+
+/* 인디고 컬러 기반의 버튼형 박스 스타일 */
+.btn-detail {
+    display: inline-block;
+    padding: 4px 12px;
+    background-color: #f5f3ff;       /* 아주 연한 보라색 배경 */
+    color: var(--primary-color);     /* 인디고 글자색 (#4f46e5) */
+    border: 1px solid var(--primary-color); /* 인디고 테두리 */
+    border-radius: 8px;              /* 둥근 모서리 */
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-decoration: none;           /* 밑줄 제거 */
+    transition: all 0.2s ease;       /* 부드러운 호버 효과 */
+}
+
+/* 마우스를 올렸을 때 반전 효과 */
+.btn-detail:hover {
+    background-color: var(--primary-color);
+    color: #ffffff;
+    box-shadow: 0 2px 8px rgba(79, 70, 229, 0.3);
+}

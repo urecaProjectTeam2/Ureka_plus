@@ -50,6 +50,7 @@ public class BatchMonitoringServiceImpl implements BatchMonitoringService {
                     emitter.send(SseEmitter.event().name("batchUpdate").data(
                             BatchProgressSseResponse.builder().isCompleted(true).build()
                     ));
+                    log.info("==> [SSE Connection Waiting] Waiting New Batch Job");
                     Thread.sleep(5000);
                     continue;
 //                    return;
@@ -60,14 +61,14 @@ public class BatchMonitoringServiceImpl implements BatchMonitoringService {
 
                 // 2. 데이터 집계 및 진행률 계산
                 long totalProcessed = partitions.stream().mapToLong(PartitionStatusDto::getWriteCount).sum();
-                double progressRate = (totalProcessed / 5000000.0) * 100;
+                double progressRate = (totalProcessed / 1000020.0) * 100;
                 long totalSkipCount = partitions.stream().mapToLong(PartitionStatusDto::getSkipCount).sum();
 
                 // 3. TPS 및 ETC 계산
                 long now = System.currentTimeMillis();
                 double timeDiff = (now - lastTimestamp) / 1000.0;
                 double tps = (timeDiff > 0) ? (totalProcessed - lastTotalProcessed) / timeDiff : 0;
-                long remainingSeconds = (tps > 0) ? (long) ((5000000 - totalProcessed) / tps) : 0;
+                long remainingSeconds = (tps > 0) ? (long) ((1000020 - totalProcessed) / tps) : 0;
 
                 lastTotalProcessed = totalProcessed;
                 lastTimestamp = now;

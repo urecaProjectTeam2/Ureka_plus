@@ -27,6 +27,7 @@ public class JdbcBatchRepositoryImpl implements JdbcBatchRepository {
                  je.STATUS,
                  je.START_TIME,
                  je.END_TIME,
+                 je.EXIT_CODE,
                  TIMESTAMPDIFF(SECOND, je.START_TIME, je.END_TIME) as DURATION,
                  SUM(CASE WHEN se.STEP_NAME IN ('masterStep', 'messageJobStep')
                        THEN (se.READ_SKIP_COUNT + se.PROCESS_SKIP_COUNT + se.WRITE_SKIP_COUNT)\s
@@ -47,7 +48,7 @@ public class JdbcBatchRepositoryImpl implements JdbcBatchRepository {
                 .duration(rs.getLong("DURATION"))
                 .totalWrite(rs.getLong("TOTAL_WRITE"))
                 .skipCount(rs.getLong("SKIP_COUNT"))
-                // .totalAmount(0L) // 이제 리스트에서는 금액을 보여주지 않으므로 0 혹은 제거
+                .exitCode(rs.getString("EXIT_CODE"))
                 .build());
     }
 
@@ -96,11 +97,10 @@ public class JdbcBatchRepositoryImpl implements JdbcBatchRepository {
     public Long findLatestActiveExecutionId() {
         // STARTING 혹은 STARTED 상태인 가장 최근의 ID 하나를 가져옵니다.
         String sql = """
-        SELECT JOB_EXECUTION_ID 
-        FROM billing_batch.BATCH_JOB_EXECUTION 
-        WHERE STATUS IN ('STARTING', 'STARTED') 
-        AND EXIT_CODE IS NULL
-        ORDER BY JOB_EXECUTION_ID DESC 
+        SELECT JOB_EXECUTION_ID
+        FROM billing_batch.BATCH_JOB_EXECUTION
+        WHERE STATUS IN ('STARTING', 'STARTED')
+        ORDER BY JOB_EXECUTION_ID DESC
         LIMIT 1
     """;
         try {

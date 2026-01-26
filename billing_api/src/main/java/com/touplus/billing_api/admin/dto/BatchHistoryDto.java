@@ -17,6 +17,7 @@ public class BatchHistoryDto {
     private long duration;         // 소요 시간 (초)
     private long totalWrite;       // 총 처리 건수
     private long totalAmount;      // 총 정산 금액
+    private String exitCode;
 
     private long skipCount;
 }
