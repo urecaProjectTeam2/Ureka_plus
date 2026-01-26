@@ -81,6 +81,7 @@ public class MessageProcessor {
                     snapshot.getBillingId(),
                     snapshot.getUserId(),
                     calculateScheduledTime(user, today),
+                    user.getBanStartTime(),
                     user.getBanEndTime()));
         }
 
@@ -134,6 +135,7 @@ public class MessageProcessor {
                         snapshot.getBillingId(),
                         snapshot.getUserId(),
                         calculateScheduledTime(user, today),
+                        user.getBanStartTime(),
                         user.getBanEndTime()));
             }
 

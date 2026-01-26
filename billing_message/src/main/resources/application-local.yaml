@@ -40,11 +40,10 @@ spring:
       group-id: billing-message-groupM19
       auto-offset-reset: earliest
       enable-auto-commit: false # 수동 커밋 모드 (안정성 확보)
-      max-poll-records: 500      # poll 처리 시간을 짧게 유지
+      max-poll-records: 2500      # poll 처리 시간을 짧게 유지
       max-poll-interval-ms: 1800000  # 처리 시간이 길어도 리밸런스 방지 (30분)
       session-timeout-ms: 60000      # poll 지연 시 세션 유지
       heartbeat-interval-ms: 20000   # 세션 유지용 하트비트
-
       # [추가] Deserializer 설정 (batch 모듈과 쌍을 맞춰야 데이터가 읽힙니다)
       key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
       value-deserializer: org.springframework.kafka.support.serializer.JsonDeserializer

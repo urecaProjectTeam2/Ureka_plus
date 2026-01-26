@@ -32,8 +32,8 @@ public class MessageJdbcRepository {
 
         String sql = """
             INSERT IGNORE INTO message
-            (billing_id, user_id, status, scheduled_at, retry_count, ban_end_time)
-            VALUES (?, ?, ?, ?, ?, ?)
+            (billing_id, user_id, status, scheduled_at, retry_count, ban_start_time, ban_end_time)
+            VALUES (?, ?, ?, ?, ?, ?, ?)
         """;
 
         int[][] results = jdbcTemplate.batchUpdate(
@@ -51,6 +51,10 @@ public class MessageJdbcRepository {
                 ps.setInt(5, m.getRetryCount());
                 ps.setTime(
                     6,
+                    m.getBanStartTime() != null ? Time.valueOf(m.getBanStartTime()) : null
+                );
+                ps.setTime(
+                    7,
                     m.getBanEndTime() != null ? Time.valueOf(m.getBanEndTime()) : null
                 );
             }
@@ -118,7 +122,7 @@ public class MessageJdbcRepository {
                 .map(id -> "?")
                 .collect(Collectors.joining(","));
 
-        String sql = "SELECT message_id, billing_id, user_id, status, scheduled_at, retry_count, ban_end_time " +
+        String sql = "SELECT message_id, billing_id, user_id, status, scheduled_at, retry_count, ban_start_time, ban_end_time " +
                 "FROM message WHERE message_id IN (" + placeholders + ")";
 
         return jdbcTemplate.query(sql, messageIds.toArray(), (rs, rowNum) -> new MessageDto(
@@ -130,6 +134,9 @@ public class MessageJdbcRepository {
                         ? rs.getTimestamp("scheduled_at").toLocalDateTime()
                         : null,
                 rs.getInt("retry_count"),
+                rs.getTime("ban_start_time") != null
+                        ? rs.getTime("ban_start_time").toLocalTime()
+                        : null,
                 rs.getTime("ban_end_time") != null
                         ? rs.getTime("ban_end_time").toLocalTime()
                         : null));
@@ -148,7 +155,7 @@ public class MessageJdbcRepository {
                 .collect(Collectors.joining(","));
 
         String sql = """
-                SELECT m.message_id, m.billing_id, m.user_id, m.status, m.scheduled_at, m.retry_count, m.ban_end_time,
+                SELECT m.message_id, m.billing_id, m.user_id, m.status, m.scheduled_at, m.retry_count, m.ban_start_time, m.ban_end_time,
                        s.message_id AS s_message_id, s.billing_id AS s_billing_id, s.settlement_month, s.user_id AS s_user_id,
                        s.user_name, s.user_email, s.user_phone, s.total_price, s.settlement_details, s.message_content
                 FROM message m
@@ -165,6 +172,9 @@ public class MessageJdbcRepository {
                         ? rs.getTimestamp("scheduled_at").toLocalDateTime()
                         : null,
                 rs.getInt("retry_count"),
+                rs.getTime("ban_start_time") != null
+                        ? rs.getTime("ban_start_time").toLocalTime()
+                        : null,
                 rs.getTime("ban_end_time") != null
                         ? rs.getTime("ban_end_time").toLocalTime()
                         : null,
@@ -185,7 +195,7 @@ public class MessageJdbcRepository {
      * 메시지 단건 조회 (JDBC)
      */
     public MessageDto findById(Long messageId) {
-        String sql = "SELECT message_id, billing_id, user_id, status, scheduled_at, retry_count, ban_end_time " +
+        String sql = "SELECT message_id, billing_id, user_id, status, scheduled_at, retry_count, ban_start_time, ban_end_time " +
                 "FROM message WHERE message_id = ?";
 
         List<MessageDto> results = jdbcTemplate.query(sql, new Object[] { messageId }, (rs, rowNum) -> new MessageDto(
@@ -197,6 +207,9 @@ public class MessageJdbcRepository {
                         ? rs.getTimestamp("scheduled_at").toLocalDateTime()
                         : null,
                 rs.getInt("retry_count"),
+                rs.getTime("ban_start_time") != null
+                        ? rs.getTime("ban_start_time").toLocalTime()
+                        : null,
                 rs.getTime("ban_end_time") != null
                         ? rs.getTime("ban_end_time").toLocalTime()
                         : null));
@@ -276,7 +289,7 @@ public class MessageJdbcRepository {
                 .map(id -> "?")
                 .collect(Collectors.joining(","));
 
-        String sql = "SELECT message_id, billing_id, user_id, status, scheduled_at, retry_count, ban_end_time " +
+        String sql = "SELECT message_id, billing_id, user_id, status, scheduled_at, retry_count, ban_start_time, ban_end_time " +
                 "FROM message WHERE billing_id IN (" + placeholders + ")";
 
         return jdbcTemplate.query(sql, billingIds.toArray(), (rs, rowNum) -> new MessageDto(
@@ -288,6 +301,9 @@ public class MessageJdbcRepository {
                         ? rs.getTimestamp("scheduled_at").toLocalDateTime()
                         : null,
                 rs.getInt("retry_count"),
+                rs.getTime("ban_start_time") != null
+                        ? rs.getTime("ban_start_time").toLocalTime()
+                        : null,
                 rs.getTime("ban_end_time") != null
                         ? rs.getTime("ban_end_time").toLocalTime()
                         : null));
@@ -303,6 +319,7 @@ public class MessageJdbcRepository {
             MessageStatus status,
             LocalDateTime scheduledAt,
             Integer retryCount,
+            java.time.LocalTime banStartTime,
             java.time.LocalTime banEndTime) {
     }
 
@@ -313,6 +330,7 @@ public class MessageJdbcRepository {
             MessageStatus status,
             LocalDateTime scheduledAt,
             Integer retryCount,
+            java.time.LocalTime banStartTime,
             java.time.LocalTime banEndTime,
             Long snapshotMessageId,
             Long snapshotBillingId,

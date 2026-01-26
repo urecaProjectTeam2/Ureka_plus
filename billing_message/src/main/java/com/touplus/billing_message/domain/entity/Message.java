@@ -45,18 +45,22 @@ public class Message {
     @Column(name = "retry_count", nullable = false)
     private Integer retryCount;
 
+    @Column(name = "ban_start_time")
+    private LocalTime banStartTime;  // 발송 금지 시작 시간 (User에서 복사)
+
     @Column(name = "ban_end_time")
     private LocalTime banEndTime;  // 발송 금지 종료 시간 (User에서 복사)
 
     /**
      * Message 생성자
      */
-    public Message(Long billingId, Long userId, LocalDateTime scheduledAt, LocalTime banEndTime) {
+    public Message(Long billingId, Long userId, LocalDateTime scheduledAt, LocalTime banStartTime, LocalTime banEndTime) {
         this.billingId = billingId;
         this.userId = userId;
         this.status = MessageStatus.WAITED;  // 고정값
         this.scheduledAt = scheduledAt;
         this.retryCount = 0;                 // 고정값
+        this.banStartTime = banStartTime;
         this.banEndTime = banEndTime;
     }
 }
