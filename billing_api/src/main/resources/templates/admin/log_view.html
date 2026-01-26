@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>로그 상세보기</title>
+    <link rel="stylesheet" th:href="@{/css/whole-process-dashboard.css}">
+    <link rel="stylesheet" th:href="@{/css/common.css}">
+    <style>
+        .log-content-box {
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+            border-radius: 8px;
+            max-height: 700px;
+            overflow-y: auto;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 13px;
+            line-height: 1.5;
+            white-space: pre-wrap;
+        }
+        .header-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .btn-back { background-color: #858796; color: white; padding: 8px 15px; border-radius: 4px; text-decoration: none; }
+    </style>
+</head>
+<body>
+<div th:replace="~{layout/sidebar :: sidebar}"></div>
+
+<div class="container">
+    <div class="header-row">
+        <h1 th:text="'📄 ' + ${fileName}">로그 파일</h1>
+        <a th:href="@{/admin/logs}" class="btn-back">목록으로</a>
+    </div>
+
+    <div class="card">
+        <div class="log-content-box">
+            <div th:each="line : ${logLines}" th:text="${line}"></div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

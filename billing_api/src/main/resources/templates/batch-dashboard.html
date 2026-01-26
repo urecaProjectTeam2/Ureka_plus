@@ -1,16 +1,204 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-<meta charset="EUC-KR">
-<title>Insert title here</title>
- <link rel="stylesheet" th:href="@{/css/message-dashboard.css}">
- <link rel="stylesheet" th:href="@{/css/common.css}">
+    <meta charset="UTF-8">
+    <title>Billing Tower</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <style>
+        .progress { height: 28px; border-radius: 15px; background-color: #dee2e6; }
+        .monitor-card { transition: all 0.3s ease; border: none; }
+        .inactive-monitor { filter: grayscale(100%); opacity: 0.65; background-color: #f8f9fa; }
+        .status-dot { height: 12px; width: 12px; border-radius: 50%; display: inline-block; margin-right: 8px; }
+        .dot-online { background-color: #28a745; box-shadow: 0 0 10px #28a745; animation: blink 1.5s infinite; }
+        .dot-offline { background-color: #adb5bd; }
+        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.4; } 100% { opacity: 1; } }
+        .metric-card { background: white; border: 1px solid #eee; padding: 15px; border-radius: 10px; transition: 0.3s; }
+        .clickable-error { cursor: pointer; border: 2px solid #dc3545 !important; background-color: #fff5f5; }
+        .clickable-error:hover { transform: scale(1.02); box-shadow: 0 4px 15px rgba(220, 53, 69, 0.2); }
+        /* style 태그 안에 추가 */
+        .progress-bar {
+            transition: width 0.1s linear;
+        }
+        #statusText {
+            transition: opacity 0.3s ease;
+        }
+    </style>
 </head>
-<body>
-<div class="navbar">
-	<a th:href="@{/admin/process/dashboard}">��ú���</a>
-    <a th:href="@{/admin/batch/dashboard}" class="active">��ġ ��ú���</a>
-    <a th:href="@{/admin/message/dashboard}">�޽��� ��ú���</a>
+<body class="bg-light">
+<div class="container py-5">
+    <h2 class="mb-4 fw-bold text-dark border-bottom pb-3">배치 모니터링</h2>
+
+    <div id="liveArea" class="card shadow monitor-card mb-5 inactive-monitor">
+        <div class="card-header bg-secondary text-white py-3" id="liveHeader">
+            <h5 class="mb-0 d-flex align-items-center">
+                <span id="statusDot" class="status-dot dot-offline"></span>
+                <span id="statusText">배치 실행 중이 아님</span>
+                <small class="ms-auto text-light" id="lastSuccessInfo"
+                       th:if="${lastSuccess != null}"
+                       th:text="'최종 성공: #' + ${lastSuccess.JOB_EXECUTION_ID} + ' (' + ${lastSuccess.END_TIME} + ')'"></small>
+            </h5>
+        </div>
+        <div class="card-body p-4">
+            <div class="row align-items-center mb-4">
+                <div class="col-md-9">
+                    <div class="progress shadow-sm">
+                        <div id="progressBar" class="progress-bar bg-secondary" role="progressbar" style="width: 0%">0%</div>
+                    </div>
+                </div>
+                <div class="col-md-3 text-end text-muted fw-bold">
+                    <span id="processedCount">0</span> / 5,000,000
+                </div>
+            </div>
+            <div class="row g-3 text-center">
+                <div class="col-md-4"><div class="metric-card shadow-sm">TPS: <span class="fw-bold h4 text-primary" id="tpsValue">0.0</span></div></div>
+                <div class="col-md-4"><div class="metric-card shadow-sm text-success">ETC: <span class="fw-bold h4" id="etcValue">00:00:00</span></div></div>
+                <div class="col-md-4"><div id="skipCard" class="metric-card shadow-sm">Skip: <span class="fw-bold h4 text-danger" id="skipCount">0</span></div></div>
+            </div>
+            <div id="partitionGrid" class="row g-2 mt-4 text-center text-muted small">작업 대기 중...</div>
+        </div>
+    </div>
+
+    <div id="historyTableContainer" th:fragment="history-table-content" class="card shadow-sm border-0">
+        <div class="card-header bg-white py-3">최근 배치 실행 이력</div>
+        <table class="table table-hover mb-0 text-center">
+            <thead class="table-light text-secondary small">
+            <tr>
+                <th>ID</th>
+                <th>상태</th>
+                <th>시작 시간</th>
+                <th>처리 건수</th>
+                <th>소요 시간</th>
+                <th>스킵 건수</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="h : ${historyList}">
+                <td th:text="${h.executionId}" class="fw-bold text-primary"></td>
+                <td><span th:text="${h.status}" th:classappend="${h.status == 'COMPLETED' ? 'badge bg-success' : (h.status == 'FAILED' ? 'badge bg-danger' : 'badge bg-warning text-dark')}"></span></td>
+                <td th:text="${#temporals.format(h.startTime, 'MM-dd HH:mm:ss')}"></td>
+                <td th:text="${#numbers.formatInteger(h.totalWrite, 0, 'COMMA')}"></td>
+                <td th:text="${h.duration + '초'}"></td>
+                <td>
+                    <div th:if="${h.skipCount > 0}">
+                        <a th:href="@{/admin/batch/error/list/{id}(id=${h.executionId})}"
+                           class="btn btn-sm btn-danger py-0 fw-bold"
+                           style="font-size: 0.75rem;"
+                           th:text="${h.skipCount + '건 (진단)'}"></a>
+                    </div>
+                    <span th:unless="${h.skipCount > 0}" class="text-muted small">0건</span>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
+
+<script th:inline="javascript">
+    const eventSource = new EventSource('/admin/batch/realtime/stream');
+
+    // 상태 관리를 위한 변수들
+    let targetProgress = 0;      // 서버에서 받은 실제 진행률
+    let displayProgress = 0;     // 화면에 보여지는 부드러운 진행률
+    let interpolationTimer = null;
+    let currentTps = 0;          // 초당 처리량 반영
+
+    eventSource.addEventListener("batchUpdate", (event) => {
+        const data = JSON.parse(event.data);
+        if (!data.isCompleted) {
+            // 1. 서버에서 온 실제 데이터 저장
+            // "12.34%" 형태의 문자열을 숫자로 변환
+            targetProgress = parseFloat(data.progress.replace('%', ''));
+            currentTps = data.tps;
+
+            // 2. 처음 시작할 때만 즉시 동기화
+            if (displayProgress === 0) displayProgress = targetProgress;
+
+            // 3. 지표 업데이트 (텍스트는 즉시 업데이트)
+            document.getElementById('processedCount').textContent = data.totalProcessed.toLocaleString();
+            document.getElementById('skipCount').textContent = data.skipCount.toLocaleString();
+            document.getElementById('tpsValue').textContent = data.tps;
+            document.getElementById('etcValue').textContent = data.etc;
+
+            // 4. 보간 타이머 시작 (아직 안 돌고 있다면)
+            if (!interpolationTimer) startInterpolation();
+        } else { // 배치 실행 중이 아님
+            console.log("==> No active batch found. Stopping monitoring connection.");
+
+            // SSE 연결 종료 (서버와 더 이상 패킷을 주고받지 않음)
+            eventSource.close();
+
+            // 타이머 중지
+            if (interpolationTimer) {
+                clearInterval(interpolationTimer);
+                interpolationTimer = null;
+            }
+
+            // UI를 '비활성' 상태로 고정
+            setInactiveMode();
+        }
+    });
+
+    function setInactiveMode() {
+        const liveArea = document.getElementById('liveArea');
+        liveArea.classList.add('inactive-monitor');
+        document.getElementById('statusDot').className = 'status-dot dot-offline';
+        document.getElementById('statusText').textContent = "배치 실행 중이 아님";
+
+        const pb = document.getElementById('progressBar');
+        pb.className = 'progress-bar bg-secondary';
+        pb.style.width = '0%';
+        pb.innerText = '0%';
+    }
+
+    // 바를 부드럽게 전진시키는 핵심 함수
+    function startInterpolation() {
+        // 100ms마다 실행 (초당 10번 업데이트)
+        interpolationTimer = setInterval(() => {
+            const pb = document.getElementById('progressBar');
+
+            // 예상 증가분 계산 (TPS 기반)
+            // 500만 건 대비 초당 증가율: (TPS / 5,000,000) * 100
+            // 이를 100ms 단위로 쪼개면 / 10
+            const incrementalStep = (currentTps / 5000000) * 100 / 10;
+
+            // 실제 값보다 너무 앞서가지 않게 조절하면서 전진
+            if (displayProgress < targetProgress) {
+                // 서버 값보다 뒤처져 있다면 조금 더 빠르게 추격 (보정 로직)
+                displayProgress += (targetProgress - displayProgress) * 0.2;
+            } else {
+                // 서버 값에 도달했어도 배치가 도는 중이면 아주 조금씩 전진 (Crawl)
+                displayProgress += incrementalStep;
+            }
+
+            // UI 반영
+            const finalVal = Math.min(displayProgress, 100).toFixed(2);
+            pb.style.width = finalVal + '%';
+            pb.innerText = finalVal + '%';
+
+        }, 100);
+    }
+
+    // 정산 완료 시 타이머 중지
+    eventSource.addEventListener("finished", (event) => {
+        if (interpolationTimer) clearInterval(interpolationTimer);
+        const pb = document.getElementById('progressBar');
+        pb.style.width = '100%';
+        pb.innerText = '100% 완료';
+        document.getElementById('statusText').textContent = "정산 완료";
+
+        console.log("==> Fetching latest history fragment...");
+        fetch('/admin/batch/dashboard/history-fragment')
+            .then(response => {
+                if (!response.ok) throw new Error('Network response was not ok');
+                return response.text();
+            })
+            .then(html => {
+                // 테이블을 감싸는 컨테이너의 내용만 교체 (새로고침 없음!)
+                document.getElementById('historyTableContainer').innerHTML = html;
+                console.log("==> History table updated successfully.");
+            })
+            .catch(error => console.error('Error updating history:', error));
+    });
+</script>
 </body>
 </html>
