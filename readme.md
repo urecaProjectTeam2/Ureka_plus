@@ -1,109 +1,196 @@
 <div align="center">
-  <h1>🚀 Ureka_plus</h1>
-  <p><strong>대용량 통신 요금 명세서 및 알림 발송 시스템</strong></p>
+  <h1>🚀 To U+</h1>
+  <p><strong>대용량 정산 및 메시지 발송 관리 시스템</strong></p>
 </div>
 
 ---
 
-### 📌 서비스 개요
-이 프로젝트는 대규모 요금 정산 데이터 배치를 처리하고, 정산 결과를 바탕으로 고객에게 명세서와 알림을 안정적으로 발송하는 시스템입니다. 모노레포 아키텍처를 기반으로 설계되었으며, Kafka와 같은 메시지 브로커를 활용해 모듈 간 결합도를 낮추고 처리율을 높였습니다.
+## 📌 프로젝트 소개
 
-**질문사항** <br>
-👉 [Notion 링크](https://auspicious-blinker-37f.notion.site/2e921d7d5c4480ee9dabc1cdac0e514b?source=copy_link)
+**To U+** 는 대규모 사용자 데이터를 기반으로 정산을 수행하고,  
+그 결과를 바탕으로 메시지를 생성·발송하는 과정을 통합 관리할 수 있도록 설계한 **백엔드 중심 프로젝트**입니다.
+
+이 프로젝트는 단순한 관리자 페이지 구현이 아니라,  
+**정산 배치**, **이벤트 기반 메시지 처리**, **운영 모니터링**을 하나의 흐름으로 연결하여  
+대용량 처리 환경에서도 안정적으로 동작하는 시스템을 설계하는 데 초점을 맞추었습니다.
+
+관리자는 웹 대시보드를 통해 정산 현황, 배치 진행 상태, Kafka 전송 상태, 메시지 생성 및 발송 상태를 확인할 수 있으며,  
+템플릿 관리, 사용자 정보 조회, Audit 로그 확인 등을 통해 전체 운영 흐름을 추적할 수 있습니다.
 
 ---
 
-### 🛠 기술 스택 (Tech Stack)
+## 🛠 기술 스택
 
-#### 🔹 Backend
+### Backend
 ![Java](https://img.shields.io/badge/Java%2017-007396?style=for-the-badge&logo=openjdk&logoColor=white)
 ![Spring Boot](https://img.shields.io/badge/Spring_Boot%203.x-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)
 ![Spring Batch](https://img.shields.io/badge/Spring_Batch-6DB33F?style=for-the-badge&logo=spring&logoColor=white)
 ![Gradle](https://img.shields.io/badge/Gradle-02303A?style=for-the-badge&logo=gradle&logoColor=white)
 
-#### 🔹 Infrastructure & Messaging
+### Infrastructure & Messaging
 ![MySQL](https://img.shields.io/badge/MySQL%208.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)
 ![Redis](https://img.shields.io/badge/Redis-DC382D?style=for-the-badge&logo=redis&logoColor=white)
 ![Apache Kafka](https://img.shields.io/badge/Apache_Kafka-231F20?style=for-the-badge&logo=apache-kafka&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white)
 
-#### 🔹 Tools / DevOps
+### Tools / DevOps
 ![Git](https://img.shields.io/badge/Git-F05032?style=for-the-badge&logo=git&logoColor=white)
 ![AWS EC2](https://img.shields.io/badge/AWS_EC2-FF9900?style=for-the-badge&logo=amazon-ec2&logoColor=white)
 
 ---
 
-### 💡 주요 핵심 기능 (Core Features)
+## ✨ 주요 기능
 
-#### 📝 1. 정산 (Billing Batch)
-- **정산 데이터 생성의 단일 진실 공급원 (SSOT)**: 모든 요금 계산과 정산 결과는 Batch Server에서 최초로 생성됩니다.
-- **데이터 정합성 보장**: 데이터베이스에 정상적으로 커밋된 이후에만 Kafka로 “정산 완료” 이벤트가 발행되도록 하여 트랜잭션 무결성을 확보했습니다.
-- **불변성(Immutability)**: Kafka를 통해 전달되는 모든 데이터는 이미 확정된 값으로, 이후 단계에서 데이터가 위변조되지 않습니다.
+### 1. 대용량 정산 배치 처리
+- 대규모 사용자 데이터를 대상으로 정산 배치 실행
+- 정산 대상 월 기준으로 배치 작업 수행 및 결과 생성
+- 정산 결과 저장 후 다음 단계로 연계 가능한 처리 흐름 구성
+- Chunk 기반 처리, 단계별 상태 관리 등 대용량 환경을 고려한 구조 반영
 
-#### ✉️ 2. 메시지 시스템 (Message Broker)
-- **멀티 채널 발송**: 수신된 이벤트를 바탕으로 실제 이메일, 문자, 푸시 메시지 등 다양한 채널로 발송합니다.
-- **강력한 멱등성 보장**: 메시지 DB를 이용하여 중복 발송을 완벽히 차단합니다. 동일한 정산 이벤트가 재인입되더라도 단 한 번만(Exactly-once) 처리됩니다.
-- **이력 관리 및 재시도 (Resilience)**: 메시지 발송 결과는 모두 이력으로 보관되며, 실패한 건에 대해서는 운영자가 수동으로 대상 건들을 재시도할 수 있습니다.
+### 2. Kafka 기반 메시지 처리
+- 정산 결과를 기반으로 Kafka 전송 단계 수행
+- 메시지 생성과 발송 단계를 분리하여 비동기 처리 흐름 구성
+- 메시지 처리 상태를 단계별로 추적 가능
+- 중복 처리 상황을 고려한 안정적인 메시지 발송 구조 설계
 
-#### ⚙️ 3. 관리자 플랫폼 (Admin Server)
-- **운영 전용 제어 플랫폼**: 전체 서비스의 동작 상태를 모니터링하고 제어하는 별도의 내부망 인트라넷 서버입니다.
-- **배치 및 메시지 제어**: 배치 스케줄 실행 상태와 메시지 발송 상태를 조회하고, 시작/중지/재시도 등의 명령을 각 서버에 직접 전달할 수 있습니다.
-- **동시성 제어 방어**: 관리자의 모든 제어 요청은 명령 ID를 기반으로 단일 처리되어, 새로고침이나 중복 클릭으로 인한 다중 요청에도 안전하게 구동됩니다.
+### 3. 관리자 대시보드
+- 정산 월, 전체 대상 데이터 건수, 전체 진행 현황 확인
+- Batch Job 진행 상태 모니터링
+- Kafka 전송 상태, 메시지 생성 상태, 메시지 발송 상태 확인
+- 운영자가 전체 처리 흐름을 한눈에 파악할 수 있도록 구성
+
+### 4. Audit 로그 관리
+- 주요 작업 이력 및 운영 로그 조회
+- 장애 상황 발생 시 원인 추적을 위한 기반 제공
+- 운영 이력 확인을 통한 관리 편의성 지원
+
+### 5. 사용자 및 템플릿 관리
+- 정산 및 발송 대상 사용자 정보 조회
+- 메시지 템플릿 생성, 수정, 삭제 기능 제공
+- 템플릿 기반 메시지 관리로 운영 효율성 향상
 
 ---
 
-### 📂 프로젝트 구조 (Project Structure)
+## 📂 프로젝트 구조
 
-본 프로젝트는 **모노레포(Monorepo)** 구조로 관리되며, 다음과 같은 서브 모듈들로 구성됩니다.
-
-```text
-Ureka_plus/
-├── billing_api/       # [Module] 사용자 요청 처리 및 데이터 조회 API 서버
-├── billing_batch/     # [Module] 대용량 정산 데이터 배치 처리 서버 (Spring Batch)
-├── billing_message/   # [Module] Kafka 컨슈머 프로세스 및 실제 알림 발송 워커 서버
-├── billing_common/    # [Module] 공통 도메인 모델, 유틸리티, 공유 설정 (예정)
-├── docker-compose.yml # 로컬/개발 환경 통합 인프라 스피닝 설정 파일
+```bash
+ToUPlus/
+├── billing_api/       # 관리자 요청 처리 및 조회 API
+├── billing_batch/     # 대용량 정산 배치 서버
+├── billing_message/   # Kafka 기반 메시지 생성 및 발송 서버
+├── docker-compose.yml
 └── README.md
 ```
 
 ---
 
-### 📊 아키텍처 및 워크플로우 (Architecture & Workflow)
+## 📊 아키텍처 및 워크플로우
 
 <details>
-<summary><b>전체 플로우차트 보기</b> (클릭하여 펼치기)</summary>
+<summary><b>전체 플로우차트 보기</b></summary>
 
 <br/>
-<img width="100%" alt="전체 플로우차트" src="https://github.com/user-attachments/assets/a427d5cb-029c-4b71-9a3b-632f30ff6024" />
+<img width="100%" src="https://github.com/user-attachments/assets/a427d5cb-029c-4b71-9a3b-632f30ff6024" />
 
 </details>
 
 <details>
-<summary><b>Batch 서버 워크플로우 보기</b> (클릭하여 펼치기)</summary>
+<summary><b>Batch 서버 워크플로우 보기</b></summary>
 
 <br/>
-<img width="100%" alt="Batch 서버 워크플로우" src="https://github.com/user-attachments/assets/f6b02faa-1551-4fdc-ae33-240978de9d9a" />
+<img width="100%" src="https://github.com/user-attachments/assets/f6b02faa-1551-4fdc-ae33-240978de9d9a" />
 
 </details>
 
 <details>
-<summary><b>Message 서버 워크플로우 보기</b> (클릭하여 펼치기)</summary>
+<summary><b>Message 서버 워크플로우 보기</b></summary>
 
 <br/>
-<img width="100%" alt="Message 서버 워크플로우" src="https://github.com/user-attachments/assets/0694ba33-048b-4bb3-8b4c-89372b018b3f" />
+<img width="100%" src="https://github.com/user-attachments/assets/0694ba33-048b-4bb3-8b4c-89372b018b3f" />
 
 </details>
 
 <details>
-<summary><b>전체 서버 구조 보기</b> (클릭하여 펼치기)</summary>
+<summary><b>전체 서버 구조 보기</b></summary>
 
 <br/>
-<img width="100%" alt="전체 서버 구조" src="https://github.com/user-attachments/assets/cb0d74d3-736c-44a4-af24-38f28530553e" />
+<img width="100%" src="https://github.com/user-attachments/assets/cb0d74d3-736c-44a4-af24-38f28530553e" />
 
 </details>
 
 ---
 
+## 🔄 핵심 처리 흐름
+
+1. 정산 대상 월과 전체 대상 데이터 확인
+2. Batch Job 실행 및 정산 진행
+3. 정산 결과 기반 Kafka 전송
+4. 메시지 생성 단계 처리
+5. 메시지 발송 단계 처리
+6. 운영자는 대시보드와 로그를 통해 전체 이력 확인
+7. 필요 시 템플릿 수정
+
+---
+
+## 🧩 설계 포인트
+
+### 대용량 배치 처리 중심 설계
+- 대량 데이터를 한 번에 처리해야 하는 정산 시나리오를 전제로 구성
+- 배치 실행 상태와 처리 진행률을 운영 관점에서 확인할 수 있도록 설계
+- 단순 조회 시스템이 아니라 실제 대용량 처리 흐름을 관리하는 데 목적을 둠
+
+### 비동기 메시지 발송 흐름 분리
+- 정산과 메시지 발송을 하나의 동기 처리로 묶지 않고 단계적으로 분리
+- Kafka를 통해 정산 이후 메시지 처리 단계를 유연하게 연결
+- 메시지 생성과 발송 단계를 나누어 운영 상태 추적이 가능하도록 구성
+
+### 운영 가시성 확보
+- 정산, Kafka 전송, 메시지 생성, 메시지 발송까지의 흐름을 시각적으로 확인 가능
+- Audit 로그와 상태 대시보드를 통해 운영 이력과 현재 상태를 함께 관리
+- 장애 분석과 운영 추적을 고려한 구조 반영
+
+### 템플릿 기반 운영 효율화
+- 반복적으로 사용하는 메시지를 템플릿 형태로 관리
+- 메시지 일관성을 유지하고 운영자의 수작업 부담을 줄일 수 있도록 구성
+
+---
+
+## 🎯 기대 효과
+
+- **운영 효율성 향상**  
+  정산부터 메시지 발송까지의 흐름을 하나의 관리자 시스템에서 통합 관리할 수 있습니다.
+
+- **대용량 처리 가시성 확보**  
+  각 단계의 진행 상황을 확인할 수 있어 운영자가 현재 처리 상태를 빠르게 파악할 수 있습니다.
+
+- **운영 안정성 강화**  
+  상태 모니터링과 Audit 로그를 통해 장애 대응과 운영 추적이 쉬워집니다.
+
+- **반복 업무 자동화 기반 마련**  
+  템플릿 관리와 메시지 처리 흐름을 통해 반복적인 운영 업무를 줄일 수 있습니다.
+
+---
+
+## 📈 향후 개선 방향
+
+- 발송 채널 확장 (SMS / EMAIL / PUSH 등)
+- 사용자별 발송 정책 설정 기능 추가
+- 통계 및 리포트 기능 고도화
+- 장애 알림 및 운영 모니터링 기능 강화
+
+---
+
+## 🎥 Demo
+
+시연 영상 또는 GIF를 아래에 추가하면 프로젝트 이해도를 더 높일 수 있습니다.
+
+```bash
+docs/demo.gif
+docs/demo.mp4
+```
+
+---
+
 <div align="center">
-  <small>Developed & Maintained by Ureka_plus Team</small>
+  <small>Developed & Maintained by To U+ Team</small>
 </div>
