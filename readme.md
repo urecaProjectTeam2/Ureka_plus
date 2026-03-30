@@ -120,6 +120,19 @@ ToUPlus/
 
 ---
 
+## 🗄️ ERD
+
+<details>
+<summary><b>ERD (Entity Relationship Diagram) 보기</b></summary>
+
+<br/>
+<!-- TODO: ERD 이미지 주소를 아래 src에 넣어주세요 -->
+<img width="100%" src="[ERD_IMAGE_URL]" alt="ERD Diagram" />
+
+</details>
+
+---
+
 ## 🔄 핵심 처리 흐름
 
 1. 정산 대상 월과 전체 대상 데이터 확인
@@ -180,14 +193,44 @@ ToUPlus/
 
 ---
 
+## 🖥️ 화면 구성
+
+<table>
+  <tr>
+    <td align="center"><img width="300" src="[메인대시보드_IMAGE_URL]" alt="메인 대시보드" /></td>
+    <td align="center"><img width="300" src="[배치대시보드_IMAGE_URL]" alt="배치 대시보드" /></td>
+    <td align="center"><img width="300" src="[메세지대시보드_IMAGE_URL]" alt="메세지 대시보드" /></td>
+  </tr>
+  <tr>
+    <td align="center"><b>메인 대시보드</b><br>전체 데이터 현황 및 정산 진행 요약 정보를 제공합니다.</td>
+    <td align="center"><b>배치 대시보드</b><br>정산 배치의 진행 상태 및 결과를 모니터링합니다.</td>
+    <td align="center"><b>메세지 대시보드</b><br>Kafka 기반 메시지 생성 및 발송 상태를 실시간으로 확인합니다.</td>
+  </tr>
+  <tr>
+    <td align="center"><img width="300" src="[관리자로그관리_IMAGE_URL]" alt="관리자 로그 관리" /></td>
+    <td align="center"><img width="300" src="[메세지템플릿관리_IMAGE_URL]" alt="메세지 템플릿 관리" /></td>
+    <td align="center"><img width="300" src="[사용자대시보드_IMAGE_URL]" alt="사용자 대시보드" /></td>
+  </tr>
+  <tr>
+    <td align="center"><b>관리자 로그 관리</b><br>시스템 내 주요 작업 이력 및 Audit 로그를 조회합니다.</td>
+    <td align="center"><b>메세지 템플릿 관리</b><br>발송할 메시지의 템플릿을 생성, 수정 및 관리합니다.</td>
+    <td align="center"><b>사용자 대시보드</b><br>사용자별 정산 및 메시지 발송 현황을 조회합니다.</td>
+  </tr>
+</table>
+
+<br />
+
+---
+
 ## 🎥 Demo
 
-시연 영상 또는 GIF를 아래에 추가하면 프로젝트 이해도를 더 높일 수 있습니다.
+시연 영상 또는 GIF를 통해 프로젝트의 실제 동작 과정을 확인할 수 있습니다.
 
-```bash
-docs/demo.gif
-docs/demo.mp4
-```
+<br/>
+<!-- TODO: 시연 GIF 이미지 주소를 아래 src에 넣어주세요 -->
+<p align="center">
+  <img src="[DEMO_GIF_URL]" alt="To U+ Demo GIF" width="80%">
+</p>
 
 ---
 
