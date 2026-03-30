@@ -114,7 +114,7 @@ ToUPlus/
 <summary><b>전체 서버 구조 보기</b></summary>
 
 <br/>
-<img width="100%" src="https://github.com/user-attachments/assets/cb0d74d3-736c-44a4-af24-38f28530553e" />
+<img width="100%" src="https://github.com/user-attachments/assets/d69788d7-6d25-4c46-8195-c52c32412d90" />
 
 </details>
 
@@ -194,44 +194,72 @@ ToUPlus/
 
 ---
 
-## 🖥️ 화면 구성
-
-<table>
-  <tr>
-    <td align="center"><img width="300" src="https://github.com/user-attachments/assets/e32ce8ea-1b49-4c5c-99ec-759cbf9cfee7" alt="메인 대시보드" /></td>
-    <td align="center"><img width="300" src="[배치대시보드_IMAGE_URL]" alt="배치 대시보드" /></td>
-    <td align="center"><img width="300" src="[메세지대시보드_IMAGE_URL]" alt="메세지 대시보드" /></td>
-  </tr>
-  <tr>
-    <td align="center"><b>메인 대시보드</b><br>전체 데이터 현황 및 정산 진행 요약 정보를 제공합니다.</td>
-    <td align="center"><b>배치 대시보드</b><br>정산 배치의 진행 상태 및 결과를 모니터링합니다.</td>
-    <td align="center"><b>메세지 대시보드</b><br>Kafka 기반 메시지 생성 및 발송 상태를 실시간으로 확인합니다.</td>
-  </tr>
-  <tr>
-    <td align="center"><img width="300" src="[관리자로그관리_IMAGE_URL]" alt="관리자 로그 관리" /></td>
-    <td align="center"><img width="300" src="[메세지템플릿관리_IMAGE_URL]" alt="메세지 템플릿 관리" /></td>
-    <td align="center"><img width="300" src="[사용자대시보드_IMAGE_URL]" alt="사용자 대시보드" /></td>
-  </tr>
-  <tr>
-    <td align="center"><b>관리자 로그 관리</b><br>시스템 내 주요 작업 이력 및 Audit 로그를 조회합니다.</td>
-    <td align="center"><b>메세지 템플릿 관리</b><br>발송할 메시지의 템플릿을 생성, 수정 및 관리합니다.</td>
-    <td align="center"><b>사용자 대시보드</b><br>사용자별 정산 및 메시지 발송 현황을 조회합니다.</td>
-  </tr>
-</table>
-
-<br />
-
----
-
 ## 🎥 Demo
 
 시연 영상 또는 GIF를 통해 프로젝트의 실제 동작 과정을 확인할 수 있습니다.
 
-<br/>
-<!-- TODO: 시연 GIF 이미지 주소를 아래 src에 넣어주세요 -->
-<p align="center">
-  <img src="[DEMO_GIF_URL]" alt="To U+ Demo GIF" width="80%">
-</p>
+<table>
+  <tr>
+    <td align="center">
+      <img width="400" src="https://github.com/user-attachments/assets/e32ce8ea-1b49-4c5c-99ec-759cbf9cfee7" alt="메인 대시보드" />
+    </td>
+    <td align="center">
+      <img width="400" src="https://github.com/user-attachments/assets/70450ae5-a2d8-46cf-8cf4-ab35250fd564" alt="배치 대시보드" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <b>메인 대시보드</b><br>
+      전체 진행사항을 요약해서 전달합니다. 
+    </td>
+    <td align="center">
+      <b>배치 대시보드</b><br>
+      정산 배치의 진행 상태 및 결과를 모니터링합니다.
+    </td>
+  </tr>
+
+  <tr>
+    <td align="center">
+      <img width="400" src="https://github.com/user-attachments/assets/3b33ce2d-facf-48c0-928d-86b061fefc8a" alt="메세지 대시보드" />
+    </td>
+    <td align="center">
+      <img width="400" src="https://github.com/user-attachments/assets/a770ee01-2e64-4d1a-b650-296c6bdefe3d" alt="관리자 로그 관리" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <b>메세지 대시보드</b><br>
+      Kafka 기반 배치 서버에서 전송된 내역을 수신 및 발송 상태를 실시간으로 확인합니다.
+    </td>
+    <td align="center">
+      <b>관리자 로그 관리</b><br>
+      시스템 내 주요 작업 이력 및 Audit 로그를 조회합니다.
+      에러 시 에러를 확인할 수 있으며 그에 따른 로그를 자세히 보거나 txt 파일로 다운로드 받을 수 있습니다. 
+    </td>
+  </tr>
+
+  <tr>
+    <td align="center">
+      <img width="400" src="https://github.com/user-attachments/assets/df9e7d35-8e77-44ea-8762-d9b08f585a8d" alt="메세지 템플릿 관리" />
+    </td>
+    <td align="center">
+      <img width="400" src="https://github.com/user-attachments/assets/19fea02a-7ffd-4a90-be27-f72269a698c0" alt="사용자 대시보드" />
+    </td>
+  </tr>
+  <tr>
+    <td align="center">
+      <b>메세지 템플릿 관리</b><br>
+      발송할 메시지의 템플릿을 생성, 수정, 삭제 및 관리합니다.
+    </td>
+    <td align="center">
+      <b>사용자 대시보드</b><br>
+      사용자별 정산 및 메시지 발송 현황을 조회합니다.
+      외에도 사용자가 자주 쓰는 요금제 등 사용자 데이터를 그래프로 확인할 수 있습니다. 
+    </td>
+  </tr>
+</table>
+
+<br />
 
 ---
 
