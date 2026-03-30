@@ -127,7 +127,8 @@ ToUPlus/
 
 <br/>
 <!-- TODO: ERD 이미지 주소를 아래 src에 넣어주세요 -->
-<img width="100%" src="[ERD_IMAGE_URL]" alt="ERD Diagram" />
+<img width="100%" src="https://github.com/user-attachments/assets/57e06716-58f8-42f7-9b75-85fdf0891bf0" alt="ERD Diagram" />
+<img width="100%" src="https://github.com/user-attachments/assets/a8b64e00-5fa4-4425-b3c1-9c55d1ba2e93" alt="ERD Diagram" />
 
 </details>
 
@@ -197,7 +198,7 @@ ToUPlus/
 
 <table>
   <tr>
-    <td align="center"><img width="300" src="[메인대시보드_IMAGE_URL]" alt="메인 대시보드" /></td>
+    <td align="center"><img width="300" src="https://github.com/user-attachments/assets/e32ce8ea-1b49-4c5c-99ec-759cbf9cfee7" alt="메인 대시보드" /></td>
     <td align="center"><img width="300" src="[배치대시보드_IMAGE_URL]" alt="배치 대시보드" /></td>
     <td align="center"><img width="300" src="[메세지대시보드_IMAGE_URL]" alt="메세지 대시보드" /></td>
   </tr>
